@@ -73,11 +73,20 @@ interface NavItem {
           <div class="topbar-spacer"></div>
           <span class="theme-label"><i class="pi pi-palette"></i> Theme</span>
           <div class="theme-buttons">
-            <button class="theme-btn" [class.active]="themeService.activeTheme() === 'classic'" (click)="themeService.setTheme('classic')">
-              <i class="pi pi-desktop"></i> Classic
+            <button class="theme-btn" [class.active]="themeService.activeTheme() === 'classic'" (click)="themeService.setTheme('classic')"
+                    pTooltip="Classic" tooltipPosition="bottom">
+              <i class="pi pi-desktop"></i>
+              <span class="theme-btn-label">Classic</span>
             </button>
-            <button class="theme-btn" [class.active]="themeService.activeTheme() === 'beach'" (click)="themeService.setTheme('beach')">
-              <i class="pi pi-sun"></i> Beach
+            <button class="theme-btn" [class.active]="themeService.activeTheme() === 'beach'" (click)="themeService.setTheme('beach')"
+                    pTooltip="Beach" tooltipPosition="bottom">
+              <i class="pi pi-sun"></i>
+              <span class="theme-btn-label">Beach</span>
+            </button>
+            <button class="theme-btn" [class.active]="themeService.activeTheme() === 'dark'" (click)="themeService.setTheme('dark')"
+                    pTooltip="Dark" tooltipPosition="bottom">
+              <i class="pi pi-moon"></i>
+              <span class="theme-btn-label">Dark</span>
             </button>
           </div>
           <a routerLink="/notifications" class="notification-bell" pTooltip="Notifications" tooltipPosition="bottom">
@@ -277,7 +286,7 @@ interface NavItem {
       display: flex;
       align-items: center;
       gap: 0.375rem;
-      padding: 0.375rem 0.875rem;
+      padding: 0.375rem 0.75rem;
       border: none;
       border-radius: 18px;
       background: transparent;
@@ -286,6 +295,7 @@ interface NavItem {
       cursor: pointer;
       transition: all 0.2s ease;
       font-family: inherit;
+      white-space: nowrap;
     }
 
     .theme-btn.active {
@@ -297,6 +307,20 @@ interface NavItem {
 
     .theme-btn:hover:not(.active) {
       color: var(--text-color);
+    }
+
+    .theme-btn-label {
+      display: inline;
+    }
+
+    @media (max-width: 640px) {
+      .theme-btn-label {
+        display: none;
+      }
+
+      .theme-btn {
+        padding: 0.375rem 0.625rem;
+      }
     }
 
     .topbar-spacer {
@@ -386,6 +410,15 @@ export class ShellComponent {
     { label: 'Appointments', icon: 'pi pi-calendar', route: '/appointments' },
     { label: 'Health Records', icon: 'pi pi-folder', route: '/records' },
     { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3 },
+    { label: 'Telehealth', icon: 'pi pi-video', route: '/telehealth' },
+    { label: 'Symptom Checker', icon: 'pi pi-heart', route: '/symptom-checker' },
+    { label: 'Timeline', icon: 'pi pi-history', route: '/health-timeline' },
+    { label: 'Lab Trends', icon: 'pi pi-chart-line', route: '/lab-trends' },
+    { label: 'Prescriptions', icon: 'pi pi-box', route: '/prescriptions' },
+    { label: 'Devices', icon: 'pi pi-mobile', route: '/devices' },
+    { label: 'Insurance', icon: 'pi pi-id-card', route: '/insurance' },
+    { label: 'Providers', icon: 'pi pi-users', route: '/providers' },
+    { label: 'Care Team', icon: 'pi pi-users', route: '/care-team' },
     { label: 'Billing', icon: 'pi pi-credit-card', route: '/billing' },
     { label: 'Forms', icon: 'pi pi-file-edit', route: '/forms' },
     { label: 'Notifications', icon: 'pi pi-bell', route: '/notifications', badge: 4 },

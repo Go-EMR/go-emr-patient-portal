@@ -23,7 +23,17 @@ export const routes: Routes = [
       { path: 'consent-management', loadComponent: () => import('./settings/feature/consent-management.component').then(m => m.ConsentManagementComponent) },
       { path: 'data-management', loadComponent: () => import('./settings/feature/data-management.component').then(m => m.DataManagementComponent) },
       { path: 'privacy-policy', loadComponent: () => import('./settings/feature/privacy-policy.component').then(m => m.PrivacyPolicyComponent) },
-      { path: 'settings', loadComponent: () => import('./settings/feature/settings.component').then(m => m.SettingsComponent) }
+      { path: 'settings', loadComponent: () => import('./settings/feature/settings.component').then(m => m.SettingsComponent) },
+      { path: 'telehealth/:appointmentId', loadComponent: () => import('./telehealth/feature/telehealth.component').then(m => m.TelehealthComponent) },
+      { path: 'telehealth', loadComponent: () => import('./telehealth/feature/telehealth.component').then(m => m.TelehealthComponent) },
+      { path: 'symptom-checker', loadComponent: () => import('./symptom-checker/feature/symptom-checker.component').then(m => m.SymptomCheckerComponent) },
+      { path: 'health-timeline', loadComponent: () => import('./health-timeline/feature/health-timeline.component').then(m => m.HealthTimelineComponent) },
+      { path: 'lab-trends', loadComponent: () => import('./lab-trends/feature/lab-trends.component').then(m => m.LabTrendsComponent) },
+      { path: 'prescriptions', loadComponent: () => import('./prescriptions/feature/prescriptions.component').then(m => m.PrescriptionsComponent) },
+      { path: 'devices', loadComponent: () => import('./devices/feature/devices.component').then(m => m.DevicesComponent) },
+      { path: 'insurance', loadComponent: () => import('./insurance/feature/insurance.component').then(m => m.InsuranceComponent) },
+      { path: 'providers', loadComponent: () => import('./providers/feature/providers.component').then(m => m.ProvidersComponent) },
+      { path: 'care-team', loadComponent: () => import('./care-team/feature/care-team.component').then(m => m.CareTeamComponent) }
     ]
   },
   { path: '**', redirectTo: 'dashboard' }
