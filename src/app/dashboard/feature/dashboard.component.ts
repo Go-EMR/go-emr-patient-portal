@@ -22,12 +22,6 @@ import { AuthService } from '../../auth/data-access';
           <p class="current-date"><i class="pi pi-calendar"></i> {{ todayDate | date:'EEEE, MMMM d, y' }}</p>
         </div>
         <div class="welcome-right">
-          <button pButton class="notification-bell p-button-text p-button-rounded p-button-lg" (click)="navigate('/notifications')">
-            <i class="pi pi-bell"></i>
-            @if (summary().unreadMessages > 0) {
-              <span class="bell-badge">{{ summary().unreadMessages }}</span>
-            }
-          </button>
           <div class="welcome-actions">
             <button pButton label="Book Appointment" icon="pi pi-calendar-plus" class="p-button-lg" (click)="navigate('/appointments')"></button>
             <button pButton label="Send Message" icon="pi pi-envelope" class="p-button-lg p-button-outlined" (click)="navigate('/messages')"></button>
@@ -98,8 +92,6 @@ import { AuthService } from '../../auth/data-access';
     .message { color: var(--text-color-secondary); margin: 0; }
     .current-date { color: var(--text-color-secondary); margin: 0.5rem 0 0; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
     .welcome-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; }
-    .notification-bell { position: relative; font-size: 1.25rem; color: var(--text-color); }
-    .bell-badge { position: absolute; top: -2px; right: -2px; background: var(--red-500); color: white; font-size: 0.65rem; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; padding: 0 4px; }
     .welcome-actions { display: flex; gap: 1rem; }
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .content-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }

@@ -407,7 +407,7 @@ interface NavGroup {
       height: 16px;
       padding: 0 4px;
       border-radius: 8px;
-      background: var(--red-500);
+      background: #ef4444;
       color: white;
       font-size: 0.625rem;
       font-weight: 700;
@@ -498,7 +498,6 @@ export class ShellComponent {
       collapsed: false,
       items: [
         { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3 },
-        { label: 'Notifications', icon: 'pi pi-bell', route: '/notifications', badge: 4 },
         { label: 'Settings', icon: 'pi pi-cog', route: '/settings' },
       ]
     },
