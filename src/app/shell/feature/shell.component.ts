@@ -15,6 +15,12 @@ interface NavItem {
   badge?: number;
 }
 
+interface NavGroup {
+  label: string;
+  collapsed: boolean;
+  items: NavItem[];
+}
+
 @Component({
   selector: 'app-shell',
   standalone: true,
@@ -36,17 +42,27 @@ interface NavItem {
         </div>
 
         <nav class="sidebar-nav">
-          @for (item of navItems; track item.route) {
-            <a [routerLink]="item.route" routerLinkActive="active" class="nav-item" pRipple
-               [pTooltip]="sidebarCollapsed() ? item.label : ''" tooltipPosition="right">
-              <i [class]="item.icon"></i>
-              @if (!sidebarCollapsed()) {
-                <span>{{ item.label }}</span>
+          @for (group of navGroups; track group.label) {
+            @if (!sidebarCollapsed()) {
+              <div class="nav-group-header" (click)="group.collapsed = !group.collapsed">
+                <span class="nav-group-label">{{ group.label }}</span>
+                <i [class]="group.collapsed ? 'pi pi-plus' : 'pi pi-minus'" class="nav-group-toggle"></i>
+              </div>
+            }
+            @if (!group.collapsed || sidebarCollapsed()) {
+              @for (item of group.items; track item.route) {
+                <a [routerLink]="item.route" routerLinkActive="active" class="nav-item" pRipple
+                   [pTooltip]="sidebarCollapsed() ? item.label : ''" tooltipPosition="right">
+                  <i [class]="item.icon"></i>
+                  @if (!sidebarCollapsed()) {
+                    <span>{{ item.label }}</span>
+                  }
+                  @if (item.badge && item.badge > 0) {
+                    <span class="nav-badge">{{ item.badge }}</span>
+                  }
+                </a>
               }
-              @if (item.badge && item.badge > 0) {
-                <span class="nav-badge">{{ item.badge }}</span>
-              }
-            </a>
+            }
           }
         </nav>
 
@@ -153,12 +169,45 @@ interface NavItem {
       overflow-y: auto;
     }
 
+    .nav-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      margin-top: 0.5rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .nav-group-header:first-child {
+      margin-top: 0;
+    }
+
+    .nav-group-label {
+      font-size: 0.675rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-color-secondary);
+    }
+
+    .nav-group-toggle {
+      font-size: 0.65rem;
+      color: var(--text-color-secondary);
+      transition: color 0.15s;
+    }
+
+    .nav-group-header:hover .nav-group-label,
+    .nav-group-header:hover .nav-group-toggle {
+      color: var(--text-color);
+    }
+
     .nav-item {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.875rem 1rem;
-      margin-bottom: 0.25rem;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.125rem;
       border-radius: var(--border-radius);
       color: var(--text-color);
       text-decoration: none;
@@ -405,24 +454,54 @@ export class ShellComponent {
 
   sidebarCollapsed = signal(false);
 
-  navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
-    { label: 'Appointments', icon: 'pi pi-calendar', route: '/appointments' },
-    { label: 'Health Records', icon: 'pi pi-folder', route: '/records' },
-    { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3 },
-    { label: 'Telehealth', icon: 'pi pi-video', route: '/telehealth' },
-    { label: 'Symptom Checker', icon: 'pi pi-heart', route: '/symptom-checker' },
-    { label: 'Timeline', icon: 'pi pi-history', route: '/health-timeline' },
-    { label: 'Lab Trends', icon: 'pi pi-chart-line', route: '/lab-trends' },
-    { label: 'Prescriptions', icon: 'pi pi-box', route: '/prescriptions' },
-    { label: 'Devices', icon: 'pi pi-mobile', route: '/devices' },
-    { label: 'Insurance', icon: 'pi pi-id-card', route: '/insurance' },
-    { label: 'Providers', icon: 'pi pi-users', route: '/providers' },
-    { label: 'Care Team', icon: 'pi pi-users', route: '/care-team' },
-    { label: 'Billing', icon: 'pi pi-credit-card', route: '/billing' },
-    { label: 'Forms', icon: 'pi pi-file-edit', route: '/forms' },
-    { label: 'Notifications', icon: 'pi pi-bell', route: '/notifications', badge: 4 },
-    { label: 'Settings', icon: 'pi pi-cog', route: '/settings' }
+  navGroups: NavGroup[] = [
+    {
+      label: 'Overview',
+      collapsed: false,
+      items: [
+        { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
+      ]
+    },
+    {
+      label: 'Care & Appointments',
+      collapsed: false,
+      items: [
+        { label: 'Appointments', icon: 'pi pi-calendar', route: '/appointments' },
+        { label: 'Telehealth', icon: 'pi pi-video', route: '/telehealth' },
+        { label: 'Symptom Checker', icon: 'pi pi-heart', route: '/symptom-checker' },
+        { label: 'Providers', icon: 'pi pi-users', route: '/providers' },
+        { label: 'Care Team', icon: 'pi pi-users', route: '/care-team' },
+      ]
+    },
+    {
+      label: 'Health Records',
+      collapsed: false,
+      items: [
+        { label: 'Health Records', icon: 'pi pi-folder', route: '/records' },
+        { label: 'Timeline', icon: 'pi pi-history', route: '/health-timeline' },
+        { label: 'Lab Trends', icon: 'pi pi-chart-line', route: '/lab-trends' },
+        { label: 'Prescriptions', icon: 'pi pi-box', route: '/prescriptions' },
+        { label: 'Devices', icon: 'pi pi-mobile', route: '/devices' },
+      ]
+    },
+    {
+      label: 'Billing & Insurance',
+      collapsed: false,
+      items: [
+        { label: 'Billing', icon: 'pi pi-credit-card', route: '/billing' },
+        { label: 'Insurance', icon: 'pi pi-id-card', route: '/insurance' },
+        { label: 'Forms', icon: 'pi pi-file-edit', route: '/forms' },
+      ]
+    },
+    {
+      label: 'Communication',
+      collapsed: false,
+      items: [
+        { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3 },
+        { label: 'Notifications', icon: 'pi pi-bell', route: '/notifications', badge: 4 },
+        { label: 'Settings', icon: 'pi pi-cog', route: '/settings' },
+      ]
+    },
   ];
 
   userName = computed(() => {
