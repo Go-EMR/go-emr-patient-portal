@@ -407,7 +407,7 @@ interface NavGroup {
       height: 16px;
       padding: 0 4px;
       border-radius: 8px;
-      background: #ef4444;
+      background: #22c55e;
       color: white;
       font-size: 0.625rem;
       font-weight: 700;
