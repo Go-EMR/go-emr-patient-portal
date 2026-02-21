@@ -73,7 +73,8 @@ interface Claim {
     .billing-summary { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
     .summary-card { display: flex; align-items: center; gap: 1rem; padding: 1.5rem; background: var(--surface-card); border-radius: var(--border-radius); box-shadow: var(--card-shadow); }
     .summary-card.balance { background: linear-gradient(135deg, var(--primary-500), var(--primary-700)); color: white; }
-    .summary-card.balance .summary-icon { background: rgba(255,255,255,0.2); }
+    .summary-card.balance .summary-icon { background: rgba(255,255,255,0.3); color: white; }
+    .summary-card.balance .summary-icon i { color: white; font-size: 1.5rem; }
     .summary-card.balance button { background: white; color: var(--primary-700); border: none; }
     .summary-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; background: var(--primary-50); color: var(--primary-500); }
     .summary-icon.pending { background: var(--orange-50); color: var(--orange-500); }

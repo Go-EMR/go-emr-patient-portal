@@ -68,8 +68,9 @@ interface NavItem {
 
       <!-- Main Content -->
       <main class="main-content">
-        <!-- Theme Toggle Bar -->
+        <!-- Top Bar -->
         <div class="theme-toggle-bar">
+          <div class="topbar-spacer"></div>
           <span class="theme-label"><i class="pi pi-palette"></i> Theme</span>
           <div class="theme-buttons">
             <button class="theme-btn" [class.active]="themeService.activeTheme() === 'classic'" (click)="themeService.setTheme('classic')">
@@ -79,6 +80,10 @@ interface NavItem {
               <i class="pi pi-sun"></i> Beach
             </button>
           </div>
+          <a routerLink="/notifications" class="notification-bell" pTooltip="Notifications" tooltipPosition="bottom">
+            <i class="pi pi-bell"></i>
+            <span class="bell-badge">4</span>
+          </a>
         </div>
         <router-outlet></router-outlet>
       </main>
@@ -292,6 +297,51 @@ interface NavItem {
 
     .theme-btn:hover:not(.active) {
       color: var(--text-color);
+    }
+
+    .topbar-spacer {
+      flex: 1;
+    }
+
+    .notification-bell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      color: var(--text-color-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .notification-bell:hover {
+      background: var(--surface-hover);
+      color: var(--text-color);
+    }
+
+    .notification-bell i {
+      font-size: 1.15rem;
+    }
+
+    .bell-badge {
+      position: absolute;
+      top: 2px;
+      right: 0;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      border-radius: 8px;
+      background: var(--red-500);
+      color: white;
+      font-size: 0.625rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
     }
 
     .main-content > :last-child {
