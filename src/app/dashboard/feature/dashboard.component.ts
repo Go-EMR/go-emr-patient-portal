@@ -19,10 +19,19 @@ import { AuthService } from '../../auth/data-access';
           <span class="greeting">{{ greeting }},</span>
           <h1 class="name">{{ userName() }}</h1>
           <p class="message">Here's your health summary for today</p>
+          <p class="current-date"><i class="pi pi-calendar"></i> {{ todayDate | date:'EEEE, MMMM d, y' }}</p>
         </div>
-        <div class="welcome-actions">
-          <button pButton label="Book Appointment" icon="pi pi-calendar-plus" class="p-button-lg" (click)="navigate('/appointments')"></button>
-          <button pButton label="Send Message" icon="pi pi-envelope" class="p-button-lg p-button-outlined" (click)="navigate('/messages')"></button>
+        <div class="welcome-right">
+          <button pButton class="notification-bell p-button-text p-button-rounded p-button-lg" (click)="navigate('/notifications')">
+            <i class="pi pi-bell"></i>
+            @if (summary().unreadMessages > 0) {
+              <span class="bell-badge">{{ summary().unreadMessages }}</span>
+            }
+          </button>
+          <div class="welcome-actions">
+            <button pButton label="Book Appointment" icon="pi pi-calendar-plus" class="p-button-lg" (click)="navigate('/appointments')"></button>
+            <button pButton label="Send Message" icon="pi pi-envelope" class="p-button-lg p-button-outlined" (click)="navigate('/messages')"></button>
+          </div>
         </div>
       </section>
 
@@ -87,6 +96,10 @@ import { AuthService } from '../../auth/data-access';
     .greeting { font-size: 1rem; color: var(--text-color-secondary); }
     .name { font-size: 2rem; font-weight: 700; margin: 0.25rem 0; }
     .message { color: var(--text-color-secondary); margin: 0; }
+    .current-date { color: var(--text-color-secondary); margin: 0.5rem 0 0; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
+    .welcome-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; }
+    .notification-bell { position: relative; font-size: 1.25rem; color: var(--text-color); }
+    .bell-badge { position: absolute; top: -2px; right: -2px; background: var(--red-500); color: white; font-size: 0.65rem; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-weight: 700; padding: 0 4px; }
     .welcome-actions { display: flex; gap: 1rem; }
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
     .content-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
@@ -110,7 +123,7 @@ import { AuthService } from '../../auth/data-access';
     .message-time { font-size: 0.75rem; color: var(--text-color-secondary); }
     .empty-state { text-align: center; padding: 2rem; color: var(--text-color-secondary); }
     @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .content-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) { .welcome-banner { flex-direction: column; text-align: center; } .welcome-actions { flex-direction: column; width: 100%; } .stats-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .welcome-banner { flex-direction: column; text-align: center; } .welcome-right { align-items: center; } .welcome-actions { flex-direction: column; width: 100%; } .stats-grid { grid-template-columns: 1fr; } }
   `]
 })
 export class DashboardComponent implements OnInit {
@@ -119,6 +132,7 @@ export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
   readonly summary = computed(() => this.dataService.healthSummary());
   readonly userName = computed(() => { const user = this.authService.user(); return user ? `${user.firstName} ${user.lastName}` : 'Patient'; });
+  readonly todayDate = new Date();
   get greeting(): string { const hour = new Date().getHours(); return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'; }
   ngOnInit(): void { this.dataService.loadDashboardData(); }
   navigate(route: string): void { this.router.navigate([route]); }

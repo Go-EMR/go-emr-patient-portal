@@ -204,6 +204,37 @@ export interface HealthSummary {
   outstandingBalance: number;
 }
 
+// Notification
+export interface Notification {
+  id: string;
+  type: 'lab_result' | 'appointment' | 'prescription' | 'message';
+  title: string;
+  body: string;
+  timestamp: Date;
+  isRead: boolean;
+  relatedId?: string;
+}
+
+// Emergency Contact
+export interface EmergencyContact {
+  id: string;
+  name: string;
+  relationship: string;
+  phone: string;
+  email?: string;
+}
+
+// Consent Item
+export interface ConsentItem {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  required: boolean;
+  granted: boolean;
+  grantedAt?: Date;
+}
+
 // User
 export interface PatientUser {
   id: string;

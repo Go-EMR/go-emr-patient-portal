@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -27,19 +27,32 @@ import { AuthService } from '../data-access';
         </ng-template>
 
         <div class="login-form">
+          @if (authService.isLockedOut()) {
+            <div class="lockout-message">
+              <i class="pi pi-lock"></i>
+              <div>
+                <strong>Account Locked</strong>
+                <p>Too many failed login attempts. Please try again in 15 minutes.</p>
+              </div>
+            </div>
+          }
+
           <div class="field">
             <label for="email">Email</label>
-            <input id="email" type="email" pInputText [(ngModel)]="email" placeholder="patient@demo.com" class="w-full" />
+            <input id="email" type="email" pInputText [(ngModel)]="email" placeholder="patient@demo.com" class="w-full" [disabled]="authService.isLockedOut()" />
           </div>
 
           <div class="field">
             <label for="password">Password</label>
-            <p-password id="password" [(ngModel)]="password" [feedback]="false" [toggleMask]="true" placeholder="demo123" styleClass="w-full" inputStyleClass="w-full" />
+            <p-password id="password" [(ngModel)]="password" [feedback]="false" [toggleMask]="true" placeholder="demo123" styleClass="w-full" inputStyleClass="w-full" [disabled]="authService.isLockedOut()" />
           </div>
 
-          <div class="field-checkbox">
-            <p-checkbox [(ngModel)]="rememberMe" [binary]="true" inputId="remember" />
-            <label for="remember">Remember me</label>
+          <div class="field-row">
+            <div class="field-checkbox">
+              <p-checkbox [(ngModel)]="rememberMe" [binary]="true" inputId="remember" />
+              <label for="remember">Remember me</label>
+            </div>
+            <a class="forgot-password-link" href="javascript:void(0)" (click)="showForgotPassword()">Forgot Password?</a>
           </div>
 
           @if (errorMessage()) {
@@ -49,7 +62,14 @@ import { AuthService } from '../data-access';
             </div>
           }
 
-          <button pButton label="Sign In" icon="pi pi-sign-in" class="w-full" [loading]="authService.isLoading()" (click)="login()"></button>
+          @if (forgotPasswordMessage()) {
+            <div class="info-message">
+              <i class="pi pi-info-circle"></i>
+              {{ forgotPasswordMessage() }}
+            </div>
+          }
+
+          <button pButton label="Sign In" icon="pi pi-sign-in" class="w-full" [loading]="authService.isLoading()" [disabled]="authService.isLockedOut()" (click)="login()"></button>
 
           <div class="demo-credentials">
             <p><strong>Demo:</strong> patient&#64;demo.com / demo123</p>
@@ -84,8 +104,16 @@ import { AuthService } from '../data-access';
     .login-form { padding: 0 1rem; }
     .field { margin-bottom: 1.25rem; }
     .field label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
-    .field-checkbox { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .field-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .field-checkbox { display: flex; align-items: center; gap: 0.5rem; }
+    .forgot-password-link { font-size: 0.875rem; color: var(--primary-600); text-decoration: none; cursor: pointer; }
+    .forgot-password-link:hover { text-decoration: underline; }
     .error-message { background: var(--red-50); color: var(--red-700); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .info-message { background: var(--blue-50); color: var(--blue-700); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .lockout-message { background: var(--orange-50); border: 1px solid var(--orange-200); color: var(--orange-800); padding: 1rem; border-radius: var(--border-radius); margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+    .lockout-message i { font-size: 1.5rem; margin-top: 0.125rem; }
+    .lockout-message strong { display: block; margin-bottom: 0.25rem; }
+    .lockout-message p { margin: 0; font-size: 0.875rem; }
     .demo-credentials { margin-top: 1.5rem; text-align: center; padding: 1rem; background: var(--surface-50); border-radius: var(--border-radius); }
     .demo-credentials p { margin: 0 0 0.5rem; font-size: 0.875rem; }
     .trust-badges { display: flex; justify-content: center; gap: 1.5rem; padding: 1rem; border-top: 1px solid var(--surface-border); }
@@ -95,14 +123,16 @@ import { AuthService } from '../data-access';
 })
 export class LoginComponent {
   readonly authService = inject(AuthService);
-  
+
   email = '';
   password = '';
   rememberMe = false;
   errorMessage = signal<string | null>(null);
+  forgotPasswordMessage = signal<string | null>(null);
 
   async login(): Promise<void> {
     this.errorMessage.set(null);
+    this.forgotPasswordMessage.set(null);
     const result = await this.authService.login(this.email, this.password);
     if (!result.success) {
       this.errorMessage.set(result.error || 'Login failed');
@@ -112,5 +142,10 @@ export class LoginComponent {
   useDemoCredentials(): void {
     this.email = 'patient@demo.com';
     this.password = 'demo123';
+  }
+
+  showForgotPassword(): void {
+    this.forgotPasswordMessage.set('Password reset instructions have been sent to your email address.');
+    setTimeout(() => this.forgotPasswordMessage.set(null), 5000);
   }
 }

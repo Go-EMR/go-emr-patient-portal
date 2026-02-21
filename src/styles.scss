@@ -64,3 +64,181 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--surface-400);
 }
+
+// =============================================================================
+// Beach Theme
+// =============================================================================
+.beach-theme {
+  // Beach color palette
+  --ocean-deep: #1E8B8B;
+  --ocean-mid: #2EC4B6;
+  --seafoam: #7EDDD0;
+  --aqua-tint: #CBF3F0;
+  --sand-light: #FFFDF5;
+  --sand-warm: #FFF8E7;
+  --amber: #FF9F1C;
+  --coral: #FF6B6B;
+  --shell-pink: #FFE8E0;
+
+  // Override PrimeNG / app variables
+  --font-family: 'Nunito', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --border-radius: 12px;
+  --card-shadow: 0 2px 12px rgba(30, 139, 139, 0.1);
+  --primary-color: #2EC4B6;
+  --primary-50: #E8FAF8;
+  --primary-100: #CBF3F0;
+  --primary-500: #2EC4B6;
+  --primary-600: #1E8B8B;
+  --primary-700: #17706E;
+
+  --surface-ground: var(--sand-light);
+  --surface-card: #FFFFFF;
+  --surface-0: #FFFFFF;
+  --surface-50: var(--sand-warm);
+  --surface-100: #FFF5D6;
+  --surface-border: rgba(46, 196, 182, 0.2);
+  --surface-hover: rgba(46, 196, 182, 0.08);
+
+  --text-color: #1a3a3a;
+  --text-color-secondary: #4a7c7c;
+
+  // Typography
+  font-family: var(--font-family);
+  letter-spacing: 0.01em;
+
+  // Cards
+  .p-card {
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(46, 196, 182, 0.12);
+    overflow: hidden;
+  }
+
+  // Buttons
+  .p-button {
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+
+    &:not(.p-button-text):not(.p-button-outlined):not(.p-button-link) {
+      background: linear-gradient(135deg, var(--ocean-mid) 0%, var(--ocean-deep) 100%);
+      border-color: var(--ocean-deep);
+    }
+
+    &.p-button-outlined {
+      border-color: var(--ocean-mid);
+      color: var(--ocean-deep);
+    }
+
+    &.p-button-success:not(.p-button-text):not(.p-button-outlined) {
+      background: linear-gradient(135deg, #2EC4B6 0%, #20A89B 100%);
+      border-color: #20A89B;
+    }
+  }
+
+  // Inputs
+  .p-inputtext {
+    border-radius: var(--border-radius);
+    border-color: rgba(46, 196, 182, 0.3);
+
+    &:focus {
+      border-color: var(--ocean-mid);
+      box-shadow: 0 0 0 3px rgba(46, 196, 182, 0.15);
+    }
+  }
+
+  // Tags
+  .p-tag {
+    border-radius: 20px;
+    font-weight: 600;
+  }
+
+  // Sidebar
+  .sidebar {
+    background: linear-gradient(180deg, #FFFFFF 0%, var(--sand-warm) 100%);
+    border-right: 1px solid rgba(46, 196, 182, 0.15);
+  }
+
+  .nav-item.active {
+    background: linear-gradient(135deg, rgba(46, 196, 182, 0.15) 0%, rgba(126, 221, 208, 0.1) 100%);
+    color: var(--ocean-deep);
+  }
+
+  .nav-badge {
+    background: linear-gradient(135deg, var(--amber) 0%, #FF8C00 100%);
+  }
+
+  // Login / MFA backgrounds
+  .login-container,
+  .mfa-container {
+    background: linear-gradient(135deg, var(--ocean-deep) 0%, #0F6B6B 50%, #17706E 100%);
+  }
+
+  // Welcome banner
+  .welcome-banner {
+    background: linear-gradient(135deg, var(--aqua-tint) 0%, var(--sand-warm) 50%, #FFFFFF 100%);
+    border: 1px solid rgba(46, 196, 182, 0.15);
+  }
+
+  // Summary cards balance gradient
+  .summary-card.balance {
+    background: linear-gradient(135deg, var(--ocean-mid) 0%, var(--ocean-deep) 100%);
+  }
+
+  // Scrollbar
+  &::-webkit-scrollbar-thumb,
+  ::-webkit-scrollbar-thumb {
+    background: var(--seafoam);
+  }
+
+  &::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-track {
+    background: var(--sand-warm);
+  }
+
+  // Tab view
+  .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+    color: var(--ocean-deep);
+    border-color: var(--ocean-mid);
+  }
+
+  // DataTable
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--sand-warm);
+    color: var(--ocean-deep);
+  }
+
+  // Dialog
+  .p-dialog {
+    border-radius: var(--border-radius);
+    box-shadow: 0 8px 32px rgba(30, 139, 139, 0.2);
+  }
+
+  // Theme toggle bar
+  .theme-toggle-bar {
+    background: linear-gradient(135deg, var(--aqua-tint) 0%, var(--sand-warm) 100%);
+    border-color: rgba(46, 196, 182, 0.2);
+  }
+
+  // Monospace font for codes
+  code, .mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  // Wave decoration for page headers
+  .page-header {
+    position: relative;
+  }
+
+  .page-header::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--ocean-mid), var(--seafoam), var(--amber), var(--coral));
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+}

@@ -6,6 +6,7 @@ import { AvatarModule } from 'primeng/avatar';
 import { RippleModule } from 'primeng/ripple';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../auth/data-access';
+import { ThemeService } from '../../shared/data-access';
 
 interface NavItem {
   label: string;
@@ -29,8 +30,8 @@ interface NavItem {
               <span>GoHealth</span>
             }
           </div>
-          <button pButton [icon]="sidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'" 
-                  class="p-button-text p-button-rounded collapse-btn" 
+          <button pButton [icon]="sidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'"
+                  class="p-button-text p-button-rounded collapse-btn"
                   (click)="toggleSidebar()"></button>
         </div>
 
@@ -59,7 +60,7 @@ interface NavItem {
               </div>
             }
           </div>
-          <button pButton icon="pi pi-sign-out" [label]="sidebarCollapsed() ? '' : 'Sign Out'" 
+          <button pButton icon="pi pi-sign-out" [label]="sidebarCollapsed() ? '' : 'Sign Out'"
                   class="p-button-text logout-btn" (click)="logout()"
                   [pTooltip]="sidebarCollapsed() ? 'Sign Out' : ''" tooltipPosition="right"></button>
         </div>
@@ -67,6 +68,18 @@ interface NavItem {
 
       <!-- Main Content -->
       <main class="main-content">
+        <!-- Theme Toggle Bar -->
+        <div class="theme-toggle-bar">
+          <span class="theme-label"><i class="pi pi-palette"></i> Theme</span>
+          <div class="theme-buttons">
+            <button class="theme-btn" [class.active]="themeService.activeTheme() === 'classic'" (click)="themeService.setTheme('classic')">
+              <i class="pi pi-desktop"></i> Classic
+            </button>
+            <button class="theme-btn" [class.active]="themeService.activeTheme() === 'beach'" (click)="themeService.setTheme('beach')">
+              <i class="pi pi-sun"></i> Beach
+            </button>
+          </div>
+        </div>
         <router-outlet></router-outlet>
       </main>
     </div>
@@ -223,8 +236,72 @@ interface NavItem {
 
     .main-content {
       flex: 1;
-      padding: 1.5rem;
+      padding: 0;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .theme-toggle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 0.5rem 1.5rem;
+      background: var(--surface-card);
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .theme-label {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .theme-buttons {
+      display: flex;
+      gap: 0.25rem;
+      background: var(--surface-100);
+      border-radius: 20px;
+      padding: 2px;
+    }
+
+    .theme-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.875rem;
+      border: none;
+      border-radius: 18px;
+      background: transparent;
+      color: var(--text-color-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .theme-btn.active {
+      background: var(--surface-card);
+      color: var(--primary-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    .theme-btn:hover:not(.active) {
+      color: var(--text-color);
+    }
+
+    .main-content > :last-child {
+      flex: 1;
+      padding: 1.5rem;
+    }
+
+    /* Make router-outlet sibling get padding */
+    .main-content ::ng-deep > *:not(.theme-toggle-bar):not(router-outlet) {
+      padding: 1.5rem;
     }
 
     @media (max-width: 1024px) {
@@ -250,7 +327,8 @@ interface NavItem {
 })
 export class ShellComponent {
   private authService = inject(AuthService);
-  
+  readonly themeService = inject(ThemeService);
+
   sidebarCollapsed = signal(false);
 
   navItems: NavItem[] = [
@@ -260,6 +338,7 @@ export class ShellComponent {
     { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3 },
     { label: 'Billing', icon: 'pi pi-credit-card', route: '/billing' },
     { label: 'Forms', icon: 'pi pi-file-edit', route: '/forms' },
+    { label: 'Notifications', icon: 'pi pi-bell', route: '/notifications', badge: 4 },
     { label: 'Settings', icon: 'pi pi-cog', route: '/settings' }
   ];
 

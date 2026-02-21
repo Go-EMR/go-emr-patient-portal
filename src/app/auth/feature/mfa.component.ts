@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -22,7 +22,7 @@ import { AuthService } from '../data-access';
         </ng-template>
 
         <div class="mfa-form">
-          <p-inputOtp [(ngModel)]="code" [length]="6" [integerOnly]="true" styleClass="otp-input" />
+          <p-inputOtp [(ngModel)]="code" [length]="6" [integerOnly]="true" styleClass="otp-input" (ngModelChange)="onCodeChange($event)" />
 
           @if (errorMessage()) {
             <div class="error-message">
@@ -42,8 +42,10 @@ import { AuthService } from '../data-access';
 
           <div class="resend-options">
             <span>Didn't receive the code?</span>
-            <button pButton label="Resend via SMS" class="p-button-text p-button-sm" (click)="resend('sms')"></button>
-            <button pButton label="Resend via Email" class="p-button-text p-button-sm" (click)="resend('email')"></button>
+            <button pButton [label]="resendSmsLabel()" class="p-button-text p-button-sm"
+                    [disabled]="resendCountdown() > 0" (click)="resend('sms')"></button>
+            <button pButton [label]="resendEmailLabel()" class="p-button-text p-button-sm"
+                    [disabled]="resendCountdown() > 0" (click)="resend('email')"></button>
           </div>
 
           <button pButton label="Back to Login" class="p-button-text w-full" icon="pi pi-arrow-left" (click)="authService.logout()"></button>
@@ -82,12 +84,41 @@ import { AuthService } from '../data-access';
     .w-full { width: 100%; }
   `]
 })
-export class MfaComponent {
+export class MfaComponent implements OnDestroy {
   readonly authService = inject(AuthService);
-  
+
   code = '';
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
+  resendCountdown = signal(0);
+
+  private countdownInterval: ReturnType<typeof setInterval> | null = null;
+  private autoVerifying = false;
+
+  resendSmsLabel = () => {
+    const cd = this.resendCountdown();
+    return cd > 0 ? `Resend via SMS (${cd}s)` : 'Resend via SMS';
+  };
+
+  resendEmailLabel = () => {
+    const cd = this.resendCountdown();
+    return cd > 0 ? `Resend via Email (${cd}s)` : 'Resend via Email';
+  };
+
+  ngOnDestroy(): void {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+  }
+
+  onCodeChange(value: string): void {
+    if (value && value.length === 6 && !this.autoVerifying) {
+      this.autoVerifying = true;
+      setTimeout(() => {
+        this.verify().finally(() => this.autoVerifying = false);
+      }, 300);
+    }
+  }
 
   async verify(): Promise<void> {
     this.errorMessage.set(null);
@@ -101,5 +132,25 @@ export class MfaComponent {
     await this.authService.resendMfaCode(method);
     this.successMessage.set(`Code sent via ${method.toUpperCase()}`);
     setTimeout(() => this.successMessage.set(null), 3000);
+    this.startCountdown();
+  }
+
+  private startCountdown(): void {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+    }
+    this.resendCountdown.set(42);
+    this.countdownInterval = setInterval(() => {
+      const current = this.resendCountdown();
+      if (current <= 1) {
+        this.resendCountdown.set(0);
+        if (this.countdownInterval) {
+          clearInterval(this.countdownInterval);
+          this.countdownInterval = null;
+        }
+      } else {
+        this.resendCountdown.set(current - 1);
+      }
+    }, 1000);
   }
 }
