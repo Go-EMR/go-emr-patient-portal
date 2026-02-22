@@ -233,6 +233,7 @@ export interface ConsentItem {
   required: boolean;
   granted: boolean;
   grantedAt?: Date;
+  expiresAt?: Date;
 }
 
 // User
@@ -250,5 +251,6 @@ export interface PatientUser {
   lastLogin?: Date;
   mfaEnabled: boolean;
   mfaVerified: boolean;
+  role?: 'patient' | 'caregiver' | 'proxy';
   preferences: { language: string; timezone: string; paperlessStatements: boolean };
 }

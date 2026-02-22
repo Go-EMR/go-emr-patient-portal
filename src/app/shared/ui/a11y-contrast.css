@@ -1,0 +1,175 @@
+/*
+ * a11y-contrast.css
+ * -----------------
+ * WCAG 2.1 AA contrast fixes (minimum 4.5:1 for normal text, 3:1 for large text).
+ *
+ * These rules override PrimeNG defaults and app-specific styles that fail
+ * automated contrast checks (e.g. axe-core, Lighthouse, Colour Contrast Analyser).
+ *
+ * Audit notes (2026-02-21):
+ *  - var(--text-color-secondary) on light themes resolves to ~#737373 → fails 4.5:1
+ *    on white (#fff) backgrounds.  Fix: use #595959 (6.0:1 on white).
+ *  - .nav-group-label & .theme-label used a computed colour ≈ #7a7a7a → fails.
+ *  - PrimeNG p-inputtext placeholder defaults to rgba(0,0,0,0.38) → fails.
+ *  - p-button.p-button-text in default theme resolves to #0d9488 on white → 3.7:1
+ *    (passes for large/bold text but not body text).  Darken to #0a756b.
+ *  - Version footer small text needs a stronger colour.
+ */
+
+/* ── 1. Secondary text: global fix ────────────────────────────────────────── */
+/*
+ * PrimeNG's --text-color-secondary on the default (classic) light theme
+ * resolves to approximately #737373, giving only ~4.48:1 against white.
+ * Bump to #595959 to reliably exceed 4.5:1 on all white/near-white surfaces.
+ */
+:root {
+  --a11y-text-secondary: #595959;
+}
+
+/* Apply wherever secondary colour is used in our codebase */
+.nav-group-label {
+  color: #595959 !important;
+}
+
+.theme-label {
+  color: #595959 !important;
+}
+
+.user-mrn {
+  color: #595959 !important;
+}
+
+.version-footer {
+  color: #595959 !important;
+}
+
+/* ── 2. PrimeNG input placeholder ─────────────────────────────────────────── */
+/*
+ * Default placeholder colour is rgba(0,0,0,0.38) ≈ #9a9a9a → fails 4.5:1.
+ * Use #767676 (4.54:1 on white).
+ */
+.p-inputtext::placeholder {
+  color: #767676 !important;
+  opacity: 1 !important; /* Firefox reduces opacity by default */
+}
+
+/* ── 3. Text-only (ghost) buttons ─────────────────────────────────────────── */
+/*
+ * p-button-text in the primary teal palette: #0d9488 on white = ~3.7:1.
+ * Darken to #0a6b63 (4.6:1) to satisfy AA for all text sizes.
+ */
+.p-button.p-button-text:not(.p-button-danger):not(.p-button-warning):not(.p-button-success):not(.p-button-info) {
+  color: #0a6b63 !important;
+}
+
+.p-button.p-button-text:not(.p-button-danger):not(.p-button-warning):not(.p-button-success):not(.p-button-info):hover {
+  color: #085550 !important;
+}
+
+/* ── 4. Navigation group header hover ─────────────────────────────────────── */
+/*
+ * On hover the nav-group-label colour changes to var(--text-color) which
+ * is fine, but ensure the base state meets contrast independently.
+ */
+.nav-group-header .nav-group-label,
+.nav-group-header .nav-group-toggle {
+  color: #595959;
+}
+
+/* ── 5. Card secondary/description text ───────────────────────────────────── */
+/*
+ * .p-card-subtitle can resolve to a very light grey on white backgrounds.
+ */
+.p-card .p-card-subtitle {
+  color: #595959 !important;
+}
+
+/* ── 6. PrimeNG dropdown label in unselected state ────────────────────────── */
+.p-dropdown .p-dropdown-label.p-placeholder {
+  color: #767676 !important;
+}
+
+/* ── 7. Security / notification item description text ─────────────────────── */
+/*
+ * .security-item p and .notification-item p inherit var(--text-color-secondary)
+ * which may fail on white card backgrounds.
+ */
+.security-item p,
+.notification-item p {
+  color: #595959 !important;
+}
+
+/* ── 8. Patient card detail label (gold/sand section) ─────────────────────── */
+/*
+ * .pc-detail-label uses rgba(70,38,0,0.6) on the gold/sand background
+ * (#E8C87A).  Computed colour ≈ #7B5526 on #E8C87A → ~2.9:1.
+ * Darken opacity to produce ≥ 4.5:1.
+ */
+.pc-detail-label {
+  color: rgba(70, 38, 0, 0.85) !important;
+}
+
+/* ── 9. Quick-link secondary icon ─────────────────────────────────────────── */
+.quick-link i:last-child {
+  color: #595959 !important;
+}
+
+/* ── 10. Tooltip text on light surfaces ───────────────────────────────────── */
+/*
+ * PrimeNG tooltip background is #333 so white text is fine.
+ * No fix needed; include for documentation purposes only.
+ */
+
+/* ── 11. Focus-visible ring (global) ──────────────────────────────────────── */
+/*
+ * Ensure every interactive element that uses :focus-visible gets a high-
+ * contrast ring regardless of theme.  This complements the
+ * KeyboardNavDirective's .keyboard-nav-active class.
+ */
+:focus-visible {
+  outline: 2px solid #005fcc !important; /* WCAG 3:1 on white and teal surfaces */
+  outline-offset: 2px !important;
+}
+
+/* Override PrimeNG's default focus ring which is often too subtle */
+.p-button:focus-visible,
+.p-inputtext:focus-visible,
+.p-dropdown:focus-visible,
+.nav-item:focus-visible,
+a:focus-visible {
+  outline: 2px solid #005fcc !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(0, 95, 204, 0.18) !important;
+}
+
+/* ── 12. beach-theme overrides ────────────────────────────────────────────── */
+/*
+ * Beach theme --text-color-secondary is #4a7c7c which gives ~4.6:1 against
+ * white — just passes.  Keep as-is but override for sand-coloured surfaces
+ * where the lighter palette reduces contrast.
+ */
+.beach-theme .nav-group-label,
+.beach-theme .theme-label {
+  color: #2a5858 !important; /* ~6:1 on sand-warm (#FFF8E7) */
+}
+
+.beach-theme .security-item p,
+.beach-theme .notification-item p {
+  color: #2a5858 !important;
+}
+
+/* ── 13. dark-theme: ensure muted text is readable ────────────────────────── */
+/*
+ * --dark-text-muted (#71717a) on --dark-bg-card (#1a1d27) gives ~4.52:1 — just
+ * passes, but is fragile.  Lighten to #8e8e96 for comfort (5.1:1).
+ */
+.dark-theme .user-mrn,
+.dark-theme .version-footer,
+.dark-theme .nav-group-label,
+.dark-theme .theme-label {
+  color: #8e8e96 !important;
+}
+
+.dark-theme .p-inputtext::placeholder {
+  color: #8e8e96 !important;
+}

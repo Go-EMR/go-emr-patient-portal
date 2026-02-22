@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -15,45 +15,88 @@ import { AuthService } from '../data-access';
       <p-card styleClass="mfa-card">
         <ng-template pTemplate="header">
           <div class="mfa-header">
-            <i class="pi pi-shield"></i>
-            <h1>Two-Factor Authentication</h1>
-            <p>Enter the 6-digit code sent to your device</p>
+            <!-- Feature 6.5: aria-hidden on decorative icon -->
+            <i class="pi pi-shield" aria-hidden="true"></i>
+            <h1 id="mfa-heading">Two-Factor Authentication</h1>
+            <p id="mfa-subheading">Enter the 6-digit code sent to your device</p>
           </div>
         </ng-template>
 
-        <div class="mfa-form">
-          <p-inputOtp [(ngModel)]="code" [length]="6" [integerOnly]="true" styleClass="otp-input" (ngModelChange)="onCodeChange($event)" />
+        <div class="mfa-form" role="main" aria-labelledby="mfa-heading">
+          <!-- Feature 6.5: aria-label, aria-required, aria-describedby on OTP input -->
+          <div class="otp-wrapper">
+            <label for="mfa-code" class="otp-label">Verification code</label>
+            <!-- aria-label provided on the wrapper; individual cells are labelled by PrimeNG -->
+            <p-inputOtp
+              [(ngModel)]="code"
+              [length]="6"
+              [integerOnly]="true"
+              styleClass="otp-input"
+              (ngModelChange)="onCodeChange($event)"
+              inputId="mfa-code"
+              [attr.aria-describedby]="errorMessage() ? 'mfa-error' : 'mfa-subheading'"
+              aria-required="true"
+              aria-label="6-digit verification code" />
+          </div>
 
+          <!-- Feature 6.5: role="alert" on error, role="status" on success -->
           @if (errorMessage()) {
-            <div class="error-message">
-              <i class="pi pi-exclamation-circle"></i>
+            <div id="mfa-error" class="error-message" role="alert" aria-live="assertive">
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
               {{ errorMessage() }}
             </div>
           }
 
           @if (successMessage()) {
-            <div class="success-message">
-              <i class="pi pi-check-circle"></i>
+            <div class="success-message" role="status" aria-live="polite">
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
               {{ successMessage() }}
             </div>
           }
 
-          <button pButton label="Verify" icon="pi pi-check" class="w-full" [loading]="authService.isLoading()" (click)="verify()"></button>
+          <button
+            pButton
+            label="Verify"
+            icon="pi pi-check"
+            class="w-full"
+            [loading]="authService.isLoading()"
+            (click)="verify()"
+            aria-label="Verify the 6-digit code"
+            [attr.aria-describedby]="errorMessage() ? 'mfa-error' : 'mfa-subheading'"></button>
 
-          <div class="resend-options">
-            <span>Didn't receive the code?</span>
-            <button pButton [label]="resendSmsLabel()" class="p-button-text p-button-sm"
-                    [disabled]="resendCountdown() > 0" (click)="resend('sms')"></button>
-            <button pButton [label]="resendEmailLabel()" class="p-button-text p-button-sm"
-                    [disabled]="resendCountdown() > 0" (click)="resend('email')"></button>
+          <!-- Feature 6.5: aria-live status for resend area -->
+          <div class="resend-options" aria-label="Resend verification code options">
+            <span id="resend-label" aria-live="polite">Didn't receive the code?</span>
+            <button
+              pButton
+              [label]="resendSmsLabel()"
+              class="p-button-text p-button-sm"
+              [disabled]="resendCountdown() > 0"
+              (click)="resend('sms')"
+              aria-label="Resend code via SMS"
+              [attr.aria-describedby]="'resend-label'"></button>
+            <button
+              pButton
+              [label]="resendEmailLabel()"
+              class="p-button-text p-button-sm"
+              [disabled]="resendCountdown() > 0"
+              (click)="resend('email')"
+              aria-label="Resend code via email"
+              [attr.aria-describedby]="'resend-label'"></button>
           </div>
 
-          <button pButton label="Back to Login" class="p-button-text w-full" icon="pi pi-arrow-left" (click)="authService.logout()"></button>
+          <button
+            pButton
+            label="Back to Login"
+            class="p-button-text w-full"
+            icon="pi pi-arrow-left"
+            (click)="authService.logout()"
+            aria-label="Return to the login page"></button>
         </div>
 
         <ng-template pTemplate="footer">
-          <div class="trust-message">
-            <i class="pi pi-lock"></i>
+          <div class="trust-message" aria-label="Security information">
+            <i class="pi pi-lock" aria-hidden="true"></i>
             Your session is protected with end-to-end encryption
           </div>
         </ng-template>
@@ -75,7 +118,18 @@ import { AuthService } from '../data-access';
     .mfa-header h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
     .mfa-header p { margin: 0; color: var(--text-color-secondary); }
     .mfa-form { padding: 0 1rem; text-align: center; }
-    :host ::ng-deep .otp-input { justify-content: center; margin-bottom: 1.5rem; }
+
+    /* Feature 6.5: visually associate label with OTP input */
+    .otp-wrapper { margin-bottom: 1.5rem; }
+    .otp-label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+
+    :host ::ng-deep .otp-input { justify-content: center; }
     .error-message { background: var(--red-50); color: var(--red-700); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
     .success-message { background: var(--green-50); color: var(--green-700); padding: 0.75rem; border-radius: var(--border-radius); margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
     .resend-options { margin: 1.5rem 0; }
@@ -84,7 +138,7 @@ import { AuthService } from '../data-access';
     .w-full { width: 100%; }
   `]
 })
-export class MfaComponent implements OnDestroy {
+export class MfaComponent implements OnDestroy, AfterViewInit {
   readonly authService = inject(AuthService);
 
   code = '';
@@ -104,6 +158,15 @@ export class MfaComponent implements OnDestroy {
     const cd = this.resendCountdown();
     return cd > 0 ? `Resend via Email (${cd}s)` : 'Resend via Email';
   };
+
+  ngAfterViewInit(): void {
+    // Feature 6.5: Auto-focus the OTP first input on load
+    // PrimeNG InputOtp renders internal inputs; focus the first one
+    setTimeout(() => {
+      const firstOtpInput = document.querySelector<HTMLInputElement>('.otp-input input');
+      firstOtpInput?.focus();
+    }, 150);
+  }
 
   ngOnDestroy(): void {
     if (this.countdownInterval) {

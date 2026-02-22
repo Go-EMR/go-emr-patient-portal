@@ -2,6 +2,9 @@
 @import "primeicons/primeicons.css";
 @import "primeflex/primeflex.css";
 
+// Accessibility: WCAG 2.1 AA contrast fixes
+@import "app/shared/ui/a11y-contrast.css";
+
 // CSS Variables
 :root {
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

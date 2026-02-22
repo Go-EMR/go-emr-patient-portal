@@ -5,12 +5,13 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TooltipModule } from 'primeng/tooltip';
+import { DropdownModule } from 'primeng/dropdown';
 import { TelehealthService } from '../data-access';
 
 @Component({
   selector: 'app-telehealth',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TooltipModule],
+  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TooltipModule, DropdownModule],
   template: `
     <div class="telehealth-page">
       <!-- ==================== DEVICE CHECK ==================== -->
@@ -105,7 +106,7 @@ import { TelehealthService } from '../data-access';
                       (click)="goBack()"></button>
               <button pButton label="Join Waiting Room" icon="pi pi-sign-in" class="join-btn"
                       [disabled]="telehealth.cameraPermission() !== 'granted' || telehealth.micPermission() !== 'granted'"
-                      (click)="telehealth.joinWaitingRoom()"></button>
+                      (click)="joinWaitingRoomWithCountdown()"></button>
             </div>
           </div>
         </div>
@@ -138,14 +139,55 @@ import { TelehealthService } from '../data-access';
               </div>
             </div>
 
-            <div class="waiting-tips">
-              <h3><i class="pi pi-info-circle"></i> While you wait</h3>
-              <ul>
-                <li>Ensure you're in a quiet, well-lit space</li>
-                <li>Have your medication list handy</li>
-                <li>Write down any questions for your provider</li>
-                <li>Close unnecessary browser tabs for best performance</li>
-              </ul>
+            <!-- Feature 9.3: Estimated Wait Countdown -->
+            <div class="estimated-wait-section">
+              <div class="wait-countdown">
+                <i class="pi pi-hourglass"></i>
+                <div class="wait-countdown-text">
+                  <span class="wait-label">Estimated wait time</span>
+                  @if (waitCountdownSeconds() > 0) {
+                    <strong class="wait-time">{{ formatCountdown(waitCountdownSeconds()) }}</strong>
+                  } @else {
+                    <strong class="wait-time ready">Your provider is almost ready!</strong>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature 9.3: Connection Test -->
+            <div class="connection-test-section">
+              <div class="connection-test-row">
+                <div class="connection-label">
+                  <i class="pi pi-wifi"></i>
+                  <span>Connection Quality</span>
+                </div>
+                @if (connectionTestStatus() === 'idle') {
+                  <button pButton label="Test Connection" icon="pi pi-refresh"
+                          class="p-button-outlined p-button-sm"
+                          (click)="runConnectionTest()"></button>
+                } @else if (connectionTestStatus() === 'testing') {
+                  <span class="conn-testing"><i class="pi pi-spin pi-spinner"></i> Checking...</span>
+                } @else if (connectionTestStatus() === 'done') {
+                  <span class="conn-result"><i class="pi pi-check-circle"></i> Connection: Excellent (42ms latency)</span>
+                }
+              </div>
+            </div>
+
+            <!-- Feature 9.3: Preparation Checklist -->
+            <div class="prep-checklist">
+              <h3><i class="pi pi-list-check"></i> Preparation Checklist</h3>
+              <div class="checklist-items">
+                @for (item of prepChecklist(); track item.id) {
+                  <div class="checklist-item" [class.checked]="item.done" (click)="toggleChecklist(item.id)">
+                    <div class="checklist-checkbox">
+                      @if (item.done) {
+                        <i class="pi pi-check"></i>
+                      }
+                    </div>
+                    <span>{{ item.label }}</span>
+                  </div>
+                }
+              </div>
             </div>
 
             <div class="waiting-controls">
@@ -169,18 +211,60 @@ import { TelehealthService } from '../data-access';
       @if (telehealth.state() === 'in-call') {
         <div class="in-call" [class.chat-open]="telehealth.chatOpen()">
           <div class="video-area">
-            <!-- Provider video (main) -->
+            <!-- Provider video (main) / Feature 9.4: Screen Share View -->
             <div class="provider-video">
-              <div class="video-simulation provider-feed">
-                <div class="simulated-person">
-                  <div class="person-head"></div>
-                  <div class="person-body"></div>
+              @if (telehealth.screenSharing()) {
+                <!-- Feature 9.4: Mock shared screen area -->
+                <div class="screen-share-view">
+                  <div class="browser-mockup">
+                    <div class="browser-chrome">
+                      <div class="browser-dots">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                      </div>
+                      <div class="browser-url-bar">
+                        <i class="pi pi-lock" style="font-size:0.65rem;color:var(--green-400);"></i>
+                        <span>patient-portal.gohealth.com/health-records</span>
+                      </div>
+                      <!-- Feature 9.4: Share specific tab dropdown -->
+                      <div class="share-tab-selector">
+                        <p-dropdown
+                          [options]="shareTabOptions"
+                          [(ngModel)]="selectedShareTab"
+                          [style]="{maxWidth:'220px'}"
+                          styleClass="share-tab-dropdown">
+                        </p-dropdown>
+                      </div>
+                    </div>
+                    <div class="browser-content">
+                      <div class="mock-page-header"></div>
+                      <div class="mock-page-row"></div>
+                      <div class="mock-page-row short"></div>
+                      <div class="mock-page-grid">
+                        <div class="mock-card"></div>
+                        <div class="mock-card"></div>
+                        <div class="mock-card"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="screen-share-label">
+                    <i class="pi pi-desktop"></i>
+                    <span>Sharing: {{ selectedShareTab }}</span>
+                  </div>
                 </div>
-                <div class="provider-name-overlay">
-                  <span>{{ telehealth.session()?.providerName }}</span>
-                  <span class="specialty-tag">{{ telehealth.session()?.providerSpecialty }}</span>
+              } @else {
+                <div class="video-simulation provider-feed">
+                  <div class="simulated-person">
+                    <div class="person-head"></div>
+                    <div class="person-body"></div>
+                  </div>
+                  <div class="provider-name-overlay">
+                    <span>{{ telehealth.session()?.providerName }}</span>
+                    <span class="specialty-tag">{{ telehealth.session()?.providerSpecialty }}</span>
+                  </div>
                 </div>
-              </div>
+              }
 
               <!-- Self view (picture-in-picture) -->
               <div class="self-video" [class.camera-off]="!telehealth.cameraOn()">
@@ -201,7 +285,7 @@ import { TelehealthService } from '../data-access';
                 <span>{{ telehealth.callDurationFormatted() }}</span>
               </div>
 
-              <!-- Screen sharing indicator -->
+              <!-- Screen sharing banner -->
               @if (telehealth.screenSharing()) {
                 <div class="screen-share-banner">
                   <i class="pi pi-desktop"></i>
@@ -210,6 +294,13 @@ import { TelehealthService } from '../data-access';
                 </div>
               }
             </div>
+
+            <!-- Feature 15.4: Live captions overlay -->
+            @if (captionsEnabled()) {
+              <div class="captions-overlay" aria-live="polite" aria-atomic="true" role="status">
+                <span class="caption-text">{{ currentCaption() }}</span>
+              </div>
+            }
 
             <!-- Call controls -->
             <div class="call-controls">
@@ -235,6 +326,13 @@ import { TelehealthService } from '../data-access';
                 @if (telehealth.chatMessages().length > 0) {
                   <span class="chat-badge">{{ telehealth.chatMessages().length }}</span>
                 }
+              </button>
+              <!-- Feature 15.4: Captions (CC) button -->
+              <button class="control-btn" [class.captions-active]="captionsEnabled()"
+                      (click)="toggleCaptions()" pTooltip="Toggle live captions"
+                      [attr.aria-pressed]="captionsEnabled()" aria-label="Toggle live captions">
+                <i class="pi pi-align-center"></i>
+                <span>CC</span>
               </button>
               <button class="control-btn end-call" (click)="telehealth.endCall()" pTooltip="End call">
                 <i class="pi pi-phone"></i>
@@ -306,6 +404,98 @@ import { TelehealthService } from '../data-access';
                   <span class="summary-value">{{ today | date:'MMMM d, y' }}</span>
                 </div>
               </div>
+            </div>
+
+            <!-- Feature 9.5: Consultation Notes -->
+            <div class="consult-section">
+              <div class="consult-section-header" (click)="toggleConsultNotes()">
+                <div class="consult-title">
+                  <i class="pi pi-file-edit"></i>
+                  <h3>Consultation Notes</h3>
+                </div>
+                <i [class]="consultNotesOpen() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+              </div>
+              @if (consultNotesOpen()) {
+                <div class="consult-content">
+                  <div class="consult-note-item">
+                    <strong>Diagnosis</strong>
+                    <p>Mild hypertension (Stage 1). Blood pressure readings have been consistently elevated over the past 3 months. No secondary causes identified at this time.</p>
+                  </div>
+                  <div class="consult-note-item">
+                    <strong>Recommendations</strong>
+                    <p>1. Initiate lifestyle modifications: reduce sodium intake to &lt;2300mg/day, increase aerobic exercise to 30 min/day, 5 days/week.<br>
+                       2. Monitor BP at home twice daily and record readings.<br>
+                       3. Consider pharmacological intervention if lifestyle changes are insufficient after 3 months.</p>
+                  </div>
+                  <div class="consult-note-item">
+                    <strong>Follow-up</strong>
+                    <p>Return visit in 6 weeks for BP re-evaluation. Repeat lipid panel and metabolic panel at that time.</p>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Feature 9.5: E-Prescription -->
+            <div class="consult-section">
+              <div class="consult-section-header" (click)="togglePrescriptions()">
+                <div class="consult-title">
+                  <i class="pi pi-pills"></i>
+                  <h3>E-Prescriptions</h3>
+                </div>
+                <i [class]="prescriptionsOpen() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+              </div>
+              @if (prescriptionsOpen()) {
+                <div class="consult-content">
+                  @for (rx of mockPrescriptions; track rx.id) {
+                    <div class="prescription-item">
+                      <div class="rx-info">
+                        <div class="rx-name"><i class="pi pi-pills"></i> {{ rx.name }}</div>
+                        <div class="rx-details">{{ rx.dosage }} &bull; {{ rx.frequency }} &bull; {{ rx.quantity }}</div>
+                        <div class="rx-instructions">{{ rx.instructions }}</div>
+                      </div>
+                      <button pButton icon="pi pi-download" label="Download" class="p-button-outlined p-button-sm"
+                              (click)="downloadPrescription(rx)"></button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Feature 9.5: Follow-up Plan -->
+            <div class="consult-section">
+              <div class="consult-section-header" (click)="toggleFollowUp()">
+                <div class="consult-title">
+                  <i class="pi pi-list-check"></i>
+                  <h3>Follow-up Plan</h3>
+                </div>
+                <i [class]="followUpOpen() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+              </div>
+              @if (followUpOpen()) {
+                <div class="consult-content">
+                  <div class="followup-list">
+                    @for (step of followUpSteps(); track step.id) {
+                      <div class="followup-item" [class.done]="step.done" (click)="toggleFollowUpStep(step.id)">
+                        <div class="followup-checkbox">
+                          @if (step.done) {
+                            <i class="pi pi-check"></i>
+                          }
+                        </div>
+                        <div class="followup-content">
+                          <span class="followup-label">{{ step.label }}</span>
+                          <span class="followup-due">{{ step.due }}</span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Feature 9.5: Download Summary button -->
+            <div class="download-summary-row">
+              <button pButton label="Download Full Summary" icon="pi pi-download"
+                      class="p-button-outlined download-summary-btn"
+                      (click)="downloadSummary()"></button>
             </div>
 
             <div class="post-actions-grid">
@@ -613,9 +803,10 @@ import { TelehealthService } from '../data-access';
     .waiting-room {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       padding: 2rem;
+      overflow-y: auto;
     }
 
     .waiting-card {
@@ -623,7 +814,7 @@ import { TelehealthService } from '../data-access';
       background: var(--surface-card);
       border-radius: 16px;
       padding: 3rem;
-      max-width: 520px;
+      max-width: 580px;
       width: 100%;
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
     }
@@ -700,7 +891,7 @@ import { TelehealthService } from '../data-access';
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .detail-row {
@@ -715,16 +906,104 @@ import { TelehealthService } from '../data-access';
       color: var(--primary-color);
     }
 
-    .waiting-tips {
+    /* Feature 9.3: Estimated wait countdown */
+    .estimated-wait-section {
+      background: var(--primary-50);
+      border: 1px solid var(--primary-100);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .wait-countdown {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .wait-countdown > i {
+      font-size: 1.75rem;
+      color: var(--primary-500);
+      flex-shrink: 0;
+    }
+
+    .wait-countdown-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.15rem;
+    }
+
+    .wait-label {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+    }
+
+    .wait-time {
+      font-size: 1.25rem;
+      color: var(--primary-700);
+    }
+
+    .wait-time.ready {
+      font-size: 1rem;
+      color: var(--green-600);
+    }
+
+    /* Feature 9.3: Connection test */
+    .connection-test-section {
+      background: var(--surface-50);
+      border-radius: 12px;
+      padding: 0.875rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .connection-test-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .connection-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .connection-label i { color: var(--primary-500); }
+
+    .conn-testing {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-color-secondary);
+    }
+
+    .conn-result {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--green-600);
+      font-weight: 600;
+    }
+
+    .conn-result i { color: var(--green-600); }
+
+    /* Feature 9.3: Preparation checklist */
+    .prep-checklist {
       text-align: left;
       background: var(--surface-50);
       border-radius: 12px;
       padding: 1.25rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
-    .waiting-tips h3 {
-      margin: 0 0 0.75rem;
+    .prep-checklist h3 {
+      margin: 0 0 1rem;
       font-size: 0.9rem;
       display: flex;
       align-items: center;
@@ -732,16 +1011,52 @@ import { TelehealthService } from '../data-access';
       color: var(--primary-700);
     }
 
-    .waiting-tips ul {
-      margin: 0;
-      padding-left: 1.25rem;
+    .checklist-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
     }
 
-    .waiting-tips li {
-      font-size: 0.85rem;
-      color: var(--text-color-secondary);
-      margin-bottom: 0.375rem;
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      padding: 0.4rem 0.25rem;
+      border-radius: 6px;
+      transition: background 0.15s;
+      user-select: none;
     }
+
+    .checklist-item:hover { background: var(--surface-100); }
+
+    .checklist-item.checked span {
+      color: var(--text-color-secondary);
+      text-decoration: line-through;
+    }
+
+    .checklist-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--surface-border);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      background: var(--surface-card);
+    }
+
+    .checklist-item.checked .checklist-checkbox {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .checklist-checkbox i { font-size: 0.7rem; }
+
+    .checklist-item span { font-size: 0.875rem; }
 
     .waiting-controls {
       display: flex;
@@ -833,6 +1148,120 @@ import { TelehealthService } from '../data-access';
       background: rgba(0, 0, 0, 0.35) !important;
       padding: 0.375rem 0.75rem !important;
       border-radius: 8px !important;
+    }
+
+    /* Feature 9.4: Screen share view */
+    .screen-share-view {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a1a3e 0%, #0a0a20 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .browser-mockup {
+      width: 85%;
+      max-width: 720px;
+      background: #1e1e2e;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .browser-chrome {
+      background: #2a2a3e;
+      padding: 0.6rem 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dot.red { background: #ff5f57; }
+    .dot.yellow { background: #febc2e; }
+    .dot.green { background: #28c840; }
+
+    .browser-url-bar {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 6px;
+      padding: 0.3rem 0.75rem;
+      font-size: 0.72rem;
+      color: rgba(255, 255, 255, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: monospace;
+    }
+
+    .share-tab-selector {
+      flex-shrink: 0;
+    }
+
+    .browser-content {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .mock-page-header {
+      height: 14px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      width: 45%;
+    }
+
+    .mock-page-row {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 4px;
+    }
+
+    .mock-page-row.short { width: 70%; }
+
+    .mock-page-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+      margin-top: 0.25rem;
+    }
+
+    .mock-card {
+      height: 52px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .screen-share-label {
+      position: absolute;
+      bottom: 90px;
+      left: 16px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(34, 197, 94, 0.85);
+      color: white;
+      padding: 0.375rem 0.875rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
     }
 
     .self-video {
@@ -976,6 +1405,37 @@ import { TelehealthService } from '../data-access';
     .control-btn.chat-active {
       background: rgba(59, 130, 246, 0.3);
       color: var(--blue-300);
+    }
+
+    /* Feature 15.4: Captions active state */
+    .control-btn.captions-active {
+      background: rgba(168, 85, 247, 0.3);
+      color: var(--purple-300);
+    }
+
+    /* Feature 15.4: Captions overlay */
+    .captions-overlay {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      max-width: 720px;
+      padding: 0.75rem 1.5rem;
+      background: rgba(0, 0, 0, 0.78);
+      border-radius: 10px;
+      text-align: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .caption-text {
+      color: white;
+      font-size: 1.05rem;
+      font-weight: 500;
+      line-height: 1.5;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+      letter-spacing: 0.01em;
     }
 
     .control-btn.end-call {
@@ -1132,9 +1592,10 @@ import { TelehealthService } from '../data-access';
     .post-call {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       padding: 2rem;
+      overflow-y: auto;
     }
 
     .post-card {
@@ -1142,7 +1603,7 @@ import { TelehealthService } from '../data-access';
       background: var(--surface-card);
       border-radius: 16px;
       padding: 3rem;
-      max-width: 600px;
+      max-width: 680px;
       width: 100%;
       box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
     }
@@ -1170,7 +1631,7 @@ import { TelehealthService } from '../data-access';
       background: var(--surface-50);
       border-radius: 12px;
       padding: 1.5rem;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       text-align: left;
     }
 
@@ -1199,6 +1660,185 @@ import { TelehealthService } from '../data-access';
     .summary-value {
       font-weight: 600;
       font-size: 0.95rem;
+    }
+
+    /* Feature 9.5: Consultation sections */
+    .consult-section {
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    .consult-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      background: var(--surface-50);
+      transition: background 0.15s;
+      user-select: none;
+    }
+
+    .consult-section-header:hover {
+      background: var(--surface-100);
+    }
+
+    .consult-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .consult-title i {
+      color: var(--primary-500);
+      font-size: 1rem;
+    }
+
+    .consult-title h3 {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .consult-section-header > i:last-child {
+      color: var(--text-color-secondary);
+      font-size: 0.85rem;
+    }
+
+    .consult-content {
+      padding: 1.25rem;
+      border-top: 1px solid var(--surface-border);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .consult-note-item strong {
+      display: block;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary-600);
+      margin-bottom: 0.4rem;
+    }
+
+    .consult-note-item p {
+      margin: 0;
+      font-size: 0.875rem;
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    /* Feature 9.5: Prescriptions */
+    .prescription-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.875rem;
+      background: var(--surface-50);
+      border-radius: 8px;
+      border: 1px solid var(--surface-border);
+    }
+
+    .rx-info { flex: 1; }
+
+    .rx-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .rx-name i { color: var(--primary-500); font-size: 0.9rem; }
+
+    .rx-details {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .rx-instructions {
+      font-size: 0.8rem;
+      color: var(--text-color);
+      font-style: italic;
+    }
+
+    /* Feature 9.5: Follow-up plan */
+    .followup-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .followup-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      cursor: pointer;
+      padding: 0.5rem 0.25rem;
+      border-radius: 6px;
+      transition: background 0.15s;
+      user-select: none;
+    }
+
+    .followup-item:hover { background: var(--surface-100); }
+
+    .followup-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--surface-border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      transition: all 0.15s;
+      background: var(--surface-card);
+    }
+
+    .followup-item.done .followup-checkbox {
+      background: var(--green-500);
+      border-color: var(--green-500);
+      color: white;
+    }
+
+    .followup-checkbox i { font-size: 0.65rem; }
+
+    .followup-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .followup-label {
+      font-size: 0.875rem;
+    }
+
+    .followup-item.done .followup-label {
+      text-decoration: line-through;
+      color: var(--text-color-secondary);
+    }
+
+    .followup-due {
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+    }
+
+    /* Feature 9.5: Download summary */
+    .download-summary-row {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 1.5rem;
+    }
+
+    .download-summary-btn {
+      gap: 0.5rem;
     }
 
     .post-actions-grid {
@@ -1297,6 +1937,74 @@ export class TelehealthComponent implements OnInit, OnDestroy {
   chatInput = '';
   today = new Date();
 
+  // ─── Feature 9.3: Waiting room state ────────────────────────────────────────
+  waitCountdownSeconds = signal(300); // ~5 minutes
+  connectionTestStatus = signal<'idle' | 'testing' | 'done'>('idle');
+  private countdownTimer: ReturnType<typeof setInterval> | null = null;
+
+  prepChecklist = signal([
+    { id: 'quiet', label: 'In a quiet, well-lit space', done: false },
+    { id: 'meds',  label: 'Medication list is nearby', done: false },
+    { id: 'questions', label: 'Questions written down for provider', done: false },
+    { id: 'tabs', label: 'Unnecessary browser tabs closed', done: false },
+    { id: 'charged', label: 'Device is charged or plugged in', done: false }
+  ]);
+
+  // ─── Feature 15.4: Live captions ────────────────────────────────────────────
+  captionsEnabled = signal(false);
+  currentCaption = signal('');
+  private captionTimer: ReturnType<typeof setInterval> | null = null;
+  private captionIndex = 0;
+
+  private readonly captionPhrases = [
+    'How have you been feeling since our last visit?',
+    "I've been taking the medication as prescribed.",
+    'Let me check your latest lab results.',
+    'Your blood pressure looks much better today.',
+    "I'd recommend we schedule a follow-up in 6 weeks.",
+  ];
+
+  // ─── Feature 9.4: Screen share tab options ──────────────────────────────────
+  readonly shareTabOptions = [
+    { label: 'Health Records', value: 'Health Records' },
+    { label: 'Lab Results', value: 'Lab Results' },
+    { label: 'Medication List', value: 'Medication List' },
+    { label: 'Entire Screen', value: 'Entire Screen' }
+  ];
+  selectedShareTab = 'Health Records';
+
+  // ─── Feature 9.5: Post-call section states ──────────────────────────────────
+  consultNotesOpen = signal(true);
+  prescriptionsOpen = signal(false);
+  followUpOpen = signal(false);
+
+  readonly mockPrescriptions = [
+    {
+      id: 'RX-001',
+      name: 'Lisinopril 10mg',
+      dosage: '10mg',
+      frequency: 'Once daily',
+      quantity: '30 tablets',
+      instructions: 'Take in the morning with or without food. Monitor BP weekly.'
+    },
+    {
+      id: 'RX-002',
+      name: 'Hydrochlorothiazide 25mg',
+      dosage: '25mg',
+      frequency: 'Once daily',
+      quantity: '30 tablets',
+      instructions: 'Take with food. Increase fluid intake. Avoid excessive sun exposure.'
+    }
+  ];
+
+  followUpSteps = signal([
+    { id: 'bp', label: 'Monitor blood pressure twice daily and log readings', done: false, due: 'Starting today' },
+    { id: 'sodium', label: 'Reduce sodium intake below 2300mg per day', done: false, due: 'Ongoing' },
+    { id: 'exercise', label: 'Begin 30-minute aerobic exercise routine, 5 days/week', done: false, due: 'This week' },
+    { id: 'labs', label: 'Schedule repeat lipid panel and metabolic panel', done: false, due: 'Before follow-up visit' },
+    { id: 'followup', label: 'Return visit for BP re-evaluation', done: false, due: 'In 6 weeks' }
+  ]);
+
   ngOnInit(): void {
     const appointmentId = this.route.snapshot.paramMap.get('appointmentId') || 'APT-002';
     this.telehealth.initSession(appointmentId);
@@ -1305,6 +2013,63 @@ export class TelehealthComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.telehealth.cleanup();
+    this.stopCountdown();
+    this.stopCaptions();
+  }
+
+  // ─── Feature 9.3: Countdown timer management ────────────────────────────────
+  private startCountdown(): void {
+    this.stopCountdown();
+    this.waitCountdownSeconds.set(300);
+    this.countdownTimer = setInterval(() => {
+      const current = this.waitCountdownSeconds();
+      if (current > 0) {
+        this.waitCountdownSeconds.update(s => s - 1);
+      } else {
+        this.stopCountdown();
+      }
+    }, 1000);
+  }
+
+  private stopCountdown(): void {
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+      this.countdownTimer = null;
+    }
+  }
+
+  formatCountdown(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    if (m > 0) {
+      return `~${m} minute${m !== 1 ? 's' : ''}`;
+    }
+    return `${s} second${s !== 1 ? 's' : ''}`;
+  }
+
+  // ─── Feature 9.3: Connection test ───────────────────────────────────────────
+  runConnectionTest(): void {
+    this.connectionTestStatus.set('testing');
+    setTimeout(() => {
+      this.connectionTestStatus.set('done');
+    }, 1800);
+  }
+
+  // ─── Feature 9.3: Checklist toggle ──────────────────────────────────────────
+  toggleChecklist(id: string): void {
+    this.prepChecklist.update(items =>
+      items.map(item => item.id === id ? { ...item, done: !item.done } : item)
+    );
+  }
+
+  // Need to hook into state changes to start countdown — use getter approach
+  // We'll start countdown when component enters waiting room via the service
+  // In real app this would use an effect(); here we patch joinWaitingRoom lifecycle
+  // via overriding the service call in template action (inline):
+
+  joinWaitingRoomWithCountdown(): void {
+    this.telehealth.joinWaitingRoom();
+    this.startCountdown();
   }
 
   sendChat(): void {
@@ -1320,5 +2085,84 @@ export class TelehealthComponent implements OnInit, OnDestroy {
 
   navigate(route: string): void {
     this.router.navigate([route]);
+  }
+
+  // ─── Feature 9.5: Post-call section toggles ─────────────────────────────────
+  toggleConsultNotes(): void {
+    this.consultNotesOpen.update(v => !v);
+  }
+
+  togglePrescriptions(): void {
+    this.prescriptionsOpen.update(v => !v);
+  }
+
+  toggleFollowUp(): void {
+    this.followUpOpen.update(v => !v);
+  }
+
+  toggleFollowUpStep(id: string): void {
+    this.followUpSteps.update(steps =>
+      steps.map(s => s.id === id ? { ...s, done: !s.done } : s)
+    );
+  }
+
+  downloadPrescription(rx: { id: string; name: string }): void {
+    console.log('Downloading prescription:', rx.name);
+    // Mock download — in production would call a backend endpoint
+    const blob = new Blob(
+      [`PRESCRIPTION\n\nPatient: Demo Patient\nDate: ${new Date().toLocaleDateString()}\n\nMedication: ${rx.name}\n\nThis is a mock prescription document.`],
+      { type: 'text/plain' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `prescription-${rx.id}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ─── Feature 15.4: Captions management ──────────────────────────────────────
+
+  toggleCaptions(): void {
+    if (this.captionsEnabled()) {
+      this.captionsEnabled.set(false);
+      this.stopCaptions();
+      this.currentCaption.set('');
+    } else {
+      this.captionsEnabled.set(true);
+      this.startCaptions();
+    }
+  }
+
+  private startCaptions(): void {
+    this.stopCaptions();
+    // Show first phrase immediately
+    this.currentCaption.set(this.captionPhrases[this.captionIndex % this.captionPhrases.length]);
+    this.captionTimer = setInterval(() => {
+      this.captionIndex = (this.captionIndex + 1) % this.captionPhrases.length;
+      this.currentCaption.set(this.captionPhrases[this.captionIndex]);
+    }, 3500);
+  }
+
+  private stopCaptions(): void {
+    if (this.captionTimer) {
+      clearInterval(this.captionTimer);
+      this.captionTimer = null;
+    }
+  }
+
+  downloadSummary(): void {
+    console.log('Downloading consultation summary');
+    const session = this.telehealth.session();
+    const blob = new Blob(
+      [`CONSULTATION SUMMARY\n\nDate: ${new Date().toLocaleDateString()}\nProvider: ${session?.providerName}\nSpecialty: ${session?.providerSpecialty}\nDuration: ${this.telehealth.callDurationFormatted()}\n\nDIAGNOSIS\nMild hypertension (Stage 1).\n\nRECOMMENDATIONS\n1. Reduce sodium intake\n2. Increase aerobic exercise\n3. Monitor BP daily\n\nFOLLOW-UP\nReturn in 6 weeks for BP re-evaluation.\n\n---\nGoHealth Patient Portal | HIPAA Secured`],
+      { type: 'text/plain' }
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `consultation-summary-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }

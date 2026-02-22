@@ -14,6 +14,9 @@ export class AuthService {
   private _failedAttempts = signal(0);
   private _lockoutUntil = signal<number | null>(null);
 
+  // Role management (Feature 6.3)
+  private _role = signal<'patient' | 'caregiver' | 'proxy'>('patient');
+
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly mfaRequired = this._mfaRequired.asReadonly();
@@ -21,6 +24,7 @@ export class AuthService {
   readonly isLoading = this._isLoading.asReadonly();
   readonly failedAttempts = this._failedAttempts.asReadonly();
   readonly lockoutUntil = this._lockoutUntil.asReadonly();
+  readonly role = this._role.asReadonly();
 
   readonly isLockedOut = computed(() => {
     const until = this._lockoutUntil();
@@ -52,6 +56,9 @@ export class AuthService {
           this._isAuthenticated.set(true);
           this._mfaRequired.set(session.user.mfaEnabled);
           this._mfaVerified.set(session.mfaVerified);
+          if (session.role) {
+            this._role.set(session.role);
+          }
         } else {
           this.clearSession();
         }
@@ -74,6 +81,19 @@ export class AuthService {
     }
   }
 
+  /** Builds the standard demo PatientUser object */
+  private buildDemoUser(): PatientUser {
+    return {
+      id: 'USR-001', patientId: 'PAT-001', mrn: 'MRN-12345',
+      firstName: 'John', lastName: 'Smith',
+      email: 'patient@demo.com', phone: '(555) 123-4567',
+      dateOfBirth: new Date('1980-05-15'),
+      portalActivatedAt: new Date(), mfaEnabled: true, mfaVerified: false,
+      role: 'patient',
+      preferences: { language: 'en', timezone: 'America/New_York', paperlessStatements: true }
+    };
+  }
+
   async login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     if (this.isLockedOut()) {
       const mins = Math.ceil(this.lockoutRemainingMs() / 60000);
@@ -85,14 +105,7 @@ export class AuthService {
       await new Promise(r => setTimeout(r, 800));
 
       if (email === 'patient@demo.com' && password === 'demo123') {
-        const user: PatientUser = {
-          id: 'USR-001', patientId: 'PAT-001', mrn: 'MRN-12345',
-          firstName: 'John', lastName: 'Smith',
-          email: 'patient@demo.com', phone: '(555) 123-4567',
-          dateOfBirth: new Date('1980-05-15'),
-          portalActivatedAt: new Date(), mfaEnabled: true, mfaVerified: false,
-          preferences: { language: 'en', timezone: 'America/New_York', paperlessStatements: true }
-        };
+        const user = this.buildDemoUser();
 
         this._user.set(user);
         this._isAuthenticated.set(true);
@@ -130,6 +143,100 @@ export class AuthService {
     }
   }
 
+  /** Feature 6.1: Phone OTP login - sends an OTP to the given phone number (mocked). */
+  async sendPhoneOtp(phone: string): Promise<{ success: boolean; error?: string }> {
+    this._isLoading.set(true);
+    try {
+      await new Promise(r => setTimeout(r, 700));
+      // Mock: any 10-digit phone number is accepted
+      const digits = phone.replace(/\D/g, '');
+      if (digits.length !== 10) {
+        return { success: false, error: 'Please enter a valid 10-digit phone number.' };
+      }
+      return { success: true };
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /** Feature 6.1: Verify OTP and complete phone-based login (mocked). */
+  async loginWithPhone(phone: string, otp: string): Promise<{ success: boolean; error?: string }> {
+    this._isLoading.set(true);
+    try {
+      await new Promise(r => setTimeout(r, 600));
+      // Mock: any 6-digit OTP passes
+      if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+        return { success: false, error: 'Please enter a valid 6-digit code.' };
+      }
+
+      const user = this.buildDemoUser();
+      this._user.set(user);
+      this._isAuthenticated.set(true);
+      this._mfaRequired.set(false);
+      this._mfaVerified.set(true);
+      this.saveSession(true);
+      this.router.navigate(['/dashboard']);
+      return { success: true };
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /**
+   * Regional Health ID login — supports Australian IHI via myGov and
+   * Romanian CNP / eID.  Both flows skip MFA as identity is verified
+   * externally by the respective national identity system.
+   */
+  async loginWithHealthId(type: 'ihi' | 'cnp'): Promise<{ success: boolean; error?: string }> {
+    this._isLoading.set(true);
+    try {
+      // Simulate redirect round-trip delay (1.5 s)
+      await new Promise(r => setTimeout(r, 1500));
+      const user = this.buildDemoUser();
+      this._user.set(user);
+      this._isAuthenticated.set(true);
+      this._mfaRequired.set(false);
+      this._mfaVerified.set(true);
+      this.saveSession(true);
+      this.router.navigate(['/dashboard']);
+      return { success: true };
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /** Feature 6.2: Social login (Google / Microsoft) - skips MFA entirely. */
+  async socialLogin(provider: string): Promise<{ success: boolean; error?: string }> {
+    this._isLoading.set(true);
+    try {
+      await new Promise(r => setTimeout(r, 900));
+      const user = this.buildDemoUser();
+      this._user.set(user);
+      this._isAuthenticated.set(true);
+      this._mfaRequired.set(false);
+      this._mfaVerified.set(true);
+      this.saveSession(true);
+      this.router.navigate(['/dashboard']);
+      return { success: true };
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /** Feature 6.3: Update the active session role. */
+  setRole(role: 'patient' | 'caregiver' | 'proxy'): void {
+    this._role.set(role);
+    // Persist role in session
+    const stored = localStorage.getItem('portal_session');
+    if (stored) {
+      try {
+        const session = JSON.parse(stored);
+        session.role = role;
+        localStorage.setItem('portal_session', JSON.stringify(session));
+      } catch { /* ignore */ }
+    }
+  }
+
   async verifyMfa(code: string): Promise<{ success: boolean; error?: string }> {
     this._isLoading.set(true);
     try {
@@ -162,6 +269,7 @@ export class AuthService {
     const session = {
       user: this._user(),
       mfaVerified,
+      role: this._role(),
       expiresAt: Date.now() + 30 * 60 * 1000
     };
     localStorage.setItem('portal_session', JSON.stringify(session));
@@ -173,5 +281,6 @@ export class AuthService {
     this._isAuthenticated.set(false);
     this._mfaRequired.set(false);
     this._mfaVerified.set(false);
+    this._role.set('patient');
   }
 }

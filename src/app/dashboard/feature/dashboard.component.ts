@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { SkeletonModule } from 'primeng/skeleton';
-import { DashboardDataService } from '../data-access';
+import { DashboardDataService, HealthAlert } from '../data-access';
 import { StatCardComponent, AppointmentCardComponent, VitalsGridComponent } from '../ui';
 import { AuthService } from '../../auth/data-access';
 
@@ -40,6 +40,51 @@ import { AuthService } from '../../auth/data-access';
           <app-stat-card [value]="summary().recentLabResults" label="New Lab Results" icon="pi pi-file" variant="labs" [badge]="summary().recentLabResults > 0 ? 'New' : undefined" badgeVariant="alert" (clicked)="navigate('/records')"></app-stat-card>
           <app-stat-card [value]="'$' + summary().outstandingBalance.toFixed(2)" label="Outstanding Balance" icon="pi pi-credit-card" variant="balance" (clicked)="navigate('/billing')"></app-stat-card>
         </div>
+      }
+
+      @if (activeAlerts().length > 0) {
+        <section class="alerts-panel">
+          <div class="alerts-header">
+            <div class="alerts-title-group">
+              <i class="pi pi-bell alerts-bell-icon"></i>
+              <h2 class="alerts-title">Health Alerts</h2>
+              <span class="alerts-badge">{{ activeAlerts().length }}</span>
+            </div>
+          </div>
+          <div class="alerts-list">
+            @for (alert of activeAlerts(); track alert.id) {
+              <div class="alert-card" [class]="'alert-card--' + alert.severity">
+                <div class="alert-icon-col">
+                  <i class="pi"
+                     [class.pi-exclamation-triangle]="alert.severity === 'critical'"
+                     [class.pi-exclamation-circle]="alert.severity === 'warning'"
+                     [class.pi-info-circle]="alert.severity === 'info'"
+                     [class]="'alert-icon alert-icon--' + alert.severity"></i>
+                </div>
+                <div class="alert-body">
+                  <span class="alert-title">{{ alert.title }}</span>
+                  <span class="alert-message">{{ alert.message }}</span>
+                </div>
+                <div class="alert-actions">
+                  @if (alert.actionRoute) {
+                    <button pButton
+                            [label]="alert.actionLabel || 'View'"
+                            class="p-button-sm p-button-text"
+                            [class]="'alert-action-btn alert-action-btn--' + alert.severity"
+                            (click)="navigateAlert(alert.actionRoute)">
+                    </button>
+                  }
+                  <button pButton
+                          icon="pi pi-times"
+                          class="p-button-sm p-button-text p-button-rounded alert-dismiss-btn"
+                          aria-label="Dismiss alert"
+                          (click)="dismissAlert(alert.id)">
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
       }
 
       <div class="content-grid">
@@ -114,6 +159,35 @@ import { AuthService } from '../../auth/data-access';
     .message-preview { display: block; font-size: 0.875rem; color: var(--text-color-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .message-time { font-size: 0.75rem; color: var(--text-color-secondary); }
     .empty-state { text-align: center; padding: 2rem; color: var(--text-color-secondary); }
+    .alerts-panel { background: var(--surface-0); border: 1px solid var(--surface-border); border-radius: var(--border-radius); margin-bottom: 1.5rem; overflow: hidden; }
+    .alerts-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--surface-border); background: var(--surface-50); }
+    .alerts-title-group { display: flex; align-items: center; gap: 0.75rem; }
+    .alerts-bell-icon { font-size: 1.125rem; color: var(--text-color-secondary); }
+    .alerts-title { margin: 0; font-size: 1.125rem; font-weight: 600; }
+    .alerts-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 1.5rem; height: 1.5rem; padding: 0 0.375rem; background: #ef4444; color: #fff; border-radius: 999px; font-size: 0.75rem; font-weight: 700; line-height: 1; }
+    .alerts-list { display: flex; flex-direction: column; gap: 0; }
+    .alert-card { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--surface-border); border-left: 4px solid transparent; transition: background 0.15s; }
+    .alert-card:last-child { border-bottom: none; }
+    .alert-card--critical { border-left-color: #ef4444; }
+    .alert-card--warning { border-left-color: #f97316; }
+    .alert-card--info { border-left-color: #3b82f6; }
+    .alert-card--critical:hover { background: #fef2f2; }
+    .alert-card--warning:hover { background: #fff7ed; }
+    .alert-card--info:hover { background: #eff6ff; }
+    .alert-icon-col { flex-shrink: 0; padding-top: 0.125rem; }
+    .alert-icon { font-size: 1.25rem; }
+    .alert-icon--critical { color: #ef4444; }
+    .alert-icon--warning { color: #f97316; }
+    .alert-icon--info { color: #3b82f6; }
+    .alert-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+    .alert-title { font-weight: 600; font-size: 0.9375rem; }
+    .alert-message { font-size: 0.875rem; color: var(--text-color-secondary); }
+    .alert-actions { display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0; }
+    .alert-action-btn--critical { color: #ef4444 !important; }
+    .alert-action-btn--warning { color: #f97316 !important; }
+    .alert-action-btn--info { color: #3b82f6 !important; }
+    .alert-dismiss-btn { color: var(--text-color-secondary) !important; }
+    @media (max-width: 768px) { .alert-card { flex-wrap: wrap; } .alert-actions { width: 100%; justify-content: flex-end; padding-top: 0.5rem; } }
     @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .content-grid { grid-template-columns: 1fr; } }
     @media (max-width: 768px) { .welcome-banner { flex-direction: column; text-align: center; } .welcome-right { align-items: center; } .welcome-actions { flex-direction: column; width: 100%; } .stats-grid { grid-template-columns: 1fr; } }
   `]
@@ -124,6 +198,7 @@ export class DashboardComponent implements OnInit {
   private readonly router = inject(Router);
   readonly summary = computed(() => this.dataService.healthSummary());
   readonly userName = computed(() => { const user = this.authService.user(); return user ? `${user.firstName} ${user.lastName}` : 'Patient'; });
+  readonly activeAlerts = computed(() => this.dataService.activeAlerts());
   readonly todayDate = new Date();
   get greeting(): string { const hour = new Date().getHours(); return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'; }
   ngOnInit(): void { this.dataService.loadDashboardData(); }
@@ -133,4 +208,6 @@ export class DashboardComponent implements OnInit {
   reschedule(): void { this.navigate('/appointments'); }
   requestRefill(medId: string): void { this.dataService.requestRefill(medId); }
   openMessage(threadId: string): void { this.router.navigate(['/messages', threadId]); }
+  dismissAlert(id: string): void { this.dataService.dismissAlert(id); }
+  navigateAlert(route: string): void { this.router.navigate([route]); }
 }

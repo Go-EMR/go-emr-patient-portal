@@ -2,6 +2,18 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { Appointment, Medication, LabResult, VitalRecord, VitalDisplay, MessageThread, PatientForm, HealthSummary } from '../../shared/data-access';
 import { EmrSyncService } from '../../shared/data-access';
 
+export interface HealthAlert {
+  id: string;
+  type: 'flagged_result' | 'missed_medication' | 'overdue_screening' | 'general';
+  severity: 'info' | 'warning' | 'critical';
+  title: string;
+  message: string;
+  actionLabel?: string;
+  actionRoute?: string;
+  dismissed: boolean;
+  createdAt: Date;
+}
+
 @Injectable({ providedIn: 'root' })
 export class DashboardDataService {
   private readonly emrSync = inject(EmrSyncService);
@@ -12,6 +24,7 @@ export class DashboardDataService {
   private readonly _vitals = signal<VitalRecord[]>([]);
   private readonly _messages = signal<MessageThread[]>([]);
   private readonly _forms = signal<PatientForm[]>([]);
+  private readonly _healthAlerts = signal<HealthAlert[]>([]);
   private readonly _isLoading = signal(false);
 
   readonly appointments = this._appointments.asReadonly();
@@ -20,7 +33,10 @@ export class DashboardDataService {
   readonly vitals = this._vitals.asReadonly();
   readonly messages = this._messages.asReadonly();
   readonly forms = this._forms.asReadonly();
+  readonly healthAlerts = this._healthAlerts.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
+
+  readonly activeAlerts = computed(() => this._healthAlerts().filter(a => !a.dismissed));
 
   readonly nextAppointment = computed(() => this._appointments().find(a => a.status === 'scheduled' || a.status === 'confirmed') ?? null);
   readonly activeMedications = computed(() => this._medications().filter(m => m.status === 'active'));
@@ -87,8 +103,17 @@ export class DashboardDataService {
     this._forms.set([
       { id: 'FORM-001', title: 'Pre-Visit Questionnaire', description: 'Complete before your visit', type: 'intake', status: 'pending', dueDate: new Date(Date.now() + 10 * 86400000), appointmentId: 'APT-001', progress: 0 }
     ]);
-    
+    this._healthAlerts.set([
+      { id: 'ALERT-001', type: 'flagged_result', severity: 'critical', title: 'Abnormal Lab Result', message: 'Lipid Panel: LDL Cholesterol elevated at 165 mg/dL (normal < 130)', actionLabel: 'View Lab Results', actionRoute: '/records', dismissed: false, createdAt: new Date(Date.now() - 5 * 86400000) },
+      { id: 'ALERT-002', type: 'overdue_screening', severity: 'warning', title: 'Overdue Preventive Screening', message: 'Overdue: Colorectal cancer screening recommended at age 45', actionLabel: 'Learn More', actionRoute: '/records', dismissed: false, createdAt: new Date(Date.now() - 2 * 86400000) },
+      { id: 'ALERT-003', type: 'missed_medication', severity: 'info', title: 'Medication Refill Reminder', message: 'Medication reminder: Metformin refill due in 5 days', actionLabel: 'Request Refill', actionRoute: '/prescriptions', dismissed: false, createdAt: new Date() }
+    ]);
+
     this._isLoading.set(false);
+  }
+
+  dismissAlert(id: string): void {
+    this._healthAlerts.update(alerts => alerts.map(a => a.id === id ? { ...a, dismissed: true } : a));
   }
 
   async requestRefill(medicationId: string): Promise<boolean> {

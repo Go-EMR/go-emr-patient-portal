@@ -8,12 +8,15 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TagModule } from 'primeng/tag';
 import { AuthService } from '../../auth/data-access';
+import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLevelService, ReadingLevel, InterpreterBookingService } from '../../shared/data-access';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputSwitchModule, DropdownModule, DividerModule],
+  imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputSwitchModule, DropdownModule, DividerModule, SelectButtonModule, TagModule],
   template: `
     <div class="settings-page">
       <header class="page-header"><h1>Settings</h1><p>Manage your account and preferences</p></header>
@@ -152,17 +155,210 @@ import { AuthService } from '../../auth/data-access';
           <div class="notification-item"><div><h4>Appointment Reminders</h4><p>Get reminded before appointments</p></div><p-inputSwitch [(ngModel)]="appointmentReminders"></p-inputSwitch></div>
         </p-card>
         <p-card header="Preferences" styleClass="settings-card">
-          <div class="field"><label>Language</label><p-dropdown [options]="languages" [(ngModel)]="selectedLanguage" [style]="{width:'100%'}"></p-dropdown></div>
+          <div class="field">
+            <label for="lang-select">Language</label>
+            <p-dropdown
+              inputId="lang-select"
+              [options]="languages"
+              [(ngModel)]="selectedLanguage"
+              [style]="{width:'100%'}"
+              (onChange)="onLanguageChange($event.value)">
+            </p-dropdown>
+          </div>
           <div class="field"><label>Time Zone</label><p-dropdown [options]="timezones" [(ngModel)]="selectedTimezone" [style]="{width:'100%'}"></p-dropdown></div>
           <p-divider></p-divider>
           <div class="notification-item"><div><h4>Paperless Statements</h4><p>Receive statements electronically</p></div><p-inputSwitch [(ngModel)]="paperless"></p-inputSwitch></div>
+        </p-card>
+
+        <!-- Feature 9.8: Notification Preferences / SMS & Email Reminders Configurator -->
+        <p-card header="Notification Preferences" styleClass="settings-card">
+          <div class="notification-item">
+            <div>
+              <h4>Email Reminders</h4>
+              <p>Receive appointment reminders by email</p>
+            </div>
+            <p-inputSwitch [(ngModel)]="emailReminders"></p-inputSwitch>
+          </div>
+          <p-divider></p-divider>
+          <div class="notification-item">
+            <div>
+              <h4>SMS Reminders</h4>
+              <p>Receive appointment reminders via text message</p>
+            </div>
+            <p-inputSwitch [(ngModel)]="smsReminders"></p-inputSwitch>
+          </div>
+          <p-divider></p-divider>
+          <div class="field">
+            <label for="reminder-timing">Reminder Timing</label>
+            <p-dropdown
+              inputId="reminder-timing"
+              [options]="reminderTimingOptions"
+              [(ngModel)]="selectedReminderTiming"
+              [style]="{width:'100%'}">
+            </p-dropdown>
+          </div>
+          <p-divider></p-divider>
+          <div class="reminder-save-row">
+            <button pButton
+                    label="Save Preferences"
+                    icon="pi pi-check"
+                    (click)="saveNotificationPreferences()">
+            </button>
+            @if (reminderSaved()) {
+              <span class="reminder-saved-msg">
+                <i class="pi pi-check-circle"></i> Preferences saved!
+              </span>
+            }
+          </div>
+        </p-card>
+
+        <!-- Feature 7.5 + 7.6: Accessibility & Health Literacy -->
+        <p-card header="Accessibility &amp; Health Literacy" styleClass="settings-card">
+          <div class="notification-item">
+            <div>
+              <h4>Simple View</h4>
+              <p>Show plain-language explanations for medical terms</p>
+            </div>
+            <p-inputSwitch
+              [(ngModel)]="simpleViewEnabled"
+              (ngModelChange)="onSimpleViewChange($event)"
+              inputId="simple-view-toggle"
+              aria-label="Toggle simple view for medical terms">
+            </p-inputSwitch>
+          </div>
+          <p-divider></p-divider>
+          <div class="field">
+            <label for="reading-level-select">Reading Level</label>
+            <p class="field-desc">Adjust the complexity of health information displayed</p>
+            <p-dropdown
+              inputId="reading-level-select"
+              [options]="readingLevelOptions"
+              [(ngModel)]="selectedReadingLevel"
+              [style]="{width:'100%'}"
+              (onChange)="onReadingLevelChange($event.value)"
+              aria-label="Select reading level for health content">
+            </p-dropdown>
+          </div>
+        </p-card>
+
+        <!-- Feature 15.3: Interpreter Services -->
+        <p-card styleClass="settings-card interpreter-card">
+          <ng-template pTemplate="header">
+            <div class="interpreter-card-header">
+              <div class="interpreter-header-icon">
+                <i class="pi pi-language"></i>
+              </div>
+              <div>
+                <h3 class="interpreter-card-title">Interpreter Services</h3>
+                <p class="interpreter-card-subtitle">Free language interpretation for your appointments</p>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- Info banner -->
+          <div class="interpreter-info-banner">
+            <i class="pi pi-info-circle"></i>
+            <span>Need an interpreter for your next appointment? We can arrange phone, video, or in-person interpretation at no cost to you.</span>
+          </div>
+
+          <div class="interpreter-form">
+            <!-- Language selection -->
+            <div class="field">
+              <label for="interp-lang">Preferred Language</label>
+              <p-dropdown
+                inputId="interp-lang"
+                [options]="interpreterLanguages"
+                [(ngModel)]="interpLanguage"
+                placeholder="Select your language"
+                [style]="{width:'100%'}"
+                optionLabel="label"
+                optionValue="value">
+              </p-dropdown>
+            </div>
+
+            <!-- Appointment selection -->
+            <div class="field">
+              <label for="interp-appt">Appointment</label>
+              <p-dropdown
+                inputId="interp-appt"
+                [options]="upcomingAppointments"
+                [(ngModel)]="interpAppointment"
+                placeholder="Select upcoming appointment"
+                [style]="{width:'100%'}"
+                optionLabel="label"
+                optionValue="value">
+              </p-dropdown>
+            </div>
+
+            <!-- Interpreter type toggle -->
+            <div class="field">
+              <label>Interpreter Type</label>
+              <p-selectButton
+                [options]="interpreterTypeOptions"
+                [(ngModel)]="interpType"
+                optionLabel="label"
+                optionValue="value">
+              </p-selectButton>
+            </div>
+
+            <!-- Action row -->
+            <div class="interpreter-action-row">
+              <button
+                pButton
+                label="Request Interpreter"
+                icon="pi pi-calendar-plus"
+                class="p-button-primary"
+                [disabled]="!canRequestInterpreter()"
+                (click)="requestInterpreter()">
+              </button>
+              <a class="tis-link" (click)="navigateTo('/tis')" tabindex="0" role="link">
+                <i class="pi pi-external-link"></i>
+                TIS National (Australia)
+              </a>
+            </div>
+
+            <!-- Success message -->
+            @if (interpreterRequested()) {
+              <div class="interpreter-success" role="alert" aria-live="polite">
+                <i class="pi pi-check-circle"></i>
+                <div>
+                  <strong>Interpreter requested successfully!</strong>
+                  <p>A {{ interpTypeLabel() }} interpreter for <strong>{{ interpLanguage }}</strong> has been requested for your appointment. You will receive a confirmation shortly.</p>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Active bookings summary -->
+          @if (interpreterBookingService.activeBookings().length > 0) {
+            <p-divider></p-divider>
+            <div class="active-interpreter-bookings">
+              <h5 class="active-bookings-title">
+                <i class="pi pi-clock"></i>
+                Active Interpreter Bookings
+              </h5>
+              @for (booking of interpreterBookingService.activeBookings(); track booking.id) {
+                <div class="active-booking-row">
+                  <div class="active-booking-info">
+                    <span class="active-booking-lang">{{ booking.language }}</span>
+                    <span class="active-booking-detail">{{ booking.appointmentLabel }}</span>
+                    <span class="active-booking-date">{{ booking.date }} at {{ booking.time }}</span>
+                  </div>
+                  <p-tag
+                    [value]="booking.status === 'confirmed' ? 'Confirmed' : 'Pending'"
+                    [severity]="booking.status === 'confirmed' ? 'success' : 'warning'">
+                  </p-tag>
+                </div>
+              }
+            </div>
+          }
         </p-card>
       </div>
 
       <!-- Version Footer -->
       <div class="version-footer">
         <span>GoHealth Patient Portal v1.0.0</span>
-        <span>Built with Angular 19 & PrimeNG</span>
+        <span>Built with Angular 19 &amp; PrimeNG</span>
       </div>
     </div>
   `,
@@ -221,7 +417,37 @@ import { AuthService } from '../../auth/data-access';
     .security-item h4, .notification-item h4 { margin: 0; }
     .security-item p, .notification-item p { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--text-color-secondary); }
 
+    .field-desc { margin: 0 0 0.5rem; font-size: 0.8rem; color: var(--text-color-secondary); }
+    .reminder-save-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .reminder-saved-msg { display: flex; align-items: center; gap: 0.4rem; font-size: 0.875rem; color: var(--green-600); font-weight: 500; }
+    .reminder-saved-msg i { font-size: 1rem; }
     .version-footer { text-align: center; padding: 2rem 0 1rem; color: var(--text-color-secondary); font-size: 0.75rem; display: flex; justify-content: center; gap: 2rem; margin-top: 2rem; border-top: 1px solid var(--surface-border); }
+
+    /* ── Interpreter Services Card ── */
+    .interpreter-card-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--surface-border); }
+    .interpreter-header-icon { width: 42px; height: 42px; background: linear-gradient(135deg, var(--purple-100), var(--purple-50)); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .interpreter-header-icon i { font-size: 1.25rem; color: var(--purple-600); }
+    .interpreter-card-title { margin: 0; font-size: 1rem; font-weight: 600; }
+    .interpreter-card-subtitle { margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--text-color-secondary); }
+    .interpreter-info-banner { display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.75rem 1rem; background: var(--blue-50); border: 1px solid var(--blue-100); border-radius: var(--border-radius); margin-bottom: 1.25rem; font-size: 0.875rem; color: var(--blue-800); line-height: 1.5; }
+    .interpreter-info-banner i { color: var(--blue-500); flex-shrink: 0; margin-top: 0.1rem; font-size: 1rem; }
+    .interpreter-form { display: flex; flex-direction: column; gap: 1rem; }
+    .interpreter-action-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding-top: 0.25rem; }
+    .tis-link { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; color: var(--purple-600); cursor: pointer; text-decoration: none; }
+    .tis-link:hover { text-decoration: underline; }
+    .tis-link i { font-size: 0.75rem; }
+    .interpreter-success { display: flex; align-items: flex-start; gap: 0.75rem; padding: 1rem; background: var(--green-50); border: 1px solid var(--green-100); border-radius: var(--border-radius); color: var(--green-800); margin-top: 0.5rem; }
+    .interpreter-success i { font-size: 1.25rem; color: var(--green-600); flex-shrink: 0; margin-top: 0.1rem; }
+    .interpreter-success strong { display: block; margin-bottom: 0.2rem; }
+    .interpreter-success p { margin: 0; font-size: 0.875rem; line-height: 1.5; }
+    .active-interpreter-bookings { display: flex; flex-direction: column; gap: 0.75rem; }
+    .active-bookings-title { margin: 0 0 0.5rem; font-size: 0.875rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; color: var(--text-color-secondary); }
+    .active-bookings-title i { font-size: 0.875rem; }
+    .active-booking-row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.625rem 0.875rem; background: var(--surface-ground); border: 1px solid var(--surface-border); border-radius: var(--border-radius); }
+    .active-booking-info { display: flex; flex-direction: column; gap: 0.1rem; }
+    .active-booking-lang { font-weight: 600; font-size: 0.875rem; }
+    .active-booking-detail { font-size: 0.8rem; color: var(--text-color-secondary); }
+    .active-booking-date { font-size: 0.78rem; color: var(--text-color-secondary); }
 
     @media (max-width: 1024px) { .settings-grid { grid-template-columns: 1fr; } .quick-links { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px) { .quick-links { grid-template-columns: 1fr; } .dc-details { flex-direction: column; gap: 0.5rem; } }
@@ -230,6 +456,10 @@ import { AuthService } from '../../auth/data-access';
 export class SettingsComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private translationService = inject(TranslationService);
+  readonly literacyService = inject(HealthLiteracyService);
+  readonly readingLevelService = inject(ReadingLevelService);
+  readonly interpreterBookingService = inject(InterpreterBookingService);
 
   firstName = this.authService.user()?.firstName || '';
   lastName = this.authService.user()?.lastName || '';
@@ -246,15 +476,126 @@ export class SettingsComponent {
   smsNotifications = true;
   appointmentReminders = true;
   paperless = true;
-  selectedLanguage = 'en';
+  selectedLanguage: SupportedLanguage = this.translationService.currentLanguage();
   selectedTimezone = 'America/New_York';
-  languages = [{ label: 'English', value: 'en' }, { label: 'Spanish', value: 'es' }];
-  timezones = [{ label: 'Eastern Time', value: 'America/New_York' }, { label: 'Central Time', value: 'America/Chicago' }, { label: 'Pacific Time', value: 'America/Los_Angeles' }];
+
+  languages = [
+    { label: 'English', value: 'en' as SupportedLanguage },
+    { label: 'Español (Spanish)', value: 'es' as SupportedLanguage },
+    { label: 'हिंदी (Hindi)', value: 'hi' as SupportedLanguage },
+    { label: 'தமிழ் (Tamil)', value: 'ta' as SupportedLanguage },
+    { label: 'বাংলা (Bengali)', value: 'bn' as SupportedLanguage },
+    { label: 'తెలుగు (Telugu)', value: 'te' as SupportedLanguage },
+    { label: 'मराठी (Marathi)', value: 'mr' as SupportedLanguage },
+    { label: 'ಕನ್ನಡ (Kannada)', value: 'kn' as SupportedLanguage },
+    { label: 'Tiếng Việt (Vietnamese)', value: 'vi' as SupportedLanguage },
+    { label: '中文 (Mandarin)', value: 'zh' as SupportedLanguage },
+    { label: '廣東話 (Cantonese)', value: 'yue' as SupportedLanguage },
+    { label: 'Tagalog (Filipino)', value: 'tl' as SupportedLanguage },
+    { label: 'Kreyòl Ayisyen (French Creole)', value: 'ht' as SupportedLanguage },
+    { label: 'العربية (Arabic)', value: 'ar' as SupportedLanguage },
+    { label: 'Italiano (Italian)', value: 'it' as SupportedLanguage },
+    { label: 'Ελληνικά (Greek)', value: 'el' as SupportedLanguage },
+  ];
+
+  timezones = [
+    { label: 'Eastern Time', value: 'America/New_York' },
+    { label: 'Central Time', value: 'America/Chicago' },
+    { label: 'Pacific Time', value: 'America/Los_Angeles' }
+  ];
+
+  // Feature 7.5: Simple View
+  simpleViewEnabled = this.literacyService.simpleView();
+
+  // Feature 7.6: Reading Level
+  selectedReadingLevel: ReadingLevel = this.readingLevelService.level();
+  readonly readingLevelOptions = [
+    { label: 'Standard', value: 'standard' as ReadingLevel },
+    { label: 'Easy Read (8th grade)', value: 'easy' as ReadingLevel },
+    { label: 'Very Simple (5th grade)', value: 'simple' as ReadingLevel },
+  ];
 
   avatarUrl = signal<string | null>(null);
 
+  // Feature 9.8: Notification Preferences / SMS & Email Reminders Configurator
+  emailReminders = true;
+  smsReminders = false;
+  selectedReminderTiming = '1 day before';
+  reminderSaved = signal(false);
+
+  readonly reminderTimingOptions = [
+    { label: '1 hour before', value: '1 hour before' },
+    { label: '2 hours before', value: '2 hours before' },
+    { label: '1 day before', value: '1 day before' },
+    { label: '2 days before', value: '2 days before' },
+    { label: '1 week before', value: '1 week before' }
+  ];
+
+  // Feature 15.3: Interpreter Services
+  interpLanguage = '';
+  interpAppointment = '';
+  interpType: 'phone' | 'video' | 'on-site' = 'phone';
+  interpreterRequested = signal(false);
+
+  readonly interpreterLanguages = [
+    { label: 'Arabic', value: 'Arabic' },
+    { label: 'Bengali (বাংলা)', value: 'Bengali' },
+    { label: 'Cantonese', value: 'Cantonese' },
+    { label: 'French Creole (Kreyòl)', value: 'French Creole' },
+    { label: 'Hindi (हिंदी)', value: 'Hindi' },
+    { label: 'Korean', value: 'Korean' },
+    { label: 'Mandarin (普通话)', value: 'Mandarin' },
+    { label: 'Portuguese', value: 'Portuguese' },
+    { label: 'Russian', value: 'Russian' },
+    { label: 'Somali', value: 'Somali' },
+    { label: 'Spanish (Español)', value: 'Spanish' },
+    { label: 'Tagalog (Filipino)', value: 'Tagalog' },
+    { label: 'Tamil (தமிழ்)', value: 'Tamil' },
+    { label: 'Vietnamese (Tiếng Việt)', value: 'Vietnamese' },
+  ];
+
+  readonly upcomingAppointments = [
+    { label: 'Annual Physical — Dr. Michael Chen (28 Feb)', value: 'APT-001' },
+    { label: 'Cardiology Consultation — Dr. Sarah Johnson (05 Mar)', value: 'APT-002' },
+    { label: 'Dermatology Follow-up — Dr. Lisa Patel (12 Mar)', value: 'APT-003' },
+    { label: 'Telehealth — Dr. James Wilson (18 Mar)', value: 'APT-004' },
+  ];
+
+  readonly interpreterTypeOptions = [
+    { label: 'Phone', value: 'phone' as const },
+    { label: 'Video', value: 'video' as const },
+    { label: 'In-Person', value: 'on-site' as const },
+  ];
+
   get userInitials(): string {
     return `${this.firstName[0] || ''}${this.lastName[0] || ''}`;
+  }
+
+  canRequestInterpreter(): boolean {
+    return !!(this.interpLanguage && this.interpAppointment);
+  }
+
+  interpTypeLabel(): string {
+    const map: Record<string, string> = { phone: 'phone', video: 'video', 'on-site': 'in-person' };
+    return map[this.interpType] ?? this.interpType;
+  }
+
+  requestInterpreter(): void {
+    const appt = this.upcomingAppointments.find(a => a.value === this.interpAppointment);
+    const [label, provider] = (appt?.label ?? '').split(' — ');
+    this.interpreterBookingService.bookInterpreter({
+      language: this.interpLanguage,
+      appointmentId: this.interpAppointment,
+      appointmentLabel: label ?? appt?.label ?? '',
+      providerName: provider ?? 'GoHealth Provider',
+      date: 'Upcoming',
+      time: 'TBD',
+      type: this.interpType,
+    });
+    this.interpreterRequested.set(true);
+    setTimeout(() => this.interpreterRequested.set(false), 5000);
+    this.interpLanguage = '';
+    this.interpAppointment = '';
   }
 
   navigateTo(route: string): void {
@@ -270,5 +611,31 @@ export class SettingsComponent {
       };
       reader.readAsDataURL(input.files[0]);
     }
+  }
+
+  // Feature 7.4: Language change handler
+  onLanguageChange(lang: SupportedLanguage): void {
+    this.translationService.setLanguage(lang);
+  }
+
+  // Feature 7.5: Simple View toggle handler
+  onSimpleViewChange(enabled: boolean): void {
+    this.literacyService.setSimpleView(enabled);
+  }
+
+  // Feature 7.6: Reading Level change handler
+  onReadingLevelChange(level: ReadingLevel): void {
+    this.readingLevelService.setLevel(level);
+  }
+
+  // Feature 9.8: Save notification preferences
+  saveNotificationPreferences(): void {
+    console.log('Notification preferences saved:', {
+      emailReminders: this.emailReminders,
+      smsReminders: this.smsReminders,
+      reminderTiming: this.selectedReminderTiming
+    });
+    this.reminderSaved.set(true);
+    setTimeout(() => this.reminderSaved.set(false), 3000);
   }
 }
