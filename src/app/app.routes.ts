@@ -63,7 +63,22 @@ export const routes: Routes = [
       { path: 'cures-act', loadComponent: () => import('./country/feature/cures-act.component').then(m => m.CuresActComponent) },
       { path: 'smart-fhir', loadComponent: () => import('./country/feature/smart-on-fhir.component').then(m => m.SmartOnFhirComponent) },
       { path: 'commonwell', loadComponent: () => import('./country/feature/commonwell.component').then(m => m.CommonwellComponent) },
-      { path: 'audit-log', loadComponent: () => import('./settings/feature/audit-log.component').then(m => m.AuditLogComponent) }
+      { path: 'audit-log', loadComponent: () => import('./settings/feature/audit-log.component').then(m => m.AuditLogComponent) },
+      // Family Management routes
+      { path: 'family', loadComponent: () => import('./family/feature/family-dashboard.component').then(m => m.FamilyDashboardComponent) },
+      { path: 'family/permissions', loadComponent: () => import('./family/feature/permission-management.component').then(m => m.PermissionManagementComponent) },
+      { path: 'family/pets/:id', loadComponent: () => import('./family/feature/pet-profile.component').then(m => m.PetProfileComponent) },
+      { path: 'family/chart', loadComponent: () => import('./family/feature/family-chart.component').then(m => m.FamilyChartComponent) },
+      // Genetic & Family History routes
+      { path: 'health/family-history', loadComponent: () => import('./family/feature/family-history.component').then(m => m.FamilyHistoryComponent) },
+      { path: 'health/genetic-tests', loadComponent: () => import('./family/feature/genetic-tests.component').then(m => m.GeneticTestsComponent) },
+      { path: 'health/genetic-risk', loadComponent: () => import('./family/feature/genetic-risk.component').then(m => m.GeneticRiskComponent) },
+      // Medicolegal & Ruleset routes
+      { path: 'settings/jurisdiction', loadComponent: () => import('./family/feature/jurisdiction-settings.component').then(m => m.JurisdictionSettingsComponent) },
+      { path: 'medications/schedule-reference', loadComponent: () => import('./family/feature/medication-schedule.component').then(m => m.MedicationScheduleComponent) },
+      { path: 'telehealth/jurisdiction-check', loadComponent: () => import('./family/feature/telehealth-checker.component').then(m => m.TelehealthCheckerComponent) },
+      { path: 'admin/consent-rules', loadComponent: () => import('./family/feature/consent-age-matrix.component').then(m => m.ConsentAgeMatrixComponent) },
+      { path: 'admin/proxy-accounts', loadComponent: () => import('./family/feature/proxy-management.component').then(m => m.ProxyManagementComponent) }
     ]
   },
   { path: '**', redirectTo: 'dashboard' }

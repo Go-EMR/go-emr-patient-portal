@@ -28,7 +28,8 @@
       "@messages/*": ["src/app/messages/*"],
       "@billing/*": ["src/app/billing/*"],
       "@forms/*": ["src/app/forms/*"],
-      "@settings/*": ["src/app/settings/*"]
+      "@settings/*": ["src/app/settings/*"],
+      "@family/*": ["src/app/family/*"]
     }
   },
   "angularCompilerOptions": {

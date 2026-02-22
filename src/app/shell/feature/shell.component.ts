@@ -779,6 +779,23 @@ export class ShellComponent implements OnInit, OnDestroy {
       ]
     },
     {
+      label: 'Family',
+      collapsed: false,
+      items: [
+        { label: 'Family Dashboard', icon: 'pi pi-users', route: '/family' },
+        { label: 'Family Chart', icon: 'pi pi-sitemap', route: '/family/chart' },
+        { label: 'Permissions', icon: 'pi pi-lock', route: '/family/permissions' },
+        { label: 'Family History', icon: 'pi pi-history', route: '/health/family-history' },
+        { label: 'Genetic Tests', icon: 'pi pi-sliders-h', route: '/health/genetic-tests' },
+        { label: 'Genetic Risk', icon: 'pi pi-exclamation-triangle', route: '/health/genetic-risk' },
+        { label: 'Jurisdiction', icon: 'pi pi-globe', route: '/settings/jurisdiction' },
+        { label: 'Drug Schedules', icon: 'pi pi-list', route: '/medications/schedule-reference' },
+        { label: 'Telehealth Check', icon: 'pi pi-video', route: '/telehealth/jurisdiction-check' },
+        { label: 'Consent Rules', icon: 'pi pi-shield', route: '/admin/consent-rules' },
+        { label: 'Proxy Accounts', icon: 'pi pi-user-edit', route: '/admin/proxy-accounts' },
+      ]
+    },
+    {
       label: 'Tools',
       collapsed: true,
       items: [
