@@ -1,5 +1,5 @@
 import { Component, inject, computed, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { LabTrendsService, LabTrendData, LabDataPoint, LabFlag, TimeRange } from '../data-access';
@@ -31,7 +31,7 @@ const SPARKLINE_H = 28;
   selector: 'app-lab-trends',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ButtonModule, CardModule],
+  imports: [ButtonModule, CardModule],
   template: `
     <div class="lab-trends-page">
       <!-- Page Header -->

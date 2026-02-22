@@ -1,12 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { DropdownModule } from 'primeng/dropdown';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
@@ -16,7 +16,7 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, InputTextModule, InputSwitchModule, DropdownModule, DividerModule, SelectButtonModule, TagModule],
+  imports: [FormsModule, CardModule, ButtonModule, InputTextModule, ToggleSwitchModule, SelectModule, DividerModule, SelectButtonModule, TagModule],
   template: `
     <div class="settings-page">
       <header class="page-header"><h1>Settings</h1><p>Manage your account and preferences</p></header>
@@ -141,33 +141,33 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
           <button pButton label="Save Changes" icon="pi pi-check"></button>
         </p-card>
         <p-card header="Security" styleClass="settings-card">
-          <div class="security-item"><div><h4>Two-Factor Authentication</h4><p>Add an extra layer of security</p></div><p-inputSwitch [(ngModel)]="mfaEnabled"></p-inputSwitch></div>
+          <div class="security-item"><div><h4>Two-Factor Authentication</h4><p>Add an extra layer of security</p></div><p-toggleswitch [(ngModel)]="mfaEnabled"></p-toggleswitch></div>
           <p-divider></p-divider>
           <div class="security-item"><div><h4>Change Password</h4><p>Last changed 90 days ago</p></div><button pButton label="Change" class="p-button-outlined"></button></div>
           <p-divider></p-divider>
           <div class="security-item"><div><h4>Trusted Devices</h4><p>2 devices registered</p></div><button pButton label="Manage" class="p-button-outlined"></button></div>
         </p-card>
         <p-card header="Notifications" styleClass="settings-card">
-          <div class="notification-item"><div><h4>Email Notifications</h4><p>Receive updates via email</p></div><p-inputSwitch [(ngModel)]="emailNotifications"></p-inputSwitch></div>
+          <div class="notification-item"><div><h4>Email Notifications</h4><p>Receive updates via email</p></div><p-toggleswitch [(ngModel)]="emailNotifications"></p-toggleswitch></div>
           <p-divider></p-divider>
-          <div class="notification-item"><div><h4>SMS Notifications</h4><p>Receive text message alerts</p></div><p-inputSwitch [(ngModel)]="smsNotifications"></p-inputSwitch></div>
+          <div class="notification-item"><div><h4>SMS Notifications</h4><p>Receive text message alerts</p></div><p-toggleswitch [(ngModel)]="smsNotifications"></p-toggleswitch></div>
           <p-divider></p-divider>
-          <div class="notification-item"><div><h4>Appointment Reminders</h4><p>Get reminded before appointments</p></div><p-inputSwitch [(ngModel)]="appointmentReminders"></p-inputSwitch></div>
+          <div class="notification-item"><div><h4>Appointment Reminders</h4><p>Get reminded before appointments</p></div><p-toggleswitch [(ngModel)]="appointmentReminders"></p-toggleswitch></div>
         </p-card>
         <p-card header="Preferences" styleClass="settings-card">
           <div class="field">
             <label for="lang-select">Language</label>
-            <p-dropdown
+            <p-select
               inputId="lang-select"
               [options]="languages"
               [(ngModel)]="selectedLanguage"
               [style]="{width:'100%'}"
               (onChange)="onLanguageChange($event.value)">
-            </p-dropdown>
+            </p-select>
           </div>
-          <div class="field"><label>Time Zone</label><p-dropdown [options]="timezones" [(ngModel)]="selectedTimezone" [style]="{width:'100%'}"></p-dropdown></div>
+          <div class="field"><label>Time Zone</label><p-select [options]="timezones" [(ngModel)]="selectedTimezone" [style]="{width:'100%'}"></p-select></div>
           <p-divider></p-divider>
-          <div class="notification-item"><div><h4>Paperless Statements</h4><p>Receive statements electronically</p></div><p-inputSwitch [(ngModel)]="paperless"></p-inputSwitch></div>
+          <div class="notification-item"><div><h4>Paperless Statements</h4><p>Receive statements electronically</p></div><p-toggleswitch [(ngModel)]="paperless"></p-toggleswitch></div>
         </p-card>
 
         <!-- Feature 9.8: Notification Preferences / SMS & Email Reminders Configurator -->
@@ -177,7 +177,7 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
               <h4>Email Reminders</h4>
               <p>Receive appointment reminders by email</p>
             </div>
-            <p-inputSwitch [(ngModel)]="emailReminders"></p-inputSwitch>
+            <p-toggleswitch [(ngModel)]="emailReminders"></p-toggleswitch>
           </div>
           <p-divider></p-divider>
           <div class="notification-item">
@@ -185,17 +185,17 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
               <h4>SMS Reminders</h4>
               <p>Receive appointment reminders via text message</p>
             </div>
-            <p-inputSwitch [(ngModel)]="smsReminders"></p-inputSwitch>
+            <p-toggleswitch [(ngModel)]="smsReminders"></p-toggleswitch>
           </div>
           <p-divider></p-divider>
           <div class="field">
             <label for="reminder-timing">Reminder Timing</label>
-            <p-dropdown
+            <p-select
               inputId="reminder-timing"
               [options]="reminderTimingOptions"
               [(ngModel)]="selectedReminderTiming"
               [style]="{width:'100%'}">
-            </p-dropdown>
+            </p-select>
           </div>
           <p-divider></p-divider>
           <div class="reminder-save-row">
@@ -219,25 +219,25 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
               <h4>Simple View</h4>
               <p>Show plain-language explanations for medical terms</p>
             </div>
-            <p-inputSwitch
+            <p-toggleswitch
               [(ngModel)]="simpleViewEnabled"
               (ngModelChange)="onSimpleViewChange($event)"
               inputId="simple-view-toggle"
               aria-label="Toggle simple view for medical terms">
-            </p-inputSwitch>
+            </p-toggleswitch>
           </div>
           <p-divider></p-divider>
           <div class="field">
             <label for="reading-level-select">Reading Level</label>
             <p class="field-desc">Adjust the complexity of health information displayed</p>
-            <p-dropdown
+            <p-select
               inputId="reading-level-select"
               [options]="readingLevelOptions"
               [(ngModel)]="selectedReadingLevel"
               [style]="{width:'100%'}"
               (onChange)="onReadingLevelChange($event.value)"
               aria-label="Select reading level for health content">
-            </p-dropdown>
+            </p-select>
           </div>
         </p-card>
 
@@ -265,7 +265,7 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
             <!-- Language selection -->
             <div class="field">
               <label for="interp-lang">Preferred Language</label>
-              <p-dropdown
+              <p-select
                 inputId="interp-lang"
                 [options]="interpreterLanguages"
                 [(ngModel)]="interpLanguage"
@@ -273,13 +273,13 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
                 [style]="{width:'100%'}"
                 optionLabel="label"
                 optionValue="value">
-              </p-dropdown>
+              </p-select>
             </div>
 
             <!-- Appointment selection -->
             <div class="field">
               <label for="interp-appt">Appointment</label>
-              <p-dropdown
+              <p-select
                 inputId="interp-appt"
                 [options]="upcomingAppointments"
                 [(ngModel)]="interpAppointment"
@@ -287,7 +287,7 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
                 [style]="{width:'100%'}"
                 optionLabel="label"
                 optionValue="value">
-              </p-dropdown>
+              </p-select>
             </div>
 
             <!-- Interpreter type toggle -->
@@ -346,7 +346,7 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
                   </div>
                   <p-tag
                     [value]="booking.status === 'confirmed' ? 'Confirmed' : 'Pending'"
-                    [severity]="booking.status === 'confirmed' ? 'success' : 'warning'">
+                    [severity]="booking.status === 'confirmed' ? 'success' : 'warn'">
                   </p-tag>
                 </div>
               }

@@ -11,13 +11,13 @@ import {
   computed,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
-import { AccordionModule } from 'primeng/accordion';
+import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 import { MessageModule } from 'primeng/message';
 import { ProgressBarModule } from 'primeng/progressbar';
 
@@ -42,16 +42,18 @@ interface PunnettCell {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     CardModule,
     TagModule,
     ButtonModule,
     DividerModule,
-    AccordionModule,
+    Accordion,
+    AccordionPanel,
+    AccordionHeader,
+    AccordionContent,
     MessageModule,
     ProgressBarModule,
-    CompletenessTrackerComponent,
-  ],
+    CompletenessTrackerComponent
+],
   template: `
     <div class="gr-page">
       <!-- Page Header -->
@@ -129,24 +131,27 @@ interface PunnettCell {
 
                 <!-- Expandable details -->
                 <p-accordion styleClass="rc-accordion">
-                  <p-accordionTab header="See Details">
-                    <div class="rc-details">
-                      <div class="detail-row">
-                        <span class="detail-label">Inheritance:</span>
-                        <span class="detail-val">{{ card.inheritancePattern }}</span>
-                      </div>
-                      <div class="detail-row">
-                        <span class="detail-label">Screening:</span>
-                        <span class="detail-val">{{ card.screeningRecommendation }}</span>
-                      </div>
-                      @if (card.countrySpecificNotes) {
+                  <p-accordion-panel value="0">
+                    <p-accordion-header>See Details</p-accordion-header>
+                    <p-accordion-content>
+                      <div class="rc-details">
                         <div class="detail-row">
-                          <span class="detail-label">{{ jurisdiction() }} Note:</span>
-                          <span class="detail-val">{{ card.countrySpecificNotes[jurisdiction()] }}</span>
+                          <span class="detail-label">Inheritance:</span>
+                          <span class="detail-val">{{ card.inheritancePattern }}</span>
                         </div>
-                      }
-                    </div>
-                  </p-accordionTab>
+                        <div class="detail-row">
+                          <span class="detail-label">Screening:</span>
+                          <span class="detail-val">{{ card.screeningRecommendation }}</span>
+                        </div>
+                        @if (card.countrySpecificNotes) {
+                          <div class="detail-row">
+                            <span class="detail-label">{{ jurisdiction() }} Note:</span>
+                            <span class="detail-val">{{ card.countrySpecificNotes[jurisdiction()] }}</span>
+                          </div>
+                        }
+                      </div>
+                    </p-accordion-content>
+                  </p-accordion-panel>
                 </p-accordion>
 
                 <p-button

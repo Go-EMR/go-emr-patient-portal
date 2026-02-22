@@ -1,5 +1,5 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -27,14 +27,13 @@ interface AppointmentInfo {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
     ButtonModule,
     CardModule,
     TagModule,
     TextareaModule,
     RatingModule
-  ],
+],
   template: `
     <div class="survey-page">
 

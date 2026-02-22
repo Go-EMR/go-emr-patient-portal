@@ -1,12 +1,12 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { DividerModule } from 'primeng/divider';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 
 interface CNASPrescription {
   id: string;
@@ -37,7 +37,7 @@ interface SickLeaveCertificate {
   selector: 'app-cnas-prescriptions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, TabViewModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, TabsModule],
   template: `
     <div class="cnas-page">
       <header class="page-header">
@@ -70,99 +70,105 @@ interface SickLeaveCertificate {
       </div>
 
       <!-- Tab View -->
-      <p-tabView>
-        <!-- E-Prescriptions Tab -->
-        <p-tabPanel header="E-Prescriptions Active (3)">
-          <div class="prescriptions-list">
-            @for (rx of prescriptions(); track rx.id) {
-              <div class="rx-card">
-                <div class="rx-header">
-                  <div class="rx-number-row">
-                    <span class="rx-number">{{ rx.cnasNumber }}</span>
-                    <p-tag
-                      [value]="rx.status"
-                      [severity]="getRxStatusSeverity(rx.status)"
-                    ></p-tag>
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab [value]="0">E-Prescriptions Active (3)</p-tab>
+          <p-tab [value]="1">Certificate Concediu Medical (2)</p-tab>
+        </p-tablist>
+        <p-tabpanels>
+          <!-- E-Prescriptions Panel -->
+          <p-tabpanel [value]="0">
+            <div class="prescriptions-list">
+              @for (rx of prescriptions(); track rx.id) {
+                <div class="rx-card">
+                  <div class="rx-header">
+                    <div class="rx-number-row">
+                      <span class="rx-number">{{ rx.cnasNumber }}</span>
+                      <p-tag
+                        [value]="rx.status"
+                        [severity]="getRxStatusSeverity(rx.status)"
+                      ></p-tag>
+                    </div>
+                    <div class="rx-medication">
+                      <i class="pi pi-box"></i>
+                      <strong>{{ rx.medication }}</strong>
+                      <span class="rx-dosage">{{ rx.dosage }}</span>
+                    </div>
                   </div>
-                  <div class="rx-medication">
-                    <i class="pi pi-box"></i>
-                    <strong>{{ rx.medication }}</strong>
-                    <span class="rx-dosage">{{ rx.dosage }}</span>
+                  <div class="rx-details">
+                    <div class="rx-detail-item">
+                      <i class="pi pi-user-md"></i>
+                      <span>Dr. {{ rx.prescribingDoctor }}</span>
+                    </div>
+                    <div class="rx-detail-item">
+                      <i class="pi pi-building"></i>
+                      <span>{{ rx.pharmacy }}</span>
+                    </div>
+                    <div class="rx-detail-item">
+                      <i class="pi pi-calendar"></i>
+                      <span>Emisa: {{ rx.issuedDate }}</span>
+                    </div>
+                    <div class="rx-detail-item">
+                      <i class="pi pi-clock"></i>
+                      <span>Valabila pana: {{ rx.validUntil }}</span>
+                    </div>
+                  </div>
+                  <div class="rx-actions">
+                    <button pButton label="Download PDF" icon="pi pi-download" class="p-button-outlined p-button-sm"></button>
+                    <button pButton label="Show QR" icon="pi pi-qrcode" class="p-button-text p-button-sm"></button>
                   </div>
                 </div>
-                <div class="rx-details">
-                  <div class="rx-detail-item">
-                    <i class="pi pi-user-md"></i>
-                    <span>Dr. {{ rx.prescribingDoctor }}</span>
-                  </div>
-                  <div class="rx-detail-item">
-                    <i class="pi pi-building"></i>
-                    <span>{{ rx.pharmacy }}</span>
-                  </div>
-                  <div class="rx-detail-item">
-                    <i class="pi pi-calendar"></i>
-                    <span>Emisa: {{ rx.issuedDate }}</span>
-                  </div>
-                  <div class="rx-detail-item">
-                    <i class="pi pi-clock"></i>
-                    <span>Valabila pana: {{ rx.validUntil }}</span>
-                  </div>
-                </div>
-                <div class="rx-actions">
-                  <button pButton label="Download PDF" icon="pi pi-download" class="p-button-outlined p-button-sm"></button>
-                  <button pButton label="Show QR" icon="pi pi-qrcode" class="p-button-text p-button-sm"></button>
-                </div>
-              </div>
-            }
-          </div>
-        </p-tabPanel>
+              }
+            </div>
+          </p-tabpanel>
 
-        <!-- Sick Leave Tab -->
-        <p-tabPanel header="Certificate Concediu Medical (2)">
-          <div class="sick-leave-list">
-            @for (cert of sickLeaveCerts(); track cert.id) {
-              <div class="cert-card">
-                <div class="cert-header">
-                  <div class="cert-number-row">
-                    <span class="cert-number">{{ cert.certificateNumber }}</span>
-                    <p-tag
-                      [value]="cert.status"
-                      [severity]="getCertStatusSeverity(cert.status)"
-                    ></p-tag>
-                    @if (cert.employerNotified) {
-                      <span class="employer-tag">
-                        <i class="pi pi-check"></i> Angajator notificat
-                      </span>
-                    }
+          <!-- Sick Leave Panel -->
+          <p-tabpanel [value]="1">
+            <div class="sick-leave-list">
+              @for (cert of sickLeaveCerts(); track cert.id) {
+                <div class="cert-card">
+                  <div class="cert-header">
+                    <div class="cert-number-row">
+                      <span class="cert-number">{{ cert.certificateNumber }}</span>
+                      <p-tag
+                        [value]="cert.status"
+                        [severity]="getCertStatusSeverity(cert.status)"
+                      ></p-tag>
+                      @if (cert.employerNotified) {
+                        <span class="employer-tag">
+                          <i class="pi pi-check"></i> Angajator notificat
+                        </span>
+                      }
+                    </div>
+                  </div>
+                  <div class="cert-diagnosis">
+                    <span class="icd-code">{{ cert.diagnosisCode }}</span>
+                    <span class="diagnosis-name">{{ cert.diagnosisName }}</span>
+                  </div>
+                  <div class="cert-details">
+                    <div class="cert-detail-item">
+                      <i class="pi pi-calendar-minus"></i>
+                      <span>Perioada: {{ cert.periodFrom }} — {{ cert.periodTo }}</span>
+                    </div>
+                    <div class="cert-detail-item">
+                      <i class="pi pi-user-md"></i>
+                      <span>Dr. {{ cert.issuingDoctor }}</span>
+                    </div>
+                    <div class="cert-detail-item">
+                      <i class="pi pi-building"></i>
+                      <span>{{ cert.institution }}</span>
+                    </div>
+                  </div>
+                  <div class="cert-actions">
+                    <button pButton label="Download Certificat" icon="pi pi-download" class="p-button-outlined p-button-sm"></button>
+                    <button pButton label="Notifica Angajatorul" icon="pi pi-send" class="p-button-text p-button-sm" [disabled]="cert.employerNotified"></button>
                   </div>
                 </div>
-                <div class="cert-diagnosis">
-                  <span class="icd-code">{{ cert.diagnosisCode }}</span>
-                  <span class="diagnosis-name">{{ cert.diagnosisName }}</span>
-                </div>
-                <div class="cert-details">
-                  <div class="cert-detail-item">
-                    <i class="pi pi-calendar-minus"></i>
-                    <span>Perioada: {{ cert.periodFrom }} — {{ cert.periodTo }}</span>
-                  </div>
-                  <div class="cert-detail-item">
-                    <i class="pi pi-user-md"></i>
-                    <span>Dr. {{ cert.issuingDoctor }}</span>
-                  </div>
-                  <div class="cert-detail-item">
-                    <i class="pi pi-building"></i>
-                    <span>{{ cert.institution }}</span>
-                  </div>
-                </div>
-                <div class="cert-actions">
-                  <button pButton label="Download Certificat" icon="pi pi-download" class="p-button-outlined p-button-sm"></button>
-                  <button pButton label="Notifica Angajatorul" icon="pi pi-send" class="p-button-text p-button-sm" [disabled]="cert.employerNotified"></button>
-                </div>
-              </div>
-            }
-          </div>
-        </p-tabPanel>
-      </p-tabView>
+              }
+            </div>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
 
       <p-divider></p-divider>
 
@@ -290,17 +296,17 @@ export class CnasPrescriptionsComponent {
     }
   ]);
 
-  getRxStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+  getRxStatusSeverity(status: string): 'success' | 'warn' | 'danger' | 'info' {
+    const map: Record<string, 'success' | 'warn' | 'danger' | 'info'> = {
       Dispensed: 'success',
-      Pending: 'warning',
+      Pending: 'warn',
       Expired: 'danger'
     };
     return map[status] ?? 'info';
   }
 
-  getCertStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+  getCertStatusSeverity(status: string): 'success' | 'warn' | 'danger' | 'info' {
+    const map: Record<string, 'success' | 'warn' | 'danger' | 'info'> = {
       Active: 'success',
       Submitted: 'info',
       Expired: 'danger'

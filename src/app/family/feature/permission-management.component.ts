@@ -9,8 +9,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
-import { SidebarModule } from 'primeng/sidebar';
+import { SelectModule } from 'primeng/select';
+import { DrawerModule } from 'primeng/drawer';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableModule } from 'primeng/table';
@@ -78,8 +78,8 @@ const CATEGORY_LABELS: Record<RecordCategory, string> = {
     FormsModule,
     RouterModule,
     ButtonModule,
-    DropdownModule,
-    SidebarModule,
+    SelectModule,
+    DrawerModule,
     TagModule,
     TooltipModule,
     TableModule,
@@ -187,7 +187,7 @@ const CATEGORY_LABELS: Record<RecordCategory, string> = {
                         [pTooltip]="'Click to view audit history for ' + member.firstName + ' / ' + getCategoryLabel(cat)"
                         tooltipPosition="top"
                       >
-                        <p-dropdown
+                        <p-select
                           [options]="accessOptions"
                           [ngModel]="getPermissionLevel(member.id, cat)"
                           (ngModelChange)="updatePermission(member.id, cat, $event)"
@@ -211,7 +211,7 @@ const CATEGORY_LABELS: Record<RecordCategory, string> = {
                               {{ opt.label }}
                             </span>
                           </ng-template>
-                        </p-dropdown>
+                        </p-select>
                       </td>
                     }
                   </tr>
@@ -257,7 +257,7 @@ const CATEGORY_LABELS: Record<RecordCategory, string> = {
     </div>
 
     <!-- Audit History Drawer -->
-    <p-sidebar
+    <p-drawer
       [(visible)]="auditDrawerVisible"
       position="right"
       [style]="{ width: '400px' }"
@@ -314,7 +314,7 @@ const CATEGORY_LABELS: Record<RecordCategory, string> = {
           }
         </div>
       }
-    </p-sidebar>
+    </p-drawer>
   `,
   styles: [`
     .permissions-page {
@@ -562,17 +562,17 @@ const CATEGORY_LABELS: Record<RecordCategory, string> = {
       background: #fffbeb40;
     }
 
-    .perm-cell ::ng-deep .p-dropdown {
+    .perm-cell ::ng-deep .p-select {
       width: 100%;
       min-width: 90px;
     }
 
-    .perm-cell ::ng-deep .p-dropdown .p-dropdown-label {
+    .perm-cell ::ng-deep .p-select .p-select-label {
       padding: 0.25rem 0.5rem;
       font-size: 0.75rem;
     }
 
-    .perm-cell ::ng-deep .p-dropdown-trigger {
+    .perm-cell ::ng-deep .p-select-trigger {
       width: 1.5rem;
     }
 

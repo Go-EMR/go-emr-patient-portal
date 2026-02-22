@@ -1,10 +1,10 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
@@ -33,16 +33,15 @@ interface MockDocument {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
     ButtonModule,
     CardModule,
     TagModule,
-    DropdownModule,
+    SelectModule,
     TextareaModule,
     TooltipModule,
     InputTextModule
-  ],
+],
   template: `
     <div class="preauth-page">
 
@@ -121,25 +120,25 @@ interface MockDocument {
                 <div class="form-row-2col">
                   <div class="form-field">
                     <label class="field-label">Procedure / Service <span class="required">*</span></label>
-                    <p-dropdown
+                    <p-select
                       [(ngModel)]="selectedProcedure"
                       [options]="procedureOptions"
                       optionLabel="label"
                       optionValue="value"
                       placeholder="Select procedure"
                       styleClass="w-full"
-                    ></p-dropdown>
+                    ></p-select>
                   </div>
                   <div class="form-field">
                     <label class="field-label">Performing Provider <span class="required">*</span></label>
-                    <p-dropdown
+                    <p-select
                       [(ngModel)]="selectedProvider"
                       [options]="providerOptions"
                       optionLabel="label"
                       optionValue="value"
                       placeholder="Select provider"
                       styleClass="w-full"
-                    ></p-dropdown>
+                    ></p-select>
                   </div>
                 </div>
 

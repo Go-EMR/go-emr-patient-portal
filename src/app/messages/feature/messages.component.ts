@@ -7,8 +7,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AvatarModule } from 'primeng/avatar';
 import { BadgeModule } from 'primeng/badge';
 import { DialogModule } from 'primeng/dialog';
-import { DropdownModule } from 'primeng/dropdown';
-import { Textarea } from 'primeng/inputtextarea';
+import { SelectModule } from 'primeng/select';
+import { Textarea } from 'primeng/textarea';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { MessageThread } from '../../shared/data-access';
 
@@ -70,7 +70,7 @@ interface QuickReplyTemplate {
     AvatarModule,
     BadgeModule,
     DialogModule,
-    DropdownModule,
+    SelectModule,
     Textarea,
     SelectButtonModule
   ],
@@ -318,24 +318,24 @@ interface QuickReplyTemplate {
 
           <div class="field">
             <label>To</label>
-            <p-dropdown
+            <p-select
               [options]="recipients"
               [(ngModel)]="selectedRecipient"
               placeholder="Select recipient"
               [style]="{width:'100%'}"
-            ></p-dropdown>
+            ></p-select>
           </div>
 
           <!-- Category dropdown (Feature 2) -->
           <div class="field">
             <label>Category</label>
-            <p-dropdown
+            <p-select
               [options]="categoryOptions"
               [ngModel]="selectedCategory()"
               (ngModelChange)="selectedCategory.set($event)"
               placeholder="Select category"
               [style]="{width:'100%'}"
-            ></p-dropdown>
+            ></p-select>
           </div>
 
           <!-- Feature 11.4: Message Routing Rules info box -->

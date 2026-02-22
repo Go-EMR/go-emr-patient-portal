@@ -1,18 +1,18 @@
 import { Component, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TextareaModule } from 'primeng/textarea';
 import { PasswordModule } from 'primeng/password';
 import { TooltipModule } from 'primeng/tooltip';
@@ -60,11 +60,23 @@ interface RecordTypeOption {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule, CardModule, ButtonModule, TagModule, DialogModule,
-    TableModule, DropdownModule, DividerModule, ProgressBarModule, CheckboxModule,
-    SelectButtonModule, InputTextModule, InputSwitchModule, TextareaModule, PasswordModule,
+    FormsModule,
+    CardModule,
+    ButtonModule,
+    TagModule,
+    DialogModule,
+    TableModule,
+    SelectModule,
+    DividerModule,
+    ProgressBarModule,
+    CheckboxModule,
+    SelectButtonModule,
+    InputTextModule,
+    ToggleSwitchModule,
+    TextareaModule,
+    PasswordModule,
     TooltipModule
-  ],
+],
   template: `
     <div class="data-mgmt-page">
       <header class="page-header">
@@ -343,7 +355,7 @@ interface RecordTypeOption {
           <div class="correction-form">
             <div class="form-field">
               <label class="field-label" for="record-type">Record Type <span class="required-mark">*</span></label>
-              <p-dropdown
+              <p-select
                 inputId="record-type"
                 [options]="recordTypeOptions"
                 [(ngModel)]="correctionRecordType"
@@ -351,7 +363,7 @@ interface RecordTypeOption {
                 optionLabel="label"
                 optionValue="value"
                 [style]="{ width: '100%', maxWidth: '360px' }"
-              ></p-dropdown>
+              ></p-select>
             </div>
             <div class="form-field">
               <label class="field-label" for="error-desc">Description of Error <span class="required-mark">*</span></label>
@@ -437,10 +449,10 @@ interface RecordTypeOption {
           </div>
           <div class="research-toggle-area">
             <span class="research-toggle-label">{{ researchOptIn() ? 'Opt Out' : 'Opt In' }}</span>
-            <p-inputSwitch
+            <p-toggleswitch
               [ngModel]="researchOptIn()"
               (ngModelChange)="researchOptIn.set($event)"
-            ></p-inputSwitch>
+            ></p-toggleswitch>
           </div>
         </div>
 

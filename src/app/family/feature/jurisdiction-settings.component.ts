@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
@@ -33,7 +33,7 @@ interface CountryOption {
     ButtonModule,
     CardModule,
     SelectButtonModule,
-    DropdownModule,
+    SelectModule,
     DividerModule,
     MessageModule,
     ToastModule,
@@ -79,7 +79,7 @@ interface CountryOption {
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   State <span class="text-red-500">*</span>
                 </label>
-                <p-dropdown
+                <p-select
                   [options]="usStateOptions()"
                   [(ngModel)]="selectedState"
                   optionLabel="label"
@@ -89,7 +89,7 @@ interface CountryOption {
                   filterPlaceholder="Search states..."
                   styleClass="w-full"
                   appendTo="body">
-                </p-dropdown>
+                </p-select>
                 @if (selectedState()) {
                   <div class="state-info mt-3 p-3 border-round surface-50 border-1 surface-border">
                     <p class="text-sm font-semibold text-gray-700 mb-1">

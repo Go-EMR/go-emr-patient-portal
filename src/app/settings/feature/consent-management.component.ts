@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DividerModule } from 'primeng/divider';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -41,7 +41,7 @@ interface HipaaAuthorization {
   providers: [MessageService],
   imports: [
     CommonModule, FormsModule, CardModule, ButtonModule, TagModule,
-    InputSwitchModule, DividerModule, CalendarModule, DialogModule, ToastModule
+    ToggleSwitchModule, DividerModule, DatePickerModule, DialogModule, ToastModule
   ],
   template: `
     <p-toast position="top-right"></p-toast>
@@ -84,7 +84,7 @@ interface HipaaAuthorization {
                   }
                 </div>
                 <div class="consent-toggle">
-                  <p-inputSwitch [ngModel]="true" [disabled]="true"></p-inputSwitch>
+                  <p-toggleswitch [ngModel]="true" [disabled]="true"></p-toggleswitch>
                 </div>
               </div>
             </p-card>
@@ -135,7 +135,7 @@ interface HipaaAuthorization {
                         @if (editingExpiryId() === consent.id) {
                           <!-- Inline date picker -->
                           <div class="expiry-picker-row">
-                            <p-calendar
+                            <p-datepicker
                               [ngModel]="expiryDate()"
                               (ngModelChange)="expiryDate.set($event)"
                               [minDate]="today"
@@ -143,7 +143,7 @@ interface HipaaAuthorization {
                               placeholder="Select expiry date"
                               [showIcon]="true"
                               inputStyleClass="expiry-calendar-input"
-                            ></p-calendar>
+                            ></p-datepicker>
                             <button
                               type="button"
                               class="expiry-action-btn expiry-save-btn"
@@ -199,10 +199,10 @@ interface HipaaAuthorization {
                       (click)="initiateRevoke(consent)"
                     ></button>
                   }
-                  <p-inputSwitch
+                  <p-toggleswitch
                     [ngModel]="consent.granted"
                     (ngModelChange)="toggleConsent(consent.id, $event)"
-                  ></p-inputSwitch>
+                  ></p-toggleswitch>
                 </div>
               </div>
             </p-card>

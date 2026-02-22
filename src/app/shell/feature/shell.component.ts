@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
@@ -26,7 +26,7 @@ interface NavGroup {
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, AvatarModule, RippleModule, TooltipModule, SkipLinkComponent],
+  imports: [RouterModule, ButtonModule, AvatarModule, RippleModule, TooltipModule, SkipLinkComponent],
   template: `
     <app-skip-link></app-skip-link>
     <div class="portal-layout" [class.sidebar-collapsed]="sidebarCollapsed()">

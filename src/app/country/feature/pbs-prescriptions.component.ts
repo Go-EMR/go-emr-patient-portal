@@ -1,5 +1,5 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -28,7 +28,7 @@ interface PbsPrescription {
   selector: 'app-pbs-prescriptions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, ProgressBarModule],
+  imports: [CardModule, ButtonModule, TagModule, TableModule, DividerModule, ProgressBarModule],
   template: `
     <div class="pbs-page">
       <header class="page-header">
@@ -338,11 +338,11 @@ export class PbsPrescriptionsComponent {
     }
   ]);
 
-  getRxSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+  getRxSeverity(status: string): 'success' | 'warn' | 'danger' | 'info' {
+    const map: Record<string, 'success' | 'warn' | 'danger' | 'info'> = {
       Active: 'success',
       Expired: 'danger',
-      Exhausted: 'warning'
+      Exhausted: 'warn'
     };
     return map[status] ?? 'info';
   }

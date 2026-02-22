@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -34,7 +34,7 @@ interface HealthRecord {
   selector: 'app-abdm-health-locker',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, DialogModule, InputTextModule, ToastModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, DialogModule, InputTextModule, ToastModule],
   providers: [MessageService],
   template: `
     <div class="abdm-locker-page">
@@ -343,10 +343,10 @@ export class AbdmHealthLockerComponent {
     { id: 'REC-006', type: 'OPD Note', source: 'Apollo Hospital, Mumbai', date: '15 Jan 2026', description: 'Orthopedics consultation - Dr. Pradeep Sharma', size: '24 KB' }
   ]);
 
-  getFacilityStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+  getFacilityStatusSeverity(status: string): 'success' | 'warn' | 'danger' | 'info' {
+    const map: Record<string, 'success' | 'warn' | 'danger' | 'info'> = {
       Connected: 'success',
-      Pending: 'warning',
+      Pending: 'warn',
       Disconnected: 'danger'
     };
     return map[status] ?? 'info';

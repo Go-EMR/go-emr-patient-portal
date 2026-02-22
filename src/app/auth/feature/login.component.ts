@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -11,7 +11,7 @@ import { AuthService } from '../data-access';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule, CheckboxModule],
+  imports: [FormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule, CheckboxModule],
   template: `
     <div class="login-container">
       <p-card styleClass="login-card">

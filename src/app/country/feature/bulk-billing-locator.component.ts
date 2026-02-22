@@ -1,5 +1,5 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -27,7 +27,7 @@ interface BulkBillingClinic {
   selector: 'app-bulk-billing-locator',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, InputTextModule, DividerModule, CheckboxModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, InputTextModule, DividerModule, CheckboxModule],
   template: `
     <div class="bulk-billing-page">
       <header class="page-header">
@@ -118,7 +118,7 @@ interface BulkBillingClinic {
                       <h3 class="clinic-name">{{ clinic.name }}</h3>
                       <p-tag
                         [value]="clinic.bulkBillingStatus + ' Bulk-Billing'"
-                        [severity]="clinic.bulkBillingStatus === 'Full' ? 'success' : 'warning'"
+                        [severity]="clinic.bulkBillingStatus === 'Full' ? 'success' : 'warn'"
                       ></p-tag>
                     </div>
                     <div class="clinic-tags">

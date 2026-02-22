@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -14,7 +14,7 @@ import { EmergencyContact } from '../../shared/data-access';
   selector: 'app-emergency-contacts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, DialogModule, DividerModule, InputTextModule, TooltipModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, DialogModule, DividerModule, InputTextModule, TooltipModule],
   template: `
     <div class="emergency-contacts-page">
       <header class="page-header">

@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -23,7 +23,7 @@ interface CrossProviderRecord {
   selector: 'app-commonwell',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, DividerModule, InputTextModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, DividerModule, InputTextModule],
   template: `
     <div class="commonwell-page">
 

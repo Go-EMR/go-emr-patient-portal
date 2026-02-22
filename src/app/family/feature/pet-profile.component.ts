@@ -15,7 +15,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -25,7 +25,7 @@ import { MessageModule } from 'primeng/message';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 
 import { FamilyService } from '../data-access/family.service';
 import { PetProfile, PetWeightEntry } from '../data-access/family.models';
@@ -46,7 +46,7 @@ const PB = 40;
     CommonModule,
     FormsModule,
     RouterModule,
-    TabViewModule,
+    TabsModule,
     TableModule,
     TagModule,
     ButtonModule,
@@ -56,7 +56,7 @@ const PB = 40;
     CheckboxModule,
     DividerModule,
     InputTextModule,
-    CalendarModule,
+    DatePickerModule,
   ],
   template: `
     <div class="pet-profile-page">
@@ -95,296 +95,307 @@ const PB = 40;
         </div>
 
         <!-- 7-tab view -->
-        <p-tabView>
+        <p-tabs [value]="0">
+          <p-tablist>
+            <p-tab [value]="0">Overview</p-tab>
+            <p-tab [value]="1">Vaccinations</p-tab>
+            <p-tab [value]="2">Medications</p-tab>
+            <p-tab [value]="3">Allergies</p-tab>
+            <p-tab [value]="4">Weight Log</p-tab>
+            <p-tab [value]="5">Zoonotic Flags</p-tab>
+            <p-tab [value]="6">Vet Visits</p-tab>
+          </p-tablist>
+          <p-tabpanels>
 
-          <!-- TAB 1: Overview -->
-          <p-tabPanel header="Overview">
-            <div class="overview-grid">
-              <p-card>
-                <ng-template pTemplate="header">
-                  <div class="card-hd"><i class="pi pi-info-circle"></i> Basic Information</div>
-                </ng-template>
-                <div class="info-rows">
-                  <div class="info-row"><span class="info-lbl">Name</span><span>{{ p.name }}</span></div>
-                  <div class="info-row"><span class="info-lbl">Species</span><span>{{ p.species | titlecase }}</span></div>
-                  <div class="info-row"><span class="info-lbl">Breed</span><span>{{ p.breed ?? '—' }}</span></div>
-                  <div class="info-row">
-                    <span class="info-lbl">Date of Birth</span>
-                    <span>{{ p.dateOfBirth ? (p.dateOfBirth | date:'mediumDate') : '—' }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-lbl">Age</span>
-                    <span>{{ p.dateOfBirth ? calcAge(p.dateOfBirth) : '—' }}</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-lbl">Weight</span>
-                    <span>{{ p.weight ? p.weight + ' ' + p.weightUnit : '—' }}</span>
-                  </div>
-                </div>
-              </p-card>
-
-              <p-card>
-                <ng-template pTemplate="header">
-                  <div class="card-hd"><i class="pi pi-shield"></i> Quick Stats</div>
-                </ng-template>
-                <div class="stat-grid">
-                  <div class="stat-box">
-                    <span class="stat-val">{{ p.vaccinations.length }}</span>
-                    <span class="stat-lbl">Vaccinations</span>
-                  </div>
-                  <div class="stat-box">
-                    <span class="stat-val">{{ p.medications.length }}</span>
-                    <span class="stat-lbl">Medications</span>
-                  </div>
-                  <div class="stat-box">
-                    <span class="stat-val">{{ p.allergies.length }}</span>
-                    <span class="stat-lbl">Allergies</span>
-                  </div>
-                  <div class="stat-box">
-                    <span class="stat-val">{{ p.vetVisits.length }}</span>
-                    <span class="stat-lbl">Vet Visits</span>
-                  </div>
-                </div>
-              </p-card>
-            </div>
-          </p-tabPanel>
-
-          <!-- TAB 2: Vaccinations -->
-          <p-tabPanel header="Vaccinations">
-            <div class="tab-actions">
-              <p-button label="Add Vaccination" icon="pi pi-plus" size="small" (onClick)="addVaccination()"></p-button>
-            </div>
-            <p-table [value]="p.vaccinations" [stripedRows]="true" [tableStyle]="{ 'min-width': '50rem' }">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th pSortableColumn="vaccineName">Vaccine <p-sortIcon field="vaccineName"></p-sortIcon></th>
-                  <th pSortableColumn="administeredDate">Date <p-sortIcon field="administeredDate"></p-sortIcon></th>
-                  <th pSortableColumn="nextDueDate">Next Due <p-sortIcon field="nextDueDate"></p-sortIcon></th>
-                  <th>Veterinarian</th>
-                  <th>Batch #</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-vax>
-                <tr>
-                  <td class="font-semibold">{{ vax.vaccineName }}</td>
-                  <td>{{ vax.administeredDate | date:'mediumDate' }}</td>
-                  <td>
-                    @if (vax.nextDueDate) {
-                      <span [class]="isDue(vax.nextDueDate) ? 'due-soon' : ''">
-                        {{ vax.nextDueDate | date:'mediumDate' }}
-                      </span>
-                    } @else { — }
-                  </td>
-                  <td>{{ vax.veterinarian }}</td>
-                  <td class="mono">{{ vax.batchNumber ?? '—' }}</td>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="emptymessage">
-                <tr><td colspan="5" class="empty-cell">No vaccinations recorded</td></tr>
-              </ng-template>
-            </p-table>
-          </p-tabPanel>
-
-          <!-- TAB 3: Medications -->
-          <p-tabPanel header="Medications">
-            <p-table [value]="p.medications" [stripedRows]="true" [tableStyle]="{ 'min-width': '50rem' }">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Medication</th>
-                  <th>Dosage</th>
-                  <th>Frequency</th>
-                  <th>Status</th>
-                  <th>Prescribed By</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-med>
-                <tr>
-                  <td class="font-semibold">{{ med.medicationName }}</td>
-                  <td>{{ med.dosage }}</td>
-                  <td>{{ med.frequency }}</td>
-                  <td>
-                    <p-tag
-                      [value]="med.status | titlecase"
-                      [severity]="medStatusSeverity(med.status)"
-                    ></p-tag>
-                  </td>
-                  <td>{{ med.prescribedBy }}</td>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="emptymessage">
-                <tr><td colspan="5" class="empty-cell">No medications recorded</td></tr>
-              </ng-template>
-            </p-table>
-          </p-tabPanel>
-
-          <!-- TAB 4: Allergies -->
-          <p-tabPanel header="Allergies">
-            <div class="allergies-section">
-              @if (p.allergies.length === 0) {
-                <p class="empty-text">No known allergies recorded.</p>
-              } @else {
-                @for (allergy of p.allergies; track allergy.id) {
-                  <div class="allergy-card">
-                    <p-tag
-                      [value]="allergy.severity | titlecase"
-                      [severity]="allergySeverity(allergy.severity)"
-                      styleClass="severity-tag"
-                    ></p-tag>
-                    <div class="allergy-info">
-                      <span class="allergy-allergen">{{ allergy.allergen }}</span>
-                      <span class="allergy-reaction">{{ allergy.reaction }}</span>
+            <!-- PANEL 0: Overview -->
+            <p-tabpanel [value]="0">
+              <div class="overview-grid">
+                <p-card>
+                  <ng-template pTemplate="header">
+                    <div class="card-hd"><i class="pi pi-info-circle"></i> Basic Information</div>
+                  </ng-template>
+                  <div class="info-rows">
+                    <div class="info-row"><span class="info-lbl">Name</span><span>{{ p.name }}</span></div>
+                    <div class="info-row"><span class="info-lbl">Species</span><span>{{ p.species | titlecase }}</span></div>
+                    <div class="info-row"><span class="info-lbl">Breed</span><span>{{ p.breed ?? '—' }}</span></div>
+                    <div class="info-row">
+                      <span class="info-lbl">Date of Birth</span>
+                      <span>{{ p.dateOfBirth ? (p.dateOfBirth | date:'mediumDate') : '—' }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-lbl">Age</span>
+                      <span>{{ p.dateOfBirth ? calcAge(p.dateOfBirth) : '—' }}</span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-lbl">Weight</span>
+                      <span>{{ p.weight ? p.weight + ' ' + p.weightUnit : '—' }}</span>
                     </div>
                   </div>
-                }
-              }
-            </div>
-          </p-tabPanel>
+                </p-card>
 
-          <!-- TAB 5: Weight Log -->
-          <p-tabPanel header="Weight Log">
-            @if (p.weightHistory.length > 1) {
-              <div class="chart-wrap">
-                <svg
-                  class="weight-chart"
-                  [attr.viewBox]="'0 0 ' + CW + ' ' + CH"
-                  preserveAspectRatio="xMidYMid meet"
-                >
-                  <!-- Grid lines + Y-axis labels -->
-                  @for (grid of buildWeightGrid(p.weightHistory); track grid.y) {
-                    <line
-                      [attr.x1]="PL" [attr.y1]="grid.y"
-                      [attr.x2]="CW - PR" [attr.y2]="grid.y"
-                      stroke="var(--surface-border)" stroke-width="1" stroke-dasharray="3 4"
-                    />
-                    <text
-                      [attr.x]="PL - 6" [attr.y]="grid.y + 4"
-                      font-size="10" fill="var(--text-color-secondary)"
-                      text-anchor="end" font-family="inherit"
-                    >{{ grid.label }}</text>
-                  }
-
-                  <!-- Polyline -->
-                  <polyline
-                    [attr.points]="buildWeightPolyline(p.weightHistory)"
-                    fill="none"
-                    stroke="var(--primary-color)"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-
-                  <!-- Area fill -->
-                  <polygon
-                    [attr.points]="buildWeightArea(p.weightHistory)"
-                    fill="var(--primary-color)"
-                    fill-opacity="0.08"
-                  />
-
-                  <!-- Data point dots -->
-                  @for (pt of buildWeightPoints(p.weightHistory); track pt.x) {
-                    <circle
-                      [attr.cx]="pt.x" [attr.cy]="pt.y" r="5"
-                      fill="var(--primary-color)" stroke="white" stroke-width="2"
-                    />
-                    <!-- Date labels on x-axis -->
-                    <text
-                      [attr.x]="pt.x"
-                      [attr.y]="CH - PB + 14"
-                      font-size="9"
-                      fill="var(--text-color-secondary)"
-                      text-anchor="middle"
-                      font-family="inherit"
-                    >{{ pt.dateLabel }}</text>
-                    <!-- Weight value above dot -->
-                    <text
-                      [attr.x]="pt.x"
-                      [attr.y]="pt.y - 9"
-                      font-size="9"
-                      fill="var(--primary-700, var(--primary-color))"
-                      text-anchor="middle"
-                      font-family="inherit"
-                      font-weight="600"
-                    >{{ pt.weight }}</text>
-                  }
-
-                  <!-- Axes -->
-                  <line [attr.x1]="PL" [attr.y1]="PT" [attr.x2]="PL" [attr.y2]="CH - PB"
-                    stroke="var(--surface-border)" stroke-width="1.5"/>
-                  <line [attr.x1]="PL" [attr.y1]="CH - PB" [attr.x2]="CW - PR" [attr.y2]="CH - PB"
-                    stroke="var(--surface-border)" stroke-width="1.5"/>
-                </svg>
-                <p class="chart-unit">Weight ({{ p.weightUnit }})</p>
+                <p-card>
+                  <ng-template pTemplate="header">
+                    <div class="card-hd"><i class="pi pi-shield"></i> Quick Stats</div>
+                  </ng-template>
+                  <div class="stat-grid">
+                    <div class="stat-box">
+                      <span class="stat-val">{{ p.vaccinations.length }}</span>
+                      <span class="stat-lbl">Vaccinations</span>
+                    </div>
+                    <div class="stat-box">
+                      <span class="stat-val">{{ p.medications.length }}</span>
+                      <span class="stat-lbl">Medications</span>
+                    </div>
+                    <div class="stat-box">
+                      <span class="stat-val">{{ p.allergies.length }}</span>
+                      <span class="stat-lbl">Allergies</span>
+                    </div>
+                    <div class="stat-box">
+                      <span class="stat-val">{{ p.vetVisits.length }}</span>
+                      <span class="stat-lbl">Vet Visits</span>
+                    </div>
+                  </div>
+                </p-card>
               </div>
-            } @else {
-              <p class="empty-text">Not enough data points for a chart. Add more weight entries.</p>
-            }
-          </p-tabPanel>
+            </p-tabpanel>
 
-          <!-- TAB 6: Zoonotic Flags -->
-          <p-tabPanel header="Zoonotic Flags">
-            @if (hasZoonoticRisk(p.zoonoticFlags)) {
-              <p-message
-                severity="error"
-                text="Zoonotic risk detected — inform household members and consult your healthcare provider."
-                styleClass="zoonotic-alert"
-              ></p-message>
-            }
+            <!-- PANEL 1: Vaccinations -->
+            <p-tabpanel [value]="1">
+              <div class="tab-actions">
+                <p-button label="Add Vaccination" icon="pi pi-plus" size="small" (onClick)="addVaccination()"></p-button>
+              </div>
+              <p-table [value]="p.vaccinations" [stripedRows]="true" [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="vaccineName">Vaccine <p-sortIcon field="vaccineName"></p-sortIcon></th>
+                    <th pSortableColumn="administeredDate">Date <p-sortIcon field="administeredDate"></p-sortIcon></th>
+                    <th pSortableColumn="nextDueDate">Next Due <p-sortIcon field="nextDueDate"></p-sortIcon></th>
+                    <th>Veterinarian</th>
+                    <th>Batch #</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-vax>
+                  <tr>
+                    <td class="font-semibold">{{ vax.vaccineName }}</td>
+                    <td>{{ vax.administeredDate | date:'mediumDate' }}</td>
+                    <td>
+                      @if (vax.nextDueDate) {
+                        <span [class]="isDue(vax.nextDueDate) ? 'due-soon' : ''">
+                          {{ vax.nextDueDate | date:'mediumDate' }}
+                        </span>
+                      } @else { — }
+                    </td>
+                    <td>{{ vax.veterinarian }}</td>
+                    <td class="mono">{{ vax.batchNumber ?? '—' }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="5" class="empty-cell">No vaccinations recorded</td></tr>
+                </ng-template>
+              </p-table>
+            </p-tabpanel>
 
-            <div class="zoonotic-grid">
-              @for (flag of ZOONOTIC_FLAGS; track flag.key) {
-                <div class="zoonotic-item" [class.risk-active]="p.zoonoticFlags[flag.key]">
-                  <p-checkbox
-                    [(ngModel)]="zoonoticValues[flag.key]"
-                    [binary]="true"
-                    [inputId]="'z-' + flag.key"
-                  ></p-checkbox>
-                  <label [for]="'z-' + flag.key" class="flag-label">
-                    <span class="flag-name">{{ flag.label }}</span>
-                    <span class="flag-desc">{{ flag.description }}</span>
-                  </label>
-                  @if (p.zoonoticFlags[flag.key]) {
-                    <p-tag value="Risk" severity="danger" styleClass="risk-tag"></p-tag>
+            <!-- PANEL 2: Medications -->
+            <p-tabpanel [value]="2">
+              <p-table [value]="p.medications" [stripedRows]="true" [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Medication</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Status</th>
+                    <th>Prescribed By</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-med>
+                  <tr>
+                    <td class="font-semibold">{{ med.medicationName }}</td>
+                    <td>{{ med.dosage }}</td>
+                    <td>{{ med.frequency }}</td>
+                    <td>
+                      <p-tag
+                        [value]="med.status | titlecase"
+                        [severity]="medStatusSeverity(med.status)"
+                      ></p-tag>
+                    </td>
+                    <td>{{ med.prescribedBy }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="5" class="empty-cell">No medications recorded</td></tr>
+                </ng-template>
+              </p-table>
+            </p-tabpanel>
+
+            <!-- PANEL 3: Allergies -->
+            <p-tabpanel [value]="3">
+              <div class="allergies-section">
+                @if (p.allergies.length === 0) {
+                  <p class="empty-text">No known allergies recorded.</p>
+                } @else {
+                  @for (allergy of p.allergies; track allergy.id) {
+                    <div class="allergy-card">
+                      <p-tag
+                        [value]="allergy.severity | titlecase"
+                        [severity]="allergySeverity(allergy.severity)"
+                        styleClass="severity-tag"
+                      ></p-tag>
+                      <div class="allergy-info">
+                        <span class="allergy-allergen">{{ allergy.allergen }}</span>
+                        <span class="allergy-reaction">{{ allergy.reaction }}</span>
+                      </div>
+                    </div>
                   }
+                }
+              </div>
+            </p-tabpanel>
+
+            <!-- PANEL 4: Weight Log -->
+            <p-tabpanel [value]="4">
+              @if (p.weightHistory.length > 1) {
+                <div class="chart-wrap">
+                  <svg
+                    class="weight-chart"
+                    [attr.viewBox]="'0 0 ' + CW + ' ' + CH"
+                    preserveAspectRatio="xMidYMid meet"
+                  >
+                    <!-- Grid lines + Y-axis labels -->
+                    @for (grid of buildWeightGrid(p.weightHistory); track grid.y) {
+                      <line
+                        [attr.x1]="PL" [attr.y1]="grid.y"
+                        [attr.x2]="CW - PR" [attr.y2]="grid.y"
+                        stroke="var(--surface-border)" stroke-width="1" stroke-dasharray="3 4"
+                      />
+                      <text
+                        [attr.x]="PL - 6" [attr.y]="grid.y + 4"
+                        font-size="10" fill="var(--text-color-secondary)"
+                        text-anchor="end" font-family="inherit"
+                      >{{ grid.label }}</text>
+                    }
+
+                    <!-- Polyline -->
+                    <polyline
+                      [attr.points]="buildWeightPolyline(p.weightHistory)"
+                      fill="none"
+                      stroke="var(--primary-color)"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+
+                    <!-- Area fill -->
+                    <polygon
+                      [attr.points]="buildWeightArea(p.weightHistory)"
+                      fill="var(--primary-color)"
+                      fill-opacity="0.08"
+                    />
+
+                    <!-- Data point dots -->
+                    @for (pt of buildWeightPoints(p.weightHistory); track pt.x) {
+                      <circle
+                        [attr.cx]="pt.x" [attr.cy]="pt.y" r="5"
+                        fill="var(--primary-color)" stroke="white" stroke-width="2"
+                      />
+                      <!-- Date labels on x-axis -->
+                      <text
+                        [attr.x]="pt.x"
+                        [attr.y]="CH - PB + 14"
+                        font-size="9"
+                        fill="var(--text-color-secondary)"
+                        text-anchor="middle"
+                        font-family="inherit"
+                      >{{ pt.dateLabel }}</text>
+                      <!-- Weight value above dot -->
+                      <text
+                        [attr.x]="pt.x"
+                        [attr.y]="pt.y - 9"
+                        font-size="9"
+                        fill="var(--primary-700, var(--primary-color))"
+                        text-anchor="middle"
+                        font-family="inherit"
+                        font-weight="600"
+                      >{{ pt.weight }}</text>
+                    }
+
+                    <!-- Axes -->
+                    <line [attr.x1]="PL" [attr.y1]="PT" [attr.x2]="PL" [attr.y2]="CH - PB"
+                      stroke="var(--surface-border)" stroke-width="1.5"/>
+                    <line [attr.x1]="PL" [attr.y1]="CH - PB" [attr.x2]="CW - PR" [attr.y2]="CH - PB"
+                      stroke="var(--surface-border)" stroke-width="1.5"/>
+                  </svg>
+                  <p class="chart-unit">Weight ({{ p.weightUnit }})</p>
                 </div>
+              } @else {
+                <p class="empty-text">Not enough data points for a chart. Add more weight entries.</p>
               }
-            </div>
+            </p-tabpanel>
 
-            <p-divider></p-divider>
-            <p class="zoonotic-note">
-              <i class="pi pi-info-circle"></i>
-              Zoonotic diseases are illnesses that can spread between animals and people.
-              Maintaining vaccinations and preventive care reduces household transmission risk.
-            </p>
-          </p-tabPanel>
+            <!-- PANEL 5: Zoonotic Flags -->
+            <p-tabpanel [value]="5">
+              @if (hasZoonoticRisk(p.zoonoticFlags)) {
+                <p-message
+                  severity="error"
+                  text="Zoonotic risk detected — inform household members and consult your healthcare provider."
+                  styleClass="zoonotic-alert"
+                ></p-message>
+              }
 
-          <!-- TAB 7: Vet Visits -->
-          <p-tabPanel header="Vet Visits">
-            <p-table [value]="p.vetVisits" [stripedRows]="true" [tableStyle]="{ 'min-width': '50rem' }">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th pSortableColumn="date">Date <p-sortIcon field="date"></p-sortIcon></th>
-                  <th>Reason</th>
-                  <th>Veterinarian</th>
-                  <th>Clinic</th>
-                  <th>Follow-up Date</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-visit>
-                <tr>
-                  <td>{{ visit.date | date:'mediumDate' }}</td>
-                  <td>{{ visit.reason }}</td>
-                  <td>{{ visit.veterinarian }}</td>
-                  <td>{{ visit.clinic }}</td>
-                  <td>{{ visit.followUpDate ? (visit.followUpDate | date:'mediumDate') : '—' }}</td>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="emptymessage">
-                <tr><td colspan="5" class="empty-cell">No vet visits recorded</td></tr>
-              </ng-template>
-            </p-table>
-          </p-tabPanel>
+              <div class="zoonotic-grid">
+                @for (flag of ZOONOTIC_FLAGS; track flag.key) {
+                  <div class="zoonotic-item" [class.risk-active]="p.zoonoticFlags[flag.key]">
+                    <p-checkbox
+                      [(ngModel)]="zoonoticValues[flag.key]"
+                      [binary]="true"
+                      [inputId]="'z-' + flag.key"
+                    ></p-checkbox>
+                    <label [for]="'z-' + flag.key" class="flag-label">
+                      <span class="flag-name">{{ flag.label }}</span>
+                      <span class="flag-desc">{{ flag.description }}</span>
+                    </label>
+                    @if (p.zoonoticFlags[flag.key]) {
+                      <p-tag value="Risk" severity="danger" styleClass="risk-tag"></p-tag>
+                    }
+                  </div>
+                }
+              </div>
 
-        </p-tabView>
+              <p-divider></p-divider>
+              <p class="zoonotic-note">
+                <i class="pi pi-info-circle"></i>
+                Zoonotic diseases are illnesses that can spread between animals and people.
+                Maintaining vaccinations and preventive care reduces household transmission risk.
+              </p>
+            </p-tabpanel>
+
+            <!-- PANEL 6: Vet Visits -->
+            <p-tabpanel [value]="6">
+              <p-table [value]="p.vetVisits" [stripedRows]="true" [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="date">Date <p-sortIcon field="date"></p-sortIcon></th>
+                    <th>Reason</th>
+                    <th>Veterinarian</th>
+                    <th>Clinic</th>
+                    <th>Follow-up Date</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-visit>
+                  <tr>
+                    <td>{{ visit.date | date:'mediumDate' }}</td>
+                    <td>{{ visit.reason }}</td>
+                    <td>{{ visit.veterinarian }}</td>
+                    <td>{{ visit.clinic }}</td>
+                    <td>{{ visit.followUpDate ? (visit.followUpDate | date:'mediumDate') : '—' }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="5" class="empty-cell">No vet visits recorded</td></tr>
+                </ng-template>
+              </p-table>
+            </p-tabpanel>
+
+          </p-tabpanels>
+        </p-tabs>
 
       } @else {
         <div class="not-found">

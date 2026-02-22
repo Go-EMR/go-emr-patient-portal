@@ -295,7 +295,7 @@ html, body {
   }
 
   // Dropdown / select
-  .p-dropdown {
+  .p-select {
     background: var(--dark-bg-input);
     border-color: var(--dark-border);
     color: var(--dark-text-primary);
@@ -309,27 +309,27 @@ html, body {
       box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
     }
 
-    .p-dropdown-label {
+    .p-select-label {
       color: var(--dark-text-primary);
     }
 
-    .p-dropdown-trigger {
+    .p-select-trigger {
       color: var(--dark-text-secondary);
     }
   }
 
-  .p-dropdown-panel {
+  .p-select-panel {
     background: var(--dark-bg-card);
     border: 1px solid var(--dark-border);
     box-shadow: var(--dark-shadow-md);
 
-    .p-dropdown-header {
+    .p-select-header {
       background: var(--dark-bg-elevated);
       border-color: var(--dark-border);
     }
 
-    .p-dropdown-items {
-      .p-dropdown-item {
+    .p-select-items {
+      .p-select-item {
         color: var(--dark-text-primary);
 
         &:not(.p-highlight):not(.p-disabled):hover {
@@ -427,40 +427,34 @@ html, body {
   }
 
   // ---- Tabs ----
-  .p-tabview {
-    .p-tabview-nav {
+  .p-tabs {
+    .p-tablist {
       background: transparent;
       border-color: var(--dark-border);
 
-      li {
-        .p-tabview-nav-link {
+      .p-tab {
+        background: transparent;
+        border-color: transparent;
+        color: var(--dark-text-secondary);
+
+        &:hover {
+          color: var(--dark-text-primary);
+          background: var(--surface-hover);
+        }
+
+        &.p-tab-active {
+          color: var(--dark-teal-400);
+          border-color: var(--dark-teal-400);
           background: transparent;
-          border-color: transparent;
-          color: var(--dark-text-secondary);
-
-          &:hover {
-            color: var(--dark-text-primary);
-            background: var(--surface-hover);
-          }
         }
 
-        &.p-highlight {
-          .p-tabview-nav-link {
-            color: var(--dark-teal-400);
-            border-color: var(--dark-teal-400);
-            background: transparent;
-          }
-        }
-
-        &:not(.p-highlight):not(.p-disabled):hover {
-          .p-tabview-nav-link {
-            border-color: var(--dark-border);
-          }
+        &:not(.p-tab-active):not(.p-disabled):hover {
+          border-color: var(--dark-border);
         }
       }
     }
 
-    .p-tabview-panels {
+    .p-tabpanels {
       background: transparent;
       color: var(--dark-text-primary);
     }
@@ -1025,7 +1019,7 @@ html, body {
   }
 
   // Tab view
-  .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  .p-tabs .p-tablist .p-tab.p-tab-active {
     color: var(--ocean-deep);
     border-color: var(--ocean-mid);
   }

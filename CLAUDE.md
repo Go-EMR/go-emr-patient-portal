@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GoHealth Patient Portal - A HIPAA-compliant patient portal built with Angular 19 and PrimeNG. Despite the repository name, this is a TypeScript/Angular project, not Go.
+GoHealth Patient Portal - A HIPAA-compliant patient portal built with Angular 21 and PrimeNG 21. Despite the repository name, this is a TypeScript/Angular project, not Go.
 
 ## Commands
 

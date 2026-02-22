@@ -1,5 +1,5 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -23,7 +23,7 @@ interface PharmacyStore {
   selector: 'app-jan-aushadhi-locator',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, InputTextModule, DividerModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, InputTextModule, DividerModule],
   template: `
     <div class="jan-aushadhi-page">
       <header class="page-header">

@@ -12,7 +12,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { AvatarModule } from 'primeng/avatar';
 import { TagModule } from 'primeng/tag';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InputTextModule } from 'primeng/inputtext';
 import { DividerModule } from 'primeng/divider';
@@ -41,7 +41,7 @@ interface ViewModeOption {
     CardModule,
     AvatarModule,
     TagModule,
-    TabViewModule,
+    TabsModule,
     SelectButtonModule,
     InputTextModule,
     DividerModule,
@@ -380,179 +380,187 @@ interface ViewModeOption {
         <!-- Right detail panel -->
         @if (selectedMember()) {
           <aside class="family-detail-panel" aria-label="Member details">
-            <p-tabView>
-              <!-- Tab 1: Health -->
-              <p-tabPanel header="Health" leftIcon="pi pi-heart-fill">
-                <div class="tab-content">
-                  <h3 class="tab-section-title">Conditions</h3>
-                  @if (selectedMember()!.conditions.length > 0) {
-                    <div class="conditions-list" role="list">
-                      @for (condition of selectedMember()!.conditions; track condition.id) {
-                        <div class="condition-item" role="listitem">
-                          <div class="ci-header">
-                            <span class="ci-name">{{ condition.conditionName }}</span>
-                            <p-tag
-                              [value]="condition.status"
-                              [severity]="getConditionSeverity(condition.status)"
-                              styleClass="ci-status-tag"
-                            ></p-tag>
-                          </div>
-                          <div class="ci-meta">
-                            <span class="ci-category">{{ condition.category }}</span>
-                            @if (condition.onsetAge) {
-                              <span class="ci-onset">Onset: age {{ condition.onsetAge }}</span>
+            <p-tabs [value]="0">
+              <p-tablist>
+                <p-tab [value]="0"><i class="pi pi-heart-fill" aria-hidden="true"></i> Health</p-tab>
+                <p-tab [value]="1"><i class="pi pi-lock" aria-hidden="true"></i> Access</p-tab>
+                <p-tab [value]="2"><i class="pi pi-history" aria-hidden="true"></i> History</p-tab>
+                <p-tab [value]="3"><i class="pi pi-pencil" aria-hidden="true"></i> Edit</p-tab>
+              </p-tablist>
+              <p-tabpanels>
+                <!-- Panel 0: Health -->
+                <p-tabpanel [value]="0">
+                  <div class="tab-content">
+                    <h3 class="tab-section-title">Conditions</h3>
+                    @if (selectedMember()!.conditions.length > 0) {
+                      <div class="conditions-list" role="list">
+                        @for (condition of selectedMember()!.conditions; track condition.id) {
+                          <div class="condition-item" role="listitem">
+                            <div class="ci-header">
+                              <span class="ci-name">{{ condition.conditionName }}</span>
+                              <p-tag
+                                [value]="condition.status"
+                                [severity]="getConditionSeverity(condition.status)"
+                                styleClass="ci-status-tag"
+                              ></p-tag>
+                            </div>
+                            <div class="ci-meta">
+                              <span class="ci-category">{{ condition.category }}</span>
+                              @if (condition.onsetAge) {
+                                <span class="ci-onset">Onset: age {{ condition.onsetAge }}</span>
+                              }
+                              @if (condition.contributedToDeath) {
+                                <span class="ci-death">
+                                  <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                                  Contributed to death
+                                </span>
+                              }
+                            </div>
+                            @if (condition.notes) {
+                              <p class="ci-notes">{{ condition.notes }}</p>
                             }
-                            @if (condition.contributedToDeath) {
-                              <span class="ci-death">
-                                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-                                Contributed to death
-                              </span>
-                            }
                           </div>
-                          @if (condition.notes) {
-                            <p class="ci-notes">{{ condition.notes }}</p>
-                          }
-                        </div>
-                      }
-                    </div>
-                  } @else {
-                    <p class="empty-tab-text">No conditions recorded.</p>
-                  }
+                        }
+                      </div>
+                    } @else {
+                      <p class="empty-tab-text">No conditions recorded.</p>
+                    }
 
-                  @if (selectedMember()!.geneticTests.length > 0) {
+                    @if (selectedMember()!.geneticTests.length > 0) {
+                      <p-divider></p-divider>
+                      <h3 class="tab-section-title">Genetic Tests</h3>
+                      <div class="genetic-tests-list" role="list">
+                        @for (test of selectedMember()!.geneticTests; track test.id) {
+                          <div class="genetic-test-item" role="listitem">
+                            <div class="gt-header">
+                              <span class="gt-name">{{ test.testName }}</span>
+                              <p-tag
+                                [value]="test.classification"
+                                [severity]="getGeneticSeverity(test.classification)"
+                              ></p-tag>
+                            </div>
+                            <div class="gt-meta">
+                              <span>{{ test.geneName }}</span>
+                              @if (test.variant) {
+                                <span class="gt-variant">{{ test.variant }}</span>
+                              }
+                              <span class="gt-lab">{{ test.lab }}</span>
+                              <span class="gt-date">{{ test.testDate | date:'mediumDate' }}</span>
+                            </div>
+                            <p class="gt-summary">{{ test.resultSummary }}</p>
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </p-tabpanel>
+
+                <!-- Panel 1: Access -->
+                <p-tabpanel [value]="1">
+                  <div class="tab-content">
+                    <h3 class="tab-section-title">Permission Levels</h3>
+                    @if (getMemberPermissions(selectedMember()!.id).length > 0) {
+                      <div class="permission-list" role="list">
+                        @for (perm of getMemberPermissions(selectedMember()!.id); track perm.category) {
+                          <div class="perm-item" role="listitem">
+                            <span class="perm-category">{{ formatCategory(perm.category) }}</span>
+                            <span class="perm-level" [class]="'perm-level--' + perm.level">
+                              <i [class]="getAccessIcon(perm.level)" aria-hidden="true"></i>
+                              {{ formatAccessLevel(perm.level) }}
+                            </span>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="empty-tab-text">No permissions configured.</p>
+                    }
                     <p-divider></p-divider>
-                    <h3 class="tab-section-title">Genetic Tests</h3>
-                    <div class="genetic-tests-list" role="list">
-                      @for (test of selectedMember()!.geneticTests; track test.id) {
-                        <div class="genetic-test-item" role="listitem">
-                          <div class="gt-header">
-                            <span class="gt-name">{{ test.testName }}</span>
-                            <p-tag
-                              [value]="test.classification"
-                              [severity]="getGeneticSeverity(test.classification)"
-                            ></p-tag>
-                          </div>
-                          <div class="gt-meta">
-                            <span>{{ test.geneName }}</span>
-                            @if (test.variant) {
-                              <span class="gt-variant">{{ test.variant }}</span>
-                            }
-                            <span class="gt-lab">{{ test.lab }}</span>
-                            <span class="gt-date">{{ test.testDate | date:'mediumDate' }}</span>
-                          </div>
-                          <p class="gt-summary">{{ test.resultSummary }}</p>
-                        </div>
-                      }
-                    </div>
-                  }
-                </div>
-              </p-tabPanel>
-
-              <!-- Tab 2: Access -->
-              <p-tabPanel header="Access" leftIcon="pi pi-lock">
-                <div class="tab-content">
-                  <h3 class="tab-section-title">Permission Levels</h3>
-                  @if (getMemberPermissions(selectedMember()!.id).length > 0) {
-                    <div class="permission-list" role="list">
-                      @for (perm of getMemberPermissions(selectedMember()!.id); track perm.category) {
-                        <div class="perm-item" role="listitem">
-                          <span class="perm-category">{{ formatCategory(perm.category) }}</span>
-                          <span class="perm-level" [class]="'perm-level--' + perm.level">
-                            <i [class]="getAccessIcon(perm.level)" aria-hidden="true"></i>
-                            {{ formatAccessLevel(perm.level) }}
-                          </span>
-                        </div>
-                      }
-                    </div>
-                  } @else {
-                    <p class="empty-tab-text">No permissions configured.</p>
-                  }
-                  <p-divider></p-divider>
-                  <button
-                    pButton
-                    label="Edit Permissions"
-                    icon="pi pi-pencil"
-                    class="p-button-outlined w-full"
-                    routerLink="/family/permissions"
-                    aria-label="Edit permissions for this member"
-                  ></button>
-                </div>
-              </p-tabPanel>
-
-              <!-- Tab 3: History -->
-              <p-tabPanel header="History" leftIcon="pi pi-history">
-                <div class="tab-content">
-                  <h3 class="tab-section-title">Audit Log</h3>
-                  @if (getMemberAuditLog(selectedMember()!.id).length > 0) {
-                    <div class="audit-log-list" role="list">
-                      @for (entry of getMemberAuditLog(selectedMember()!.id); track entry.id) {
-                        <div class="audit-item" role="listitem">
-                          <div class="ai-icon">
-                            <i [class]="getAuditIcon(entry.action)" aria-hidden="true"></i>
-                          </div>
-                          <div class="ai-content">
-                            <span class="ai-action">{{ formatAction(entry.action) }}</span>
-                            <p class="ai-details">{{ entry.details }}</p>
-                            <span class="ai-time">{{ entry.timestamp | date:'medium' }}</span>
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  } @else {
-                    <p class="empty-tab-text">No audit history available.</p>
-                  }
-                </div>
-              </p-tabPanel>
-
-              <!-- Tab 4: Edit -->
-              <p-tabPanel header="Edit" leftIcon="pi pi-pencil">
-                <div class="tab-content">
-                  <h3 class="tab-section-title">Edit Member Details</h3>
-                  <form class="edit-form" (ngSubmit)="saveEdit()">
-                    <div class="form-field">
-                      <label for="edit-firstname">First Name</label>
-                      <input
-                        pInputText
-                        id="edit-firstname"
-                        [(ngModel)]="editFirstName"
-                        name="firstName"
-                        class="w-full"
-                      />
-                    </div>
-                    <div class="form-field">
-                      <label for="edit-lastname">Last Name</label>
-                      <input
-                        pInputText
-                        id="edit-lastname"
-                        [(ngModel)]="editLastName"
-                        name="lastName"
-                        class="w-full"
-                      />
-                    </div>
-                    <div class="form-field">
-                      <label for="edit-notes">Notes</label>
-                      <textarea
-                        pInputText
-                        id="edit-notes"
-                        [(ngModel)]="editNotes"
-                        name="notes"
-                        rows="4"
-                        class="w-full edit-notes-area"
-                        aria-label="Notes for this member"
-                      ></textarea>
-                    </div>
                     <button
                       pButton
-                      type="submit"
-                      label="Save Changes"
-                      icon="pi pi-check"
-                      class="p-button-success w-full"
-                      aria-label="Save member changes"
+                      label="Edit Permissions"
+                      icon="pi pi-pencil"
+                      class="p-button-outlined w-full"
+                      routerLink="/family/permissions"
+                      aria-label="Edit permissions for this member"
                     ></button>
-                  </form>
-                </div>
-              </p-tabPanel>
-            </p-tabView>
+                  </div>
+                </p-tabpanel>
+
+                <!-- Panel 2: History -->
+                <p-tabpanel [value]="2">
+                  <div class="tab-content">
+                    <h3 class="tab-section-title">Audit Log</h3>
+                    @if (getMemberAuditLog(selectedMember()!.id).length > 0) {
+                      <div class="audit-log-list" role="list">
+                        @for (entry of getMemberAuditLog(selectedMember()!.id); track entry.id) {
+                          <div class="audit-item" role="listitem">
+                            <div class="ai-icon">
+                              <i [class]="getAuditIcon(entry.action)" aria-hidden="true"></i>
+                            </div>
+                            <div class="ai-content">
+                              <span class="ai-action">{{ formatAction(entry.action) }}</span>
+                              <p class="ai-details">{{ entry.details }}</p>
+                              <span class="ai-time">{{ entry.timestamp | date:'medium' }}</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <p class="empty-tab-text">No audit history available.</p>
+                    }
+                  </div>
+                </p-tabpanel>
+
+                <!-- Panel 3: Edit -->
+                <p-tabpanel [value]="3">
+                  <div class="tab-content">
+                    <h3 class="tab-section-title">Edit Member Details</h3>
+                    <form class="edit-form" (ngSubmit)="saveEdit()">
+                      <div class="form-field">
+                        <label for="edit-firstname">First Name</label>
+                        <input
+                          pInputText
+                          id="edit-firstname"
+                          [(ngModel)]="editFirstName"
+                          name="firstName"
+                          class="w-full"
+                        />
+                      </div>
+                      <div class="form-field">
+                        <label for="edit-lastname">Last Name</label>
+                        <input
+                          pInputText
+                          id="edit-lastname"
+                          [(ngModel)]="editLastName"
+                          name="lastName"
+                          class="w-full"
+                        />
+                      </div>
+                      <div class="form-field">
+                        <label for="edit-notes">Notes</label>
+                        <textarea
+                          pInputText
+                          id="edit-notes"
+                          [(ngModel)]="editNotes"
+                          name="notes"
+                          rows="4"
+                          class="w-full edit-notes-area"
+                          aria-label="Notes for this member"
+                        ></textarea>
+                      </div>
+                      <button
+                        pButton
+                        type="submit"
+                        label="Save Changes"
+                        icon="pi pi-check"
+                        class="p-button-success w-full"
+                        aria-label="Save member changes"
+                      ></button>
+                    </form>
+                  </div>
+                </p-tabpanel>
+              </p-tabpanels>
+            </p-tabs>
           </aside>
         }
       </div>
@@ -1084,11 +1092,11 @@ interface ViewModeOption {
       overflow-y: auto;
     }
 
-    .family-detail-panel ::ng-deep .p-tabview {
+    .family-detail-panel ::ng-deep .p-tabs {
       height: 100%;
     }
 
-    .family-detail-panel ::ng-deep .p-tabview-panels {
+    .family-detail-panel ::ng-deep .p-tabpanels {
       padding: 0;
     }
 
@@ -1471,13 +1479,13 @@ export class FamilyDashboardComponent {
     return map[rel] ?? rel;
   }
 
-  getRelationshipSeverity(rel: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | 'contrast' | undefined {
-    const map: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary'> = {
+  getRelationshipSeverity(rel: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' | undefined {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       spouse: 'info',
       partner: 'info',
       child: 'success',
-      parent: 'warning',
-      grandparent: 'warning',
+      parent: 'warn',
+      grandparent: 'warn',
       sibling: 'secondary',
       'aunt-uncle': 'secondary',
     };
@@ -1530,20 +1538,20 @@ export class FamilyDashboardComponent {
     return map[cat] ?? cat;
   }
 
-  getConditionSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | undefined {
-    const map: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary'> = {
+  getConditionSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | undefined {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       affected: 'danger',
-      carrier: 'warning',
+      carrier: 'warn',
       unaffected: 'success',
       unknown: 'secondary',
     };
     return map[status] ?? 'secondary';
   }
 
-  getGeneticSeverity(classification: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | undefined {
-    const map: Record<string, 'success' | 'info' | 'warning' | 'danger' | 'secondary'> = {
+  getGeneticSeverity(classification: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | undefined {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       pathogenic: 'danger',
-      'likely-pathogenic': 'warning',
+      'likely-pathogenic': 'warn',
       vus: 'info',
       'likely-benign': 'secondary',
       benign: 'success',

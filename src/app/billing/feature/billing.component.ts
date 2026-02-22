@@ -3,13 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { DropdownModule } from 'primeng/dropdown';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { SelectModule } from 'primeng/select';
+import { Textarea } from 'primeng/textarea';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { InputTextModule } from 'primeng/inputtext';
 import { Statement } from '../../shared/data-access';
@@ -114,13 +114,13 @@ interface PaymentPlanOption {
     FormsModule,
     CardModule,
     ButtonModule,
-    TabViewModule,
+    TabsModule,
     TableModule,
     TagModule,
     DialogModule,
     TooltipModule,
-    DropdownModule,
-    InputTextarea,
+    SelectModule,
+    Textarea,
     RadioButtonModule,
     InputTextModule
   ],
@@ -205,11 +205,21 @@ interface PaymentPlanOption {
         </div>
       }
 
-      <p-tabView>
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab [value]="0">Overview</p-tab>
+          <p-tab [value]="1">Statements</p-tab>
+          <p-tab [value]="2">Claims</p-tab>
+          <p-tab [value]="3">Cost Estimator</p-tab>
+          <p-tab [value]="4">EOB</p-tab>
+          <p-tab [value]="5">CNAS Reimbursement</p-tab>
+          <p-tab [value]="6">Ayushman Bharat</p-tab>
+        </p-tablist>
+        <p-tabpanels>
         <!-- ══════════════════════════════════════════════════════
              Overview Tab
         ══════════════════════════════════════════════════════ -->
-        <p-tabPanel header="Overview">
+        <p-tabpanel [value]="0">
           <div class="billing-summary">
             <div class="summary-card balance">
               <div class="summary-icon"><i class="pi pi-wallet"></i></div>
@@ -282,12 +292,12 @@ interface PaymentPlanOption {
               </div>
             </div>
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ══════════════════════════════════════════════════════
              Statements Tab
         ══════════════════════════════════════════════════════ -->
-        <p-tabPanel header="Statements">
+        <p-tabpanel [value]="1">
           @if (filteredStatements().length === 0) {
             <div class="empty-state">
               <i class="pi pi-file-o"></i>
@@ -429,12 +439,12 @@ interface PaymentPlanOption {
               </ng-template>
             </p-table>
           }
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ══════════════════════════════════════════════════════
              Claims Tab
         ══════════════════════════════════════════════════════ -->
-        <p-tabPanel header="Claims">
+        <p-tabpanel [value]="2">
           @if (filteredClaims().length === 0) {
             <div class="empty-state">
               <i class="pi pi-file-o"></i>
@@ -527,12 +537,12 @@ interface PaymentPlanOption {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ══════════════════════════════════════════════════════
              Cost Estimator Tab (Feature 5.1)
         ══════════════════════════════════════════════════════ -->
-        <p-tabPanel header="Cost Estimator">
+        <p-tabpanel [value]="3">
           <div class="estimator-container">
             <div class="estimator-header">
               <div class="estimator-icon"><i class="pi pi-calculator"></i></div>
@@ -544,7 +554,7 @@ interface PaymentPlanOption {
 
             <div class="estimator-search">
               <label for="service-select" class="estimator-label">Select a Service</label>
-              <p-dropdown
+              <p-select
                 inputId="service-select"
                 [options]="serviceOptions"
                 [(ngModel)]="selectedService"
@@ -552,7 +562,7 @@ interface PaymentPlanOption {
                 placeholder="Choose a service..."
                 [style]="{width: '100%'}"
                 (onChange)="onServiceSelect()"
-              ></p-dropdown>
+              ></p-select>
             </div>
 
             @if (currentEstimate()) {
@@ -609,12 +619,12 @@ interface PaymentPlanOption {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ══════════════════════════════════════════════════════
              EOB Tab (Feature 5.3)
         ══════════════════════════════════════════════════════ -->
-        <p-tabPanel header="EOB">
+        <p-tabpanel [value]="4">
           <div class="eob-container">
             <div class="eob-info-banner">
               <div class="eob-info-banner__icon"><i class="pi pi-info-circle"></i></div>
@@ -674,12 +684,12 @@ interface PaymentPlanOption {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ══════════════════════════════════════════════════════
              CNAS Reimbursement Tab (Feature 13.3)
         ══════════════════════════════════════════════════════ -->
-        <p-tabPanel header="CNAS Reimbursement">
+        <p-tabpanel [value]="5">
           <div class="cnas-container">
             <!-- Header -->
             <div class="cnas-header">
@@ -771,12 +781,12 @@ interface PaymentPlanOption {
               <span>Claims are processed by <strong>Casa Nationala de Asigurari de Sanatate</strong>. Processing time: <strong>15-30 business days</strong>.</span>
             </div>
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ══════════════════════════════════════════════════════
              Ayushman Bharat PM-JAY Tab (Feature 13.4)
         ══════════════════════════════════════════════════════ -->
-        <p-tabPanel header="Ayushman Bharat">
+        <p-tabpanel [value]="6">
           <div class="pmjay-container">
 
             <!-- Beneficiary Status Card -->
@@ -893,9 +903,10 @@ interface PaymentPlanOption {
             </div>
 
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
-      </p-tabView>
+        </p-tabpanels>
+      </p-tabs>
 
       <!-- ════════════════════════════════════════════════════════
            Payment Dialog — Feature 5.6 (Payment Method Selection)
@@ -1153,12 +1164,12 @@ interface PaymentPlanOption {
 
             <div class="form-field">
               <label class="form-label">Dispute Reason <span class="required">*</span></label>
-              <p-dropdown
+              <p-select
                 [options]="disputeReasonOptions"
                 [(ngModel)]="disputeForm.reason"
                 placeholder="Select a reason..."
                 [style]="{width: '100%'}"
-              ></p-dropdown>
+              ></p-select>
             </div>
 
             <div class="form-field">

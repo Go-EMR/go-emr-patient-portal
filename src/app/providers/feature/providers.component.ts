@@ -1,5 +1,5 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
@@ -9,7 +9,7 @@ import { ProvidersService, Provider, Specialty, SortBy, SPECIALTIES } from '../d
   selector: 'app-providers',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ButtonModule, CardModule, TagModule],
+  imports: [ButtonModule, CardModule, TagModule],
   template: `
     <div class="providers-page">
 

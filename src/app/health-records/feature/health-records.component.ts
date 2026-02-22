@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
@@ -36,7 +36,7 @@ interface ImagingStudy {
     FormsModule,
     CardModule,
     ButtonModule,
-    TabViewModule,
+    TabsModule,
     TagModule,
     TableModule,
     DialogModule,
@@ -53,16 +53,36 @@ interface ImagingStudy {
         <p>View your complete health information</p>
       </header>
 
-      <p-tabView>
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab [value]="0">Medications</p-tab>
+          <p-tab [value]="1">
+            <span class="lab-tab-header">
+              Lab Results
+              <button
+                class="lab-settings-btn"
+                pTooltip="Result notification settings"
+                tooltipPosition="top"
+                (click)="openNotifSettings($event)"
+              ><i class="pi pi-cog"></i></button>
+            </span>
+          </p-tab>
+          <p-tab [value]="2">Allergies</p-tab>
+          <p-tab [value]="3">Immunizations</p-tab>
+          <p-tab [value]="4">Clinical Documents</p-tab>
+          <p-tab [value]="5">Imaging</p-tab>
+          <p-tab [value]="6">Preventive Care</p-tab>
+        </p-tablist>
+        <p-tabpanels>
 
         <!-- ── Medications ── -->
-        <p-tabPanel header="Medications">
+        <p-tabpanel [value]="0">
           <div class="medications-grid">
             @for (med of medications(); track med.id) {
               <div class="medication-card" [class.controlled]="med.isControlled">
                 <div class="med-header">
                   <h3>{{ med.medicationName }}</h3>
-                  @if (med.isControlled) { <p-tag value="Controlled" severity="warning"></p-tag> }
+                  @if (med.isControlled) { <p-tag value="Controlled" severity="warn"></p-tag> }
                 </div>
                 <p class="generic">{{ med.genericName }}</p>
                 <div class="med-details">
@@ -79,21 +99,10 @@ interface ImagingStudy {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ── Lab Results ── -->
-        <p-tabPanel>
-          <ng-template pTemplate="header">
-            <span class="lab-tab-header">
-              Lab Results
-              <button
-                class="lab-settings-btn"
-                pTooltip="Result notification settings"
-                tooltipPosition="top"
-                (click)="openNotifSettings($event)"
-              ><i class="pi pi-cog"></i></button>
-            </span>
-          </ng-template>
+        <p-tabpanel [value]="1">
           <p-table [value]="labResults()" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
             <ng-template pTemplate="header">
               <tr>
@@ -135,10 +144,10 @@ interface ImagingStudy {
               </tr>
             </ng-template>
           </p-table>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ── Allergies ── -->
-        <p-tabPanel header="Allergies">
+        <p-tabpanel [value]="2">
           <div class="allergies-list">
             @for (allergy of allergies(); track allergy.id) {
               <div class="allergy-card" [class]="allergy.severity">
@@ -152,10 +161,10 @@ interface ImagingStudy {
               <p class="empty">No allergies on file</p>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ── Immunizations ── -->
-        <p-tabPanel header="Immunizations">
+        <p-tabpanel [value]="3">
           <div class="imm-toolbar">
             <button
               pButton
@@ -184,16 +193,16 @@ interface ImagingStudy {
                 <td>
                   <p-tag
                     [value]="imm.seriesComplete ? 'Complete' : 'In Progress'"
-                    [severity]="imm.seriesComplete ? 'success' : 'warning'"
+                    [severity]="imm.seriesComplete ? 'success' : 'warn'"
                   ></p-tag>
                 </td>
               </tr>
             </ng-template>
           </p-table>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ── Clinical Documents ── -->
-        <p-tabPanel header="Clinical Documents">
+        <p-tabpanel [value]="4">
           <div class="doc-filter-bar">
             <div class="doc-category-chips">
               @for (cat of docCategories; track cat) {
@@ -271,10 +280,10 @@ interface ImagingStudy {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ── Imaging (Feature 10.4) ── -->
-        <p-tabPanel header="Imaging">
+        <p-tabpanel [value]="5">
           <div class="imaging-list">
             @for (study of imagingStudies(); track study.id) {
               <div class="imaging-row">
@@ -307,10 +316,10 @@ interface ImagingStudy {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ── Preventive Care ── -->
-        <p-tabPanel header="Preventive Care">
+        <p-tabpanel [value]="6">
           <!-- Feature 10.8: Enhanced summary bar -->
           <div class="pcare-enhanced-banner">
             <div class="pcare-summary-text">
@@ -427,9 +436,10 @@ interface ImagingStudy {
               </div>
             </div>
           }
-        </p-tabPanel>
+        </p-tabpanel>
 
-      </p-tabView>
+        </p-tabpanels>
+      </p-tabs>
 
       <!-- ── Lab Detail / Comparison Dialog ── -->
       <p-dialog

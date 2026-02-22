@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { InputOtpModule } from 'primeng/inputotp';
@@ -9,7 +9,7 @@ import { AuthService } from '../data-access';
 @Component({
   selector: 'app-mfa',
   standalone: true,
-  imports: [CommonModule, FormsModule, CardModule, InputOtpModule, ButtonModule],
+  imports: [FormsModule, CardModule, InputOtpModule, ButtonModule],
   template: `
     <div class="mfa-container">
       <p-card styleClass="mfa-card">

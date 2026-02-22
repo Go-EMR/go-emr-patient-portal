@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -22,7 +22,7 @@ interface DesRecord {
   selector: 'app-des-viewer',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, BadgeModule],
+  imports: [CardModule, ButtonModule, TagModule, TableModule, DividerModule, BadgeModule],
   template: `
     <div class="des-page">
       <header class="page-header">
@@ -254,12 +254,12 @@ export class DesViewerComponent {
     return labels[status] ?? status;
   }
 
-  getStatusSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' {
-    const severities: Record<string, 'success' | 'info' | 'warning' | 'danger'> = {
+  getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' {
+    const severities: Record<string, 'success' | 'info' | 'warn' | 'danger'> = {
       active: 'success',
       expired: 'danger',
       used: 'info',
-      pending: 'warning'
+      pending: 'warn'
     };
     return severities[status] ?? 'info';
   }

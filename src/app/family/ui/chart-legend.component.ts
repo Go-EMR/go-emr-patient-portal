@@ -4,7 +4,7 @@ import {
   signal,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 
@@ -59,7 +59,7 @@ const RISK_ITEMS: LegendItem[] = [
   selector: 'app-chart-legend',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ButtonModule, CardModule],
+  imports: [ButtonModule, CardModule],
   template: `
     <div class="chart-legend" [class.collapsed]="!visible()">
       <!-- Toggle button always visible -->
@@ -72,101 +72,106 @@ const RISK_ITEMS: LegendItem[] = [
         [attr.aria-expanded]="visible()"
         (click)="toggleVisible()"
       ></button>
-
+    
       <!-- Legend body -->
-      <div class="legend-body" *ngIf="visible()">
-        <div class="legend-title">
-          <span class="pi pi-list"></span>
-          <span>Legend</span>
-          <span class="legend-mode-badge">{{ viewMode }}</span>
+      @if (visible()) {
+        <div class="legend-body">
+          <div class="legend-title">
+            <span class="pi pi-list"></span>
+            <span>Legend</span>
+            <span class="legend-mode-badge">{{ viewMode }}</span>
+          </div>
+          <ul class="legend-list" role="list">
+            @for (item of currentItems(); track trackItem($index, item)) {
+              <li
+                class="legend-item"
+                role="listitem"
+                >
+                <!-- Symbol SVG -->
+                <svg
+                  [attr.width]="symbolSize"
+                  [attr.height]="symbolSize"
+                  [attr.aria-label]="item.label + ' symbol'"
+                  role="img"
+                  class="legend-symbol"
+                  >
+                  <!-- Square -->
+                  @if (item.symbol === 'square') {
+                    <rect
+                      x="2" y="2" width="12" height="12"
+                      [attr.fill]="item.color"
+                      [attr.stroke]="item.strokeColor || '#374151'"
+                      stroke-width="1.5"
+                    ></rect>
+                  }
+                  <!-- Circle -->
+                  @if (item.symbol === 'circle') {
+                    <circle
+                      cx="8" cy="8" r="6"
+                      [attr.fill]="item.color"
+                      [attr.stroke]="item.strokeColor || '#374151'"
+                      stroke-width="1.5"
+                    ></circle>
+                  }
+                  <!-- Diamond -->
+                  @if (item.symbol === 'diamond') {
+                    <polygon
+                      points="8,1 15,8 8,15 1,8"
+                      [attr.fill]="item.color"
+                      [attr.stroke]="item.strokeColor || '#374151'"
+                      stroke-width="1.5"
+                    ></polygon>
+                  }
+                  <!-- Diagonal death line -->
+                  @if (item.symbol === 'line') {
+                    <g>
+                      <rect x="2" y="2" width="12" height="12" fill="#fff" stroke="#374151" stroke-width="1.5"></rect>
+                      <line x1="2" y1="14" x2="14" y2="2" stroke="#374151" stroke-width="1.5"></line>
+                    </g>
+                  }
+                  <!-- Carrier centre dot -->
+                  @if (item.symbol === 'dot') {
+                    <g>
+                      <circle cx="8" cy="8" r="6" fill="#fff" stroke="#374151" stroke-width="1.5"></circle>
+                      <circle cx="8" cy="8" r="2.5" fill="#374151"></circle>
+                    </g>
+                  }
+                  <!-- Adopted brackets -->
+                  @if (item.symbol === 'bracket') {
+                    <g>
+                      <rect x="4" y="2" width="8" height="12" fill="#fff" stroke="#374151" stroke-width="1.5"></rect>
+                      <path d="M4,2 L1,2 L1,14 L4,14" fill="none" stroke="#374151" stroke-width="1.5"></path>
+                      <path d="M12,2 L15,2 L15,14 L12,14" fill="none" stroke="#374151" stroke-width="1.5"></path>
+                    </g>
+                  }
+                  <!-- Permission ring -->
+                  @if (item.symbol === 'ring') {
+                    <circle
+                      cx="8" cy="8" r="6"
+                      fill="none"
+                      [attr.stroke]="item.color"
+                      stroke-width="2.5"
+                      [attr.stroke-dasharray]="item.isDashed ? '3,2' : 'none'"
+                    ></circle>
+                  }
+                  <!-- Risk badge -->
+                  @if (item.symbol === 'badge') {
+                    <rect
+                      x="1" y="3" width="14" height="10" rx="4"
+                      [attr.fill]="item.color"
+                      stroke="#d1d5db"
+                      stroke-width="1"
+                    ></rect>
+                  }
+                </svg>
+                <span class="legend-label">{{ item.label }}</span>
+              </li>
+            }
+          </ul>
         </div>
-
-        <ul class="legend-list" role="list">
-          <li
-            *ngFor="let item of currentItems(); trackBy: trackItem"
-            class="legend-item"
-            role="listitem"
-          >
-            <!-- Symbol SVG -->
-            <svg
-              [attr.width]="symbolSize"
-              [attr.height]="symbolSize"
-              [attr.aria-label]="item.label + ' symbol'"
-              role="img"
-              class="legend-symbol"
-            >
-              <!-- Square -->
-              <rect
-                *ngIf="item.symbol === 'square'"
-                x="2" y="2" width="12" height="12"
-                [attr.fill]="item.color"
-                [attr.stroke]="item.strokeColor || '#374151'"
-                stroke-width="1.5"
-              ></rect>
-
-              <!-- Circle -->
-              <circle
-                *ngIf="item.symbol === 'circle'"
-                cx="8" cy="8" r="6"
-                [attr.fill]="item.color"
-                [attr.stroke]="item.strokeColor || '#374151'"
-                stroke-width="1.5"
-              ></circle>
-
-              <!-- Diamond -->
-              <polygon
-                *ngIf="item.symbol === 'diamond'"
-                points="8,1 15,8 8,15 1,8"
-                [attr.fill]="item.color"
-                [attr.stroke]="item.strokeColor || '#374151'"
-                stroke-width="1.5"
-              ></polygon>
-
-              <!-- Diagonal death line -->
-              <g *ngIf="item.symbol === 'line'">
-                <rect x="2" y="2" width="12" height="12" fill="#fff" stroke="#374151" stroke-width="1.5"></rect>
-                <line x1="2" y1="14" x2="14" y2="2" stroke="#374151" stroke-width="1.5"></line>
-              </g>
-
-              <!-- Carrier centre dot -->
-              <g *ngIf="item.symbol === 'dot'">
-                <circle cx="8" cy="8" r="6" fill="#fff" stroke="#374151" stroke-width="1.5"></circle>
-                <circle cx="8" cy="8" r="2.5" fill="#374151"></circle>
-              </g>
-
-              <!-- Adopted brackets -->
-              <g *ngIf="item.symbol === 'bracket'">
-                <rect x="4" y="2" width="8" height="12" fill="#fff" stroke="#374151" stroke-width="1.5"></rect>
-                <path d="M4,2 L1,2 L1,14 L4,14" fill="none" stroke="#374151" stroke-width="1.5"></path>
-                <path d="M12,2 L15,2 L15,14 L12,14" fill="none" stroke="#374151" stroke-width="1.5"></path>
-              </g>
-
-              <!-- Permission ring -->
-              <circle
-                *ngIf="item.symbol === 'ring'"
-                cx="8" cy="8" r="6"
-                fill="none"
-                [attr.stroke]="item.color"
-                stroke-width="2.5"
-                [attr.stroke-dasharray]="item.isDashed ? '3,2' : 'none'"
-              ></circle>
-
-              <!-- Risk badge -->
-              <rect
-                *ngIf="item.symbol === 'badge'"
-                x="1" y="3" width="14" height="10" rx="4"
-                [attr.fill]="item.color"
-                stroke="#d1d5db"
-                stroke-width="1"
-              ></rect>
-            </svg>
-
-            <span class="legend-label">{{ item.label }}</span>
-          </li>
-        </ul>
-      </div>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .chart-legend {
       position: absolute;

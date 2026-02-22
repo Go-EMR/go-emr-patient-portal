@@ -14,14 +14,14 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
-import { SidebarModule } from 'primeng/sidebar';
+import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { Textarea } from 'primeng/textarea';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
@@ -57,14 +57,14 @@ interface GeneSuggestion {
     CommonModule,
     FormsModule,
     TableModule,
-    SidebarModule,
+    DrawerModule,
     ButtonModule,
     TagModule,
-    DropdownModule,
-    CalendarModule,
+    SelectModule,
+    DatePickerModule,
     AutoCompleteModule,
     InputTextModule,
-    InputTextarea,
+    Textarea,
     CheckboxModule,
     DialogModule,
     MessageModule,
@@ -176,7 +176,7 @@ interface GeneSuggestion {
     </div>
 
     <!-- Add Test Sidebar -->
-    <p-sidebar
+    <p-drawer
       [(visible)]="sidebarVisible"
       position="right"
       [style]="{ width: '440px' }"
@@ -187,14 +187,14 @@ interface GeneSuggestion {
         <!-- Member selector -->
         <div class="field">
           <label class="field-label">Family Member *</label>
-          <p-dropdown
+          <p-select
             [(ngModel)]="form.memberId"
             [options]="memberOptions()"
             optionLabel="label"
             optionValue="value"
             placeholder="Select member..."
             styleClass="w-full"
-          ></p-dropdown>
+          ></p-select>
         </div>
 
         <!-- Test name -->
@@ -227,21 +227,21 @@ interface GeneSuggestion {
         <!-- Classification -->
         <div class="field">
           <label class="field-label">Classification *</label>
-          <p-dropdown
+          <p-select
             [(ngModel)]="form.classification"
             [options]="classificationOptions"
             optionLabel="label"
             optionValue="value"
             placeholder="Select..."
             styleClass="w-full"
-          ></p-dropdown>
+          ></p-select>
         </div>
 
         <!-- Test date + lab -->
         <div class="field-row-2">
           <div class="field">
             <label class="field-label">Test Date</label>
-            <p-calendar [(ngModel)]="form.testDate" dateFormat="mm/dd/yy" styleClass="w-full" [showIcon]="true"></p-calendar>
+            <p-datepicker [(ngModel)]="form.testDate" dateFormat="mm/dd/yy" styleClass="w-full" [showIcon]="true"></p-datepicker>
           </div>
           <div class="field">
             <label class="field-label">Lab</label>
@@ -281,7 +281,7 @@ interface GeneSuggestion {
           ></p-button>
         </div>
       </div>
-    </p-sidebar>
+    </p-drawer>
 
     <!-- GDPR Consent Gate (Romania) -->
     <p-dialog

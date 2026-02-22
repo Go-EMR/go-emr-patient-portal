@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
@@ -11,7 +11,7 @@ import { PrescriptionsService, Prescription, RefillRequest, PharmacyInfo, Adhere
   selector: 'app-prescriptions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ButtonModule, CardModule, TagModule, DialogModule, TooltipModule],
+  imports: [ButtonModule, CardModule, TagModule, DialogModule, TooltipModule],
   template: `
     <div class="prescriptions-page">
 

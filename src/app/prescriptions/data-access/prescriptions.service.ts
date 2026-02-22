@@ -645,10 +645,10 @@ export class PrescriptionsService {
     return labels[status];
   }
 
-  getStatusSeverity(status: RefillRequest['status']): 'success' | 'info' | 'warning' | 'danger' {
-    const map: Record<RefillRequest['status'], 'success' | 'info' | 'warning' | 'danger'> = {
+  getStatusSeverity(status: RefillRequest['status']): 'success' | 'info' | 'warn' | 'danger' {
+    const map: Record<RefillRequest['status'], 'success' | 'info' | 'warn' | 'danger'> = {
       'requested': 'info',
-      'processing': 'warning',
+      'processing': 'warn',
       'ready': 'success',
       'picked-up': 'success'
     };

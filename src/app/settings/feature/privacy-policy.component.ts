@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { RouterModule } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -9,7 +9,7 @@ import { DividerModule } from 'primeng/divider';
   selector: 'app-privacy-policy',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterModule, CardModule, ButtonModule, DividerModule],
+  imports: [RouterModule, CardModule, ButtonModule, DividerModule],
   template: `
     <div class="privacy-page">
       <header class="page-header">

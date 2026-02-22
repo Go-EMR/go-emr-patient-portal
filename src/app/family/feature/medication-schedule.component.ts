@@ -5,9 +5,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
@@ -33,16 +33,15 @@ interface CountryTabConfig {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
-    TabViewModule,
+    TabsModule,
     TableModule,
     TagModule,
     InputTextModule,
     MessageModule,
     TooltipModule,
-    CardModule,
-  ],
+    CardModule
+],
   template: `
     <div class="medication-schedule p-4">
       <div class="page-header mb-4">
@@ -54,123 +53,130 @@ interface CountryTabConfig {
         </p>
       </div>
 
-      <p-tabView>
-        @for (tab of countryTabs; track tab.country) {
-          <p-tabPanel [header]="tab.flag + ' ' + tab.label">
+      <p-tabs [value]="0">
+        <p-tablist>
+          @for (tab of countryTabs; track tab.country; let i = $index) {
+            <p-tab [value]="i">{{ tab.flag }} {{ tab.label }}</p-tab>
+          }
+        </p-tablist>
+        <p-tabpanels>
+          @for (tab of countryTabs; track tab.country; let i = $index) {
+            <p-tabpanel [value]="i">
 
-            <!-- Country schedule system callout -->
-            <p-message
-              severity="info"
-              styleClass="w-full mb-4"
-              [text]="tab.systemDescription">
-            </p-message>
+              <!-- Country schedule system callout -->
+              <p-message
+                severity="info"
+                styleClass="w-full mb-4"
+                [text]="tab.systemDescription">
+              </p-message>
 
-            <div class="surface-50 border-round border-1 surface-border p-3 mb-4 text-sm text-gray-700">
-              {{ tab.systemDetails }}
-            </div>
-
-            <!-- Search input -->
-            <div class="mb-3 flex align-items-center gap-2">
-              <i class="pi pi-search text-gray-400"></i>
-              <input
-                pInputText
-                type="text"
-                [(ngModel)]="searchTerms[tab.country]"
-                [placeholder]="'Search drugs in ' + tab.label + '...'"
-                class="w-full md:w-20rem"
-                (input)="onSearch()" />
-            </div>
-
-            <!-- Drug table -->
-            <p-table
-              [value]="getFilteredDrugs(tab.country)"
-              [paginator]="true"
-              [rows]="8"
-              [rowsPerPageOptions]="[8, 15, 30]"
-              [showCurrentPageReport]="true"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords} drugs"
-              styleClass="p-datatable-sm p-datatable-striped"
-              [globalFilterFields]="['drugName', 'genericName']">
-
-              <ng-template pTemplate="header">
-                <tr>
-                  <th pSortableColumn="drugName" style="min-width: 150px">
-                    Drug Name <p-sortIcon field="drugName"></p-sortIcon>
-                  </th>
-                  <th style="min-width: 160px">Generic Name</th>
-                  <th style="width: 130px">Schedule Code</th>
-                  <th style="width: 140px">Telehealth</th>
-                  <th>Notes</th>
-                </tr>
-              </ng-template>
-
-              <ng-template pTemplate="body" let-drug>
-                <tr>
-                  <td class="font-semibold">{{ drug.drugName }}</td>
-                  <td class="text-gray-500 text-sm italic">{{ drug.genericName }}</td>
-                  <td>
-                    <p-tag
-                      [value]="getScheduleCode(drug, tab.country)"
-                      [severity]="getScheduleSeverity(drug, tab.country)"
-                      [pTooltip]="getScheduleTooltip(drug, tab.country)"
-                      tooltipPosition="top">
-                    </p-tag>
-                  </td>
-                  <td>
-                    <div class="flex align-items-center gap-1">
-                      @let teleStatus = getTelehealthStatus(drug, tab.country);
-                      @if (teleStatus === true) {
-                        <i class="pi pi-check-circle text-green-600 text-lg"
-                           pTooltip="Telehealth prescribing allowed"
-                           tooltipPosition="top"></i>
-                        <span class="text-xs text-green-700">Allowed</span>
-                      } @else if (teleStatus === false) {
-                        <i class="pi pi-times-circle text-red-500 text-lg"
-                           pTooltip="Telehealth prescribing not permitted"
-                           tooltipPosition="top"></i>
-                        <span class="text-xs text-red-600">Not Allowed</span>
-                      } @else {
-                        <i class="pi pi-exclamation-triangle text-orange-500 text-lg"
-                           pTooltip="Allowed with conditions — see notes"
-                           tooltipPosition="top"></i>
-                        <span class="text-xs text-orange-700">Conditional</span>
-                      }
-                    </div>
-                  </td>
-                  <td class="text-sm text-gray-600" style="max-width: 280px; white-space: normal; line-height: 1.4">
-                    {{ drug.notes[tab.country] }}
-                  </td>
-                </tr>
-              </ng-template>
-
-              <ng-template pTemplate="emptymessage">
-                <tr>
-                  <td colspan="5" class="text-center py-4 text-gray-400">
-                    <i class="pi pi-search mr-2"></i>No drugs match your search.
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-
-            <!-- Legend -->
-            <div class="legend mt-4 flex flex-wrap gap-3">
-              <span class="text-xs text-gray-500 font-medium">Schedule legend:</span>
-              <div class="flex align-items-center gap-1">
-                <p-tag value="Controlled" severity="danger" styleClass="text-xs"></p-tag>
-                <span class="text-xs text-gray-500">Controlled substance</span>
+              <div class="surface-50 border-round border-1 surface-border p-3 mb-4 text-sm text-gray-700">
+                {{ tab.systemDetails }}
               </div>
-              <div class="flex align-items-center gap-1">
-                <p-tag value="Rx" severity="warn" styleClass="text-xs"></p-tag>
-                <span class="text-xs text-gray-500">Prescription only</span>
+
+              <!-- Search input -->
+              <div class="mb-3 flex align-items-center gap-2">
+                <i class="pi pi-search text-gray-400"></i>
+                <input
+                  pInputText
+                  type="text"
+                  [(ngModel)]="searchTerms[tab.country]"
+                  [placeholder]="'Search drugs in ' + tab.label + '...'"
+                  class="w-full md:w-20rem"
+                  (input)="onSearch()" />
               </div>
-              <div class="flex align-items-center gap-1">
-                <p-tag value="OTC" severity="success" styleClass="text-xs"></p-tag>
-                <span class="text-xs text-gray-500">Over the counter</span>
+
+              <!-- Drug table -->
+              <p-table
+                [value]="getFilteredDrugs(tab.country)"
+                [paginator]="true"
+                [rows]="8"
+                [rowsPerPageOptions]="[8, 15, 30]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} drugs"
+                styleClass="p-datatable-sm p-datatable-striped"
+                [globalFilterFields]="['drugName', 'genericName']">
+
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="drugName" style="min-width: 150px">
+                      Drug Name <p-sortIcon field="drugName"></p-sortIcon>
+                    </th>
+                    <th style="min-width: 160px">Generic Name</th>
+                    <th style="width: 130px">Schedule Code</th>
+                    <th style="width: 140px">Telehealth</th>
+                    <th>Notes</th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-drug>
+                  <tr>
+                    <td class="font-semibold">{{ drug.drugName }}</td>
+                    <td class="text-gray-500 text-sm italic">{{ drug.genericName }}</td>
+                    <td>
+                      <p-tag
+                        [value]="getScheduleCode(drug, tab.country)"
+                        [severity]="getScheduleSeverity(drug, tab.country)"
+                        [pTooltip]="getScheduleTooltip(drug, tab.country)"
+                        tooltipPosition="top">
+                      </p-tag>
+                    </td>
+                    <td>
+                      <div class="flex align-items-center gap-1">
+                        @let teleStatus = getTelehealthStatus(drug, tab.country);
+                        @if (teleStatus === true) {
+                          <i class="pi pi-check-circle text-green-600 text-lg"
+                             pTooltip="Telehealth prescribing allowed"
+                             tooltipPosition="top"></i>
+                          <span class="text-xs text-green-700">Allowed</span>
+                        } @else if (teleStatus === false) {
+                          <i class="pi pi-times-circle text-red-500 text-lg"
+                             pTooltip="Telehealth prescribing not permitted"
+                             tooltipPosition="top"></i>
+                          <span class="text-xs text-red-600">Not Allowed</span>
+                        } @else {
+                          <i class="pi pi-exclamation-triangle text-orange-500 text-lg"
+                             pTooltip="Allowed with conditions — see notes"
+                             tooltipPosition="top"></i>
+                          <span class="text-xs text-orange-700">Conditional</span>
+                        }
+                      </div>
+                    </td>
+                    <td class="text-sm text-gray-600" style="max-width: 280px; white-space: normal; line-height: 1.4">
+                      {{ drug.notes[tab.country] }}
+                    </td>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="5" class="text-center py-4 text-gray-400">
+                      <i class="pi pi-search mr-2"></i>No drugs match your search.
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+
+              <!-- Legend -->
+              <div class="legend mt-4 flex flex-wrap gap-3">
+                <span class="text-xs text-gray-500 font-medium">Schedule legend:</span>
+                <div class="flex align-items-center gap-1">
+                  <p-tag value="Controlled" severity="danger" styleClass="text-xs"></p-tag>
+                  <span class="text-xs text-gray-500">Controlled substance</span>
+                </div>
+                <div class="flex align-items-center gap-1">
+                  <p-tag value="Rx" severity="warn" styleClass="text-xs"></p-tag>
+                  <span class="text-xs text-gray-500">Prescription only</span>
+                </div>
+                <div class="flex align-items-center gap-1">
+                  <p-tag value="OTC" severity="success" styleClass="text-xs"></p-tag>
+                  <span class="text-xs text-gray-500">Over the counter</span>
+                </div>
               </div>
-            </div>
-          </p-tabPanel>
-        }
-      </p-tabView>
+            </p-tabpanel>
+          }
+        </p-tabpanels>
+      </p-tabs>
     </div>
   `,
   styles: [`

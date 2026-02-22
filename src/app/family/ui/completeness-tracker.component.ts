@@ -13,7 +13,7 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ButtonModule } from 'primeng/button';
@@ -32,12 +32,11 @@ import {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     ProgressBarModule,
     ButtonModule,
     DialogModule,
-    DividerModule,
-  ],
+    DividerModule
+],
   template: `
     <div class="completeness-widget">
       <div class="widget-header">

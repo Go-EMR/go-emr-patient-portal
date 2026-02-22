@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { HealthAnalyticsService } from '../data-access';
 
@@ -61,7 +61,7 @@ function historySparkPath(scores: number[], maxScore: number, w: number, h: numb
   selector: 'app-pro-questionnaires',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   template: `
 <div class="pro-page">
 

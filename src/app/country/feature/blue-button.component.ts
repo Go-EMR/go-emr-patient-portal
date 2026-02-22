@@ -1,5 +1,5 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -24,7 +24,7 @@ interface MedicareClaim {
   selector: 'app-blue-button',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, ToastModule],
+  imports: [CardModule, ButtonModule, TagModule, TableModule, DividerModule, ToastModule],
   providers: [MessageService],
   template: `
     <div class="blue-button-page">
@@ -316,10 +316,10 @@ export class BlueButtonComponent {
   readonly totalMedicarePaid = computed(() => this.claims().reduce((s, c) => s + c.medicarePaid, 0));
   readonly totalPatientResponsibility = computed(() => this.claims().reduce((s, c) => s + c.patientResponsibility, 0));
 
-  getClaimStatusSeverity(status: string): 'success' | 'warning' | 'danger' | 'info' {
-    const map: Record<string, 'success' | 'warning' | 'danger' | 'info'> = {
+  getClaimStatusSeverity(status: string): 'success' | 'warn' | 'danger' | 'info' {
+    const map: Record<string, 'success' | 'warn' | 'danger' | 'info'> = {
       Processed: 'success',
-      Pending: 'warning',
+      Pending: 'warn',
       Denied: 'danger'
     };
     return map[status] ?? 'info';

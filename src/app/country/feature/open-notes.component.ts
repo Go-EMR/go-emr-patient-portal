@@ -1,5 +1,5 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -24,7 +24,7 @@ interface ClinicalNote {
   selector: 'app-open-notes',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, DividerModule, SelectButtonModule, AnimateOnScrollModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, DividerModule, SelectButtonModule, AnimateOnScrollModule],
   template: `
     <div class="open-notes-page">
       <header class="page-header">
@@ -433,10 +433,10 @@ Electronically signed: Dr. Emily Chen, MD | 10 Jan 2025, 09:15 AM`,
     return icons[type] ?? 'pi-file';
   }
 
-  getNoteTagSeverity(type: string): 'success' | 'info' | 'warning' | 'danger' {
-    const severities: Record<string, 'success' | 'info' | 'warning' | 'danger'> = {
+  getNoteTagSeverity(type: string): 'success' | 'info' | 'warn' | 'danger' {
+    const severities: Record<string, 'success' | 'info' | 'warn' | 'danger'> = {
       visit: 'success',
-      procedure: 'warning',
+      procedure: 'warn',
       consultation: 'info',
       discharge: 'danger'
     };

@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -23,7 +23,7 @@ interface AbhaProfile {
   selector: 'app-abha-health-id',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
+  imports: [CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
   providers: [MessageService],
   template: `
     <div class="abha-page">
@@ -238,7 +238,7 @@ interface AbhaProfile {
                 <span class="facility-type">{{ facility.type }}</span>
                 <span class="facility-linked">Linked since {{ facility.linkedDate }}</span>
               </div>
-              <p-tag [value]="facility.status" [severity]="facility.status === 'Active' ? 'success' : 'warning'"></p-tag>
+              <p-tag [value]="facility.status" [severity]="facility.status === 'Active' ? 'success' : 'warn'"></p-tag>
             </div>
           }
         </div>

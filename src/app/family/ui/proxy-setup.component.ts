@@ -10,7 +10,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { StepsModule } from 'primeng/steps';
+import { StepperModule } from 'primeng/stepper';
 import { FileUploadModule } from 'primeng/fileupload';
 import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
@@ -88,7 +88,7 @@ const MOCK_ACTION_LOG: ProxyActionLog[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
-    StepsModule,
+    StepperModule,
     FileUploadModule,
     MessageModule,
     TableModule,
@@ -144,12 +144,13 @@ const MOCK_ACTION_LOG: ProxyActionLog[] = [
 
       <!-- Progress Steps -->
       <div class="proxy-steps-container">
-        <p-steps
-          [model]="proxySteps"
-          [activeIndex]="getStepIndex(currentProxyStatus())"
-          [readonly]="true"
-          aria-label="Proxy setup progress"
-        ></p-steps>
+        <p-stepper [value]="getStepIndex(currentProxyStatus()) + 1" aria-label="Proxy setup progress">
+          <p-step-list>
+            @for (step of proxySteps; track step.label; let i = $index) {
+              <p-step [value]="i + 1">{{ step.label }}</p-step>
+            }
+          </p-step-list>
+        </p-stepper>
       </div>
 
       <p-divider></p-divider>

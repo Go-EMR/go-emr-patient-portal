@@ -1,5 +1,5 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -8,7 +8,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 
 type DurationOption = '24h' | '7d' | '30d' | 'custom';
 
@@ -27,7 +27,6 @@ interface ActiveShare {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
     ButtonModule,
     CardModule,
@@ -36,11 +35,11 @@ interface ActiveShare {
     InputTextModule,
     SelectButtonModule,
     TooltipModule,
-    CalendarModule
-  ],
+    DatePickerModule
+],
   template: `
     <div class="sharing-page">
-
+    
       <!-- Page Header -->
       <div class="page-header">
         <div class="header-content">
@@ -57,25 +56,25 @@ interface ActiveShare {
           HIPAA Secure
         </div>
       </div>
-
+    
       <!-- Warning Banner -->
       <div class="warn-banner">
         <i class="pi pi-exclamation-triangle"></i>
         <span>Shared links provide read-only access. Links expire automatically. Never share links via unsecured channels.</span>
       </div>
-
+    
       <!-- Page Layout -->
       <div class="page-layout">
-
+    
         <!-- Generate Link Form -->
         <div class="form-panel">
           <div class="form-panel-header">
             <i class="pi pi-link"></i>
             <h2 class="form-panel-title">Generate Access Link</h2>
           </div>
-
+    
           <div class="form-body">
-
+    
             <!-- Record Selection -->
             <div class="form-section">
               <h3 class="section-label">Select Records to Share <span class="required">*</span></h3>
@@ -85,7 +84,7 @@ interface ActiveShare {
                     class="record-option"
                     [class.selected]="isSelected(opt.value)"
                     [class.all-records]="opt.value === 'all'"
-                  >
+                    >
                     <p-checkbox
                       [binary]="true"
                       [(ngModel)]="opt.checked"
@@ -104,7 +103,7 @@ interface ActiveShare {
                 }
               </div>
             </div>
-
+    
             <!-- Duration -->
             <div class="form-section">
               <h3 class="section-label">Access Duration <span class="required">*</span></h3>
@@ -114,7 +113,7 @@ interface ActiveShare {
                     class="duration-btn"
                     [class.selected]="selectedDuration === d.value"
                     (click)="selectedDuration = d.value"
-                  >
+                    >
                     <i [class]="d.icon"></i>
                     <span class="duration-btn-label">{{ d.label }}</span>
                     <span class="duration-btn-sub">{{ d.sub }}</span>
@@ -124,18 +123,18 @@ interface ActiveShare {
               @if (selectedDuration === 'custom') {
                 <div class="custom-date-field">
                   <label class="field-label">Custom Expiry Date</label>
-                  <p-calendar
+                  <p-datepicker
                     [(ngModel)]="customExpiryDate"
                     [showIcon]="true"
                     [minDate]="minExpiryDate"
                     placeholder="Select expiration date"
                     styleClass="w-full"
                     dateFormat="mm/dd/yy"
-                  ></p-calendar>
+                  ></p-datepicker>
                 </div>
               }
             </div>
-
+    
             <!-- Recipient Email (Optional) -->
             <div class="form-section">
               <h3 class="section-label">Recipient Email <span class="optional">(Optional)</span></h3>
@@ -145,10 +144,10 @@ interface ActiveShare {
                 type="email"
                 placeholder="recipient@example.com"
                 class="w-full"
-              />
+                />
               <p class="field-hint">If provided, the link will also be sent to this address.</p>
             </div>
-
+    
             <!-- Generate Button -->
             <button
               pButton
@@ -158,7 +157,7 @@ interface ActiveShare {
               (click)="generateLink()"
               class="generate-btn"
             ></button>
-
+    
             <!-- Generated Link Display -->
             @if (generatedLink()) {
               <div class="generated-link-box">
@@ -185,10 +184,10 @@ interface ActiveShare {
                 </div>
               </div>
             }
-
+    
           </div>
         </div>
-
+    
         <!-- Active Shares -->
         <div class="shares-panel">
           <div class="shares-panel-header">
@@ -196,11 +195,11 @@ interface ActiveShare {
             <h2 class="shares-panel-title">Active Shares</h2>
             <span class="share-count-badge">{{ activeShares().length }}</span>
           </div>
-
+    
           <div class="shares-list">
             @for (share of activeShares(); track share.id) {
               <div class="share-card" [class.expiring-soon]="isExpiringSoon(share.expiresAt)">
-
+    
                 <div class="share-card-header">
                   <div class="share-records-list">
                     @for (rec of share.records; track rec) {
@@ -215,7 +214,7 @@ interface ActiveShare {
                     [severity]="isExpiringSoon(share.expiresAt) ? 'warn' : 'success'"
                   ></p-tag>
                 </div>
-
+    
                 <div class="share-link-row">
                   <code class="share-link-preview">{{ share.link }}</code>
                   <button
@@ -226,7 +225,7 @@ interface ActiveShare {
                     tooltipPosition="top"
                   ></button>
                 </div>
-
+    
                 <div class="share-meta">
                   @if (share.recipient) {
                     <div class="share-meta-item">
@@ -247,7 +246,7 @@ interface ActiveShare {
                     <span>Accessed {{ share.accessCount }} time{{ share.accessCount !== 1 ? 's' : '' }}</span>
                   </div>
                 </div>
-
+    
                 <div class="share-footer">
                   <button
                     pButton
@@ -259,9 +258,9 @@ interface ActiveShare {
                     tooltipPosition="top"
                   ></button>
                 </div>
-
+    
               </div>
-            } @empty {
+              } @empty {
               <div class="empty-shares">
                 <i class="pi pi-link"></i>
                 <p>No active shares</p>
@@ -269,25 +268,27 @@ interface ActiveShare {
               </div>
             }
           </div>
-
+    
           <!-- Summary Footer -->
           <div class="shares-summary">
             <span class="summary-item">
               <i class="pi pi-link"></i>
               {{ activeShares().length }} active link{{ activeShares().length !== 1 ? 's' : '' }}
             </span>
-            <span class="summary-item warning" *ngIf="expiringSoonCount() > 0">
-              <i class="pi pi-exclamation-triangle"></i>
-              {{ expiringSoonCount() }} expiring within 24h
-            </span>
+            @if (expiringSoonCount() > 0) {
+              <span class="summary-item warning">
+                <i class="pi pi-exclamation-triangle"></i>
+                {{ expiringSoonCount() }} expiring within 24h
+              </span>
+            }
           </div>
-
+    
         </div>
-
+    
       </div>
-
+    
     </div>
-  `,
+    `,
   styles: [`
     /* ===== Page ===== */
     .sharing-page {

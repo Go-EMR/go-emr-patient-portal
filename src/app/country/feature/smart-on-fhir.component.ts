@@ -1,10 +1,10 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
-import { AccordionModule } from 'primeng/accordion';
+import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 
 interface EhrSystem {
   id: string;
@@ -26,7 +26,7 @@ interface FhirConfig {
   selector: 'app-smart-on-fhir',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, DividerModule, AccordionModule],
+  imports: [CardModule, ButtonModule, TagModule, DividerModule, Accordion, AccordionPanel, AccordionHeader, AccordionContent],
   template: `
     <div class="smart-fhir-page">
 
@@ -167,56 +167,68 @@ interface FhirConfig {
 
       <!-- How to Connect — Accordion per EHR -->
       <p-card header="How to Connect Your EHR" styleClass="howto-card">
-        <p-accordion>
-          <p-accordionTab header="Epic MyChart">
-            <ol class="setup-steps">
-              <li>Log in to the Epic App Orchard at <code>apporchard.epic.com</code></li>
-              <li>Search for <strong>GoHealth Patient Portal</strong> in the app gallery</li>
-              <li>Click <strong>Request Access</strong> and provide your organization's NPI</li>
-              <li>Copy the Client ID above and paste it into the Epic configuration form</li>
-              <li>Add the authorized redirect URI: <code>https://portal.gohealth.com/smart/callback</code></li>
-              <li>Select the required scopes: <code>openid profile launch patient/*.read</code></li>
-              <li>Submit for Epic review — approval typically takes 2–5 business days</li>
-              <li>Once approved, GoHealth will appear in MyChart's <strong>Apps</strong> section</li>
-            </ol>
-          </p-accordionTab>
+        <p-accordion value="0">
+          <p-accordion-panel value="0">
+            <p-accordion-header>Epic MyChart</p-accordion-header>
+            <p-accordion-content>
+              <ol class="setup-steps">
+                <li>Log in to the Epic App Orchard at <code>apporchard.epic.com</code></li>
+                <li>Search for <strong>GoHealth Patient Portal</strong> in the app gallery</li>
+                <li>Click <strong>Request Access</strong> and provide your organization's NPI</li>
+                <li>Copy the Client ID above and paste it into the Epic configuration form</li>
+                <li>Add the authorized redirect URI: <code>https://portal.gohealth.com/smart/callback</code></li>
+                <li>Select the required scopes: <code>openid profile launch patient/*.read</code></li>
+                <li>Submit for Epic review — approval typically takes 2–5 business days</li>
+                <li>Once approved, GoHealth will appear in MyChart's <strong>Apps</strong> section</li>
+              </ol>
+            </p-accordion-content>
+          </p-accordion-panel>
 
-          <p-accordionTab header="Oracle Health (Cerner)">
-            <ol class="setup-steps">
-              <li>Navigate to the Cerner Code Console at <code>code.cerner.com</code></li>
-              <li>Create a new application and select <strong>SMART on FHIR</strong> as the type</li>
-              <li>Enter the GoHealth Client ID in the Application settings</li>
-              <li>Configure the launch URL: <code>https://portal.gohealth.com/smart/launch</code></li>
-              <li>Set the redirect URI to the callback URL provided above</li>
-              <li>Request the following scopes: <code>launch patient/Patient.read user/*.read</code></li>
-              <li>Contact your Cerner system administrator to enable the integration in your tenant</li>
-              <li>Test using the Cerner SMART App Launcher before going live</li>
-            </ol>
-          </p-accordionTab>
+          <p-accordion-panel value="1">
+            <p-accordion-header>Oracle Health (Cerner)</p-accordion-header>
+            <p-accordion-content>
+              <ol class="setup-steps">
+                <li>Navigate to the Cerner Code Console at <code>code.cerner.com</code></li>
+                <li>Create a new application and select <strong>SMART on FHIR</strong> as the type</li>
+                <li>Enter the GoHealth Client ID in the Application settings</li>
+                <li>Configure the launch URL: <code>https://portal.gohealth.com/smart/launch</code></li>
+                <li>Set the redirect URI to the callback URL provided above</li>
+                <li>Request the following scopes: <code>launch patient/Patient.read user/*.read</code></li>
+                <li>Contact your Cerner system administrator to enable the integration in your tenant</li>
+                <li>Test using the Cerner SMART App Launcher before going live</li>
+              </ol>
+            </p-accordion-content>
+          </p-accordion-panel>
 
-          <p-accordionTab header="athenahealth">
-            <ol class="setup-steps">
-              <li>Access the athenahealth Marketplace at <code>marketplace.athenahealth.com</code></li>
-              <li>Find GoHealth Patient Portal and click <strong>Get Started</strong></li>
-              <li>Your athenahealth Implementation Manager will guide the integration setup</li>
-              <li>Provide the FHIR Base URL and Client ID to your Implementation Manager</li>
-              <li>Configure single sign-on using the OAuth 2.0 authorization code flow</li>
-              <li>Enable patient context passing in your athenaOne configuration</li>
-              <li>Run the test suite to verify data access permissions</li>
-            </ol>
-          </p-accordionTab>
+          <p-accordion-panel value="2">
+            <p-accordion-header>athenahealth</p-accordion-header>
+            <p-accordion-content>
+              <ol class="setup-steps">
+                <li>Access the athenahealth Marketplace at <code>marketplace.athenahealth.com</code></li>
+                <li>Find GoHealth Patient Portal and click <strong>Get Started</strong></li>
+                <li>Your athenahealth Implementation Manager will guide the integration setup</li>
+                <li>Provide the FHIR Base URL and Client ID to your Implementation Manager</li>
+                <li>Configure single sign-on using the OAuth 2.0 authorization code flow</li>
+                <li>Enable patient context passing in your athenaOne configuration</li>
+                <li>Run the test suite to verify data access permissions</li>
+              </ol>
+            </p-accordion-content>
+          </p-accordion-panel>
 
-          <p-accordionTab header="MEDITECH">
-            <ol class="setup-steps">
-              <li>Contact your MEDITECH vendor representative to enable SMART on FHIR</li>
-              <li>Request access to the MEDITECH FHIR Sandbox at <code>fhir.meditech.com</code></li>
-              <li>Register GoHealth as a trusted application using the Client ID above</li>
-              <li>Configure the MEDITECH App Server with the GoHealth launch parameters</li>
-              <li>Work with MEDITECH support to set up patient-context scoped access tokens</li>
-              <li>Validate the integration in the MEDITECH test environment before production</li>
-              <li>Schedule a go-live date with both MEDITECH and GoHealth implementation teams</li>
-            </ol>
-          </p-accordionTab>
+          <p-accordion-panel value="3">
+            <p-accordion-header>MEDITECH</p-accordion-header>
+            <p-accordion-content>
+              <ol class="setup-steps">
+                <li>Contact your MEDITECH vendor representative to enable SMART on FHIR</li>
+                <li>Request access to the MEDITECH FHIR Sandbox at <code>fhir.meditech.com</code></li>
+                <li>Register GoHealth as a trusted application using the Client ID above</li>
+                <li>Configure the MEDITECH App Server with the GoHealth launch parameters</li>
+                <li>Work with MEDITECH support to set up patient-context scoped access tokens</li>
+                <li>Validate the integration in the MEDITECH test environment before production</li>
+                <li>Schedule a go-live date with both MEDITECH and GoHealth implementation teams</li>
+              </ol>
+            </p-accordion-content>
+          </p-accordion-panel>
         </p-accordion>
       </p-card>
 
@@ -419,11 +431,11 @@ export class SmartOnFhirComponent {
     return map[status];
   }
 
-  getStatusSeverity(status: EhrSystem['status']): 'success' | 'info' | 'warning' {
-    const map: Record<EhrSystem['status'], 'success' | 'info' | 'warning'> = {
+  getStatusSeverity(status: EhrSystem['status']): 'success' | 'info' | 'warn' {
+    const map: Record<EhrSystem['status'], 'success' | 'info' | 'warn'> = {
       connected: 'success',
       available: 'info',
-      'coming-soon': 'warning'
+      'coming-soon': 'warn'
     };
     return map[status];
   }

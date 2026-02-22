@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -19,7 +19,7 @@ interface EhdsPhase {
   selector: 'app-ehds-roadmap',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
+  imports: [CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
   providers: [MessageService],
   template: `
     <div class="ehds-page">
@@ -277,10 +277,10 @@ export class EhdsRoadmapComponent {
     return map[status] ?? 'pi-calendar';
   }
 
-  getPhaseSeverity(status: string): 'success' | 'warning' | 'info' | 'danger' {
-    const map: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
+  getPhaseSeverity(status: string): 'success' | 'warn' | 'info' | 'danger' {
+    const map: Record<string, 'success' | 'warn' | 'info' | 'danger'> = {
       'Active': 'success',
-      'In Progress': 'warning',
+      'In Progress': 'warn',
       'Planned 2026': 'info',
       'Planned 2027': 'info',
       'Planned 2028': 'info'

@@ -17,10 +17,10 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { AutoCompleteModule } from 'primeng/autocomplete';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
@@ -43,10 +43,10 @@ import { FamilyChartComponent } from './family-chart.component';
     ButtonModule,
     CardModule,
     AutoCompleteModule,
-    DropdownModule,
+    SelectModule,
     SelectButtonModule,
     InputNumberModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     DividerModule,
     InputTextModule,
     TagModule,
@@ -209,25 +209,25 @@ import { FamilyChartComponent } from './family-chart.component';
         <div class="form-row">
           <div class="field">
             <label class="field-label">Relationship *</label>
-            <p-dropdown
+            <p-select
               [(ngModel)]="newMember.relationship"
               [options]="relationshipOptions"
               optionLabel="label"
               optionValue="value"
               placeholder="Select..."
               styleClass="w-full"
-            ></p-dropdown>
+            ></p-select>
           </div>
           <div class="field">
             <label class="field-label">Sex at Birth</label>
-            <p-dropdown
+            <p-select
               [(ngModel)]="newMember.sexAtBirth"
               [options]="sexOptions"
               optionLabel="label"
               optionValue="value"
               placeholder="Select..."
               styleClass="w-full"
-            ></p-dropdown>
+            ></p-select>
           </div>
         </div>
 
@@ -238,7 +238,7 @@ import { FamilyChartComponent } from './family-chart.component';
 
         <div class="field field-row">
           <label class="field-label">Deceased</label>
-          <p-inputSwitch [(ngModel)]="newMember.isDeceased"></p-inputSwitch>
+          <p-toggleswitch [(ngModel)]="newMember.isDeceased"></p-toggleswitch>
         </div>
       </div>
 

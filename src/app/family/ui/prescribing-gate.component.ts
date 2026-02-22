@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ButtonModule } from 'primeng/button';
 import { MessageModule } from 'primeng/message';
 import { CardModule } from 'primeng/card';
@@ -40,7 +40,7 @@ interface ProviderOption {
     FormsModule,
     AutoCompleteModule,
     RadioButtonModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     ButtonModule,
     MessageModule,
     CardModule,
@@ -163,14 +163,14 @@ interface ProviderOption {
                 <p class="font-medium text-sm text-gray-800 mb-0">Telehealth Session</p>
                 <p class="text-xs text-gray-500 mb-0">Is this appointment via telehealth / video / phone?</p>
               </div>
-              <p-inputSwitch [(ngModel)]="isTelehealth" (onChange)="clearResult()"></p-inputSwitch>
+              <p-toggleswitch [(ngModel)]="isTelehealth" (onChange)="clearResult()"></p-toggleswitch>
             </div>
             <div class="flex align-items-center justify-content-between p-3 surface-50 border-round border-1 surface-border">
               <div>
                 <p class="font-medium text-sm text-gray-800 mb-0">First Prescription</p>
                 <p class="text-xs text-gray-500 mb-0">Is this the first time prescribing this drug for this patient?</p>
               </div>
-              <p-inputSwitch [(ngModel)]="isFirstPrescription" (onChange)="clearResult()"></p-inputSwitch>
+              <p-toggleswitch [(ngModel)]="isFirstPrescription" (onChange)="clearResult()"></p-toggleswitch>
             </div>
           </div>
         </div>

@@ -10,18 +10,18 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
-import { SidebarModule } from 'primeng/sidebar';
-import { StepsModule } from 'primeng/steps';
+import { DrawerModule } from 'primeng/drawer';
+import { StepperModule } from 'primeng/stepper';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InputTextModule } from 'primeng/inputtext';
 import { DividerModule } from 'primeng/divider';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { MenuItem } from 'primeng/api';
 import { FamilyService } from '../data-access/family.service';
@@ -74,22 +74,21 @@ const AVATAR_COLORS = [
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
-    SidebarModule,
-    StepsModule,
+    DrawerModule,
+    StepperModule,
     ButtonModule,
     CardModule,
-    CalendarModule,
-    DropdownModule,
+    DatePickerModule,
+    SelectModule,
     SelectButtonModule,
     InputTextModule,
     DividerModule,
-    InputSwitchModule,
-    TagModule,
-  ],
+    ToggleSwitchModule,
+    TagModule
+],
   template: `
-    <p-sidebar
+    <p-drawer
       [(visible)]="sidebarVisible"
       position="right"
       [style]="{ width: '480px' }"
@@ -102,7 +101,13 @@ const AVATAR_COLORS = [
       <div class="wizard-container">
         <!-- Steps indicator -->
         <div class="wizard-steps">
-          <p-steps [model]="steps" [activeIndex]="currentStep()" [readonly]="true"></p-steps>
+          <p-stepper [value]="currentStep() + 1">
+            <p-step-list>
+              @for (step of steps; track step.label; let i = $index) {
+                <p-step [value]="i + 1">{{ step.label }}</p-step>
+              }
+            </p-step-list>
+          </p-stepper>
         </div>
 
         <div class="wizard-content">
@@ -175,7 +180,7 @@ const AVATAR_COLORS = [
 
               <div class="form-field">
                 <label for="add-dob">Date of Birth</label>
-                <p-calendar
+                <p-datepicker
                   id="add-dob"
                   [(ngModel)]="formData.dateOfBirth"
                   name="dateOfBirth"
@@ -185,12 +190,12 @@ const AVATAR_COLORS = [
                   placeholder="DD/MM/YYYY"
                   styleClass="w-full"
                   aria-label="Date of birth"
-                ></p-calendar>
+                ></p-datepicker>
               </div>
 
               <div class="form-field">
                 <label for="add-sex">Sex at Birth</label>
-                <p-dropdown
+                <p-select
                   id="add-sex"
                   [(ngModel)]="formData.sexAtBirth"
                   name="sexAtBirth"
@@ -200,12 +205,12 @@ const AVATAR_COLORS = [
                   placeholder="Select..."
                   styleClass="w-full"
                   aria-label="Sex at birth"
-                ></p-dropdown>
+                ></p-select>
               </div>
 
               <div class="form-field">
                 <label for="add-country">Country</label>
-                <p-dropdown
+                <p-select
                   id="add-country"
                   [(ngModel)]="formData.country"
                   name="country"
@@ -215,7 +220,7 @@ const AVATAR_COLORS = [
                   placeholder="Select country..."
                   styleClass="w-full"
                   aria-label="Country"
-                ></p-dropdown>
+                ></p-select>
               </div>
 
               @if (formData.country) {
@@ -387,11 +392,11 @@ const AVATAR_COLORS = [
                         ></i>
                       }
                     </div>
-                    <p-inputSwitch
+                    <p-toggleswitch
                       [(ngModel)]="toggle.enabled"
                       [name]="'perm-' + toggle.category"
                       [attr.aria-label]="'Enable ' + toggle.label + ' access'"
-                    ></p-inputSwitch>
+                    ></p-toggleswitch>
                   </div>
                 }
               </div>
@@ -400,7 +405,7 @@ const AVATAR_COLORS = [
 
               <div class="form-field">
                 <label for="add-expiry">Access Expiry Date (optional)</label>
-                <p-calendar
+                <p-datepicker
                   id="add-expiry"
                   [(ngModel)]="formData.expiryDate"
                   name="expiryDate"
@@ -410,7 +415,7 @@ const AVATAR_COLORS = [
                   placeholder="No expiry"
                   styleClass="w-full"
                   aria-label="Access expiry date"
-                ></p-calendar>
+                ></p-datepicker>
                 <span class="field-hint">Leave blank for indefinite access.</span>
               </div>
             </div>
@@ -462,7 +467,7 @@ const AVATAR_COLORS = [
           </div>
         </div>
       </div>
-    </p-sidebar>
+    </p-drawer>
   `,
   styles: [`
     .wizard-container {

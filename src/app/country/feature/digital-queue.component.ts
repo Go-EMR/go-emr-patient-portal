@@ -1,10 +1,10 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -30,7 +30,7 @@ interface QueueHistoryItem {
   selector: 'app-digital-queue',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, DropdownModule, DividerModule, TableModule, ProgressBarModule, ToggleButtonModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, SelectModule, DividerModule, TableModule, ProgressBarModule, ToggleButtonModule],
   template: `
     <div class="queue-page">
       <header class="page-header">
@@ -48,7 +48,7 @@ interface QueueHistoryItem {
       <!-- Select Department -->
       <p-card header="Select Department" styleClass="department-card">
         <div class="department-select-row">
-          <p-dropdown
+          <p-select
             [options]="departments"
             [(ngModel)]="selectedDepartmentValue"
             optionLabel="label"
@@ -56,7 +56,7 @@ interface QueueHistoryItem {
             placeholder="Choose a department"
             [style]="{ width: '100%', maxWidth: '380px' }"
             (onChange)="onDepartmentChange()"
-          ></p-dropdown>
+          ></p-select>
           @if (selectedDepartmentInfo()) {
             <div class="dept-meta">
               <span class="dept-queue-count">

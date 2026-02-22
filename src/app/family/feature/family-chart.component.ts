@@ -30,11 +30,11 @@ import {
   ChangeDetectorRef,
   NgZone,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { MenuModule } from 'primeng/menu';
-import { SidebarModule } from 'primeng/sidebar';
+import { DrawerModule } from 'primeng/drawer';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import * as d3 from 'd3';
 
@@ -61,130 +61,120 @@ import { ChartLegendComponent } from '../ui/chart-legend.component';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     ButtonModule,
     TooltipModule,
     MenuModule,
-    SidebarModule,
+    DrawerModule,
     SelectButtonModule,
     ChartDetailPanelComponent,
-    ChartLegendComponent,
-  ],
+    ChartLegendComponent
+],
   template: `
     <div class="chart-root" [class.embedded-mode]="embedded" (keydown)="onKeyDown($event)" tabindex="-1">
-
+    
       <!-- ── LEFT TOOLBAR ─────────────────────────────────────────────────── -->
-      <nav class="chart-toolbar" *ngIf="!embedded" aria-label="Chart controls">
-
-        <!-- Zoom In -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-search-plus"
-          class="p-button-text toolbar-btn"
-          pTooltip="Zoom In"
-          tooltipPosition="right"
-          aria-label="Zoom in"
-          (click)="zoomIn()"
-        ></button>
-
-        <!-- Zoom Out -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-search-minus"
-          class="p-button-text toolbar-btn"
-          pTooltip="Zoom Out"
-          tooltipPosition="right"
-          aria-label="Zoom out"
-          (click)="zoomOut()"
-        ></button>
-
-        <!-- Fit All -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-expand"
-          class="p-button-text toolbar-btn"
-          pTooltip="Fit All"
-          tooltipPosition="right"
-          aria-label="Fit all nodes in view"
-          (click)="fitAll()"
-        ></button>
-
-        <div class="toolbar-divider"></div>
-
-        <!-- Genetics view -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-dna"
-          class="p-button-text toolbar-btn"
-          [class.toolbar-btn-active]="viewMode() === 'genetics'"
-          pTooltip="Genetics view"
-          tooltipPosition="right"
-          aria-label="Switch to genetics view"
-          (click)="setViewMode('genetics')"
-        ></button>
-
-        <!-- Permissions view -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-lock"
-          class="p-button-text toolbar-btn"
-          [class.toolbar-btn-active]="viewMode() === 'permissions'"
-          pTooltip="Permissions view"
-          tooltipPosition="right"
-          aria-label="Switch to permissions view"
-          (click)="setViewMode('permissions')"
-        ></button>
-
-        <!-- Risk view -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-chart-line"
-          class="p-button-text toolbar-btn"
-          [class.toolbar-btn-active]="viewMode() === 'risk'"
-          pTooltip="Risk view"
-          tooltipPosition="right"
-          aria-label="Switch to risk view"
-          (click)="setViewMode('risk')"
-        ></button>
-
-        <div class="toolbar-divider"></div>
-
-        <!-- Toggle legend -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-list"
-          class="p-button-text toolbar-btn"
-          pTooltip="Toggle Legend"
-          tooltipPosition="right"
-          aria-label="Toggle legend"
-          (click)="toggleLegend()"
-        ></button>
-
-        <!-- Export menu -->
-        <button
-          pButton
-          type="button"
-          icon="pi pi-download"
-          class="p-button-text toolbar-btn"
-          pTooltip="Export"
-          tooltipPosition="right"
-          aria-label="Export chart"
-          (click)="exportMenu.toggle($event)"
-        ></button>
-        <p-menu #exportMenu [model]="exportMenuItems" [popup]="true"></p-menu>
-
-      </nav>
-
+      @if (!embedded) {
+        <nav class="chart-toolbar" aria-label="Chart controls">
+          <!-- Zoom In -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-search-plus"
+            class="p-button-text toolbar-btn"
+            pTooltip="Zoom In"
+            tooltipPosition="right"
+            aria-label="Zoom in"
+            (click)="zoomIn()"
+          ></button>
+          <!-- Zoom Out -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-search-minus"
+            class="p-button-text toolbar-btn"
+            pTooltip="Zoom Out"
+            tooltipPosition="right"
+            aria-label="Zoom out"
+            (click)="zoomOut()"
+          ></button>
+          <!-- Fit All -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-expand"
+            class="p-button-text toolbar-btn"
+            pTooltip="Fit All"
+            tooltipPosition="right"
+            aria-label="Fit all nodes in view"
+            (click)="fitAll()"
+          ></button>
+          <div class="toolbar-divider"></div>
+          <!-- Genetics view -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-dna"
+            class="p-button-text toolbar-btn"
+            [class.toolbar-btn-active]="viewMode() === 'genetics'"
+            pTooltip="Genetics view"
+            tooltipPosition="right"
+            aria-label="Switch to genetics view"
+            (click)="setViewMode('genetics')"
+          ></button>
+          <!-- Permissions view -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-lock"
+            class="p-button-text toolbar-btn"
+            [class.toolbar-btn-active]="viewMode() === 'permissions'"
+            pTooltip="Permissions view"
+            tooltipPosition="right"
+            aria-label="Switch to permissions view"
+            (click)="setViewMode('permissions')"
+          ></button>
+          <!-- Risk view -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-chart-line"
+            class="p-button-text toolbar-btn"
+            [class.toolbar-btn-active]="viewMode() === 'risk'"
+            pTooltip="Risk view"
+            tooltipPosition="right"
+            aria-label="Switch to risk view"
+            (click)="setViewMode('risk')"
+          ></button>
+          <div class="toolbar-divider"></div>
+          <!-- Toggle legend -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-list"
+            class="p-button-text toolbar-btn"
+            pTooltip="Toggle Legend"
+            tooltipPosition="right"
+            aria-label="Toggle legend"
+            (click)="toggleLegend()"
+          ></button>
+          <!-- Export menu -->
+          <button
+            pButton
+            type="button"
+            icon="pi pi-download"
+            class="p-button-text toolbar-btn"
+            pTooltip="Export"
+            tooltipPosition="right"
+            aria-label="Export chart"
+            (click)="exportMenu.toggle($event)"
+          ></button>
+          <p-menu #exportMenu [model]="exportMenuItems" [popup]="true"></p-menu>
+        </nav>
+      }
+    
       <!-- ── CENTRE CANVAS ──────────────────────────────────────────────── -->
       <main class="chart-canvas-wrap" aria-label="Family pedigree chart">
-
+    
         <!-- Main SVG -->
         <svg
           #chartSvg
@@ -192,7 +182,7 @@ import { ChartLegendComponent } from '../ui/chart-legend.component';
           role="application"
           aria-label="Family pedigree"
           [attr.aria-activedescendant]="selectedMemberId() ?? undefined"
-        >
+          >
           <defs>
             <!-- Arrow marker for proband arrowhead -->
             <marker
@@ -200,13 +190,13 @@ import { ChartLegendComponent } from '../ui/chart-legend.component';
               markerWidth="8" markerHeight="8"
               refX="4" refY="4"
               orient="auto-start-reverse"
-            >
+              >
               <path d="M0,0 L0,8 L8,4 Z" fill="#374151"></path>
             </marker>
           </defs>
           <!-- D3 content injected here -->
         </svg>
-
+    
         <!-- Hover tooltip -->
         <div
           #tooltip
@@ -216,14 +206,16 @@ import { ChartLegendComponent } from '../ui/chart-legend.component';
           [style.top.px]="tooltipY()"
           role="tooltip"
           aria-live="polite"
-        >
+          >
           <div class="tooltip-name">{{ tooltipData().name }}</div>
           <div class="tooltip-rel">{{ tooltipData().relationship }}</div>
-          <div class="tooltip-conditions" *ngIf="tooltipData().conditions">
-            {{ tooltipData().conditions }}
-          </div>
+          @if (tooltipData().conditions) {
+            <div class="tooltip-conditions">
+              {{ tooltipData().conditions }}
+            </div>
+          }
         </div>
-
+    
         <!-- Context menu -->
         <div
           #contextMenuEl
@@ -233,71 +225,78 @@ import { ChartLegendComponent } from '../ui/chart-legend.component';
           [style.top.px]="contextMenuY()"
           role="menu"
           aria-label="Node actions"
-        >
-          <button
-            *ngFor="let item of contextMenuItems"
-            class="context-menu-item"
-            role="menuitem"
-            (click)="item.action()"
           >
-            <i [class]="item.icon"></i>
-            <span>{{ item.label }}</span>
-          </button>
+          @for (item of contextMenuItems; track item) {
+            <button
+              class="context-menu-item"
+              role="menuitem"
+              (click)="item.action()"
+              >
+              <i [class]="item.icon"></i>
+              <span>{{ item.label }}</span>
+            </button>
+          }
         </div>
-
+    
         <!-- Multi-select bulk edit button -->
-        <div class="bulk-edit-bar" *ngIf="multiSelection().length > 1">
-          <span>{{ multiSelection().length }} members selected</span>
-          <button pButton type="button" label="Bulk Edit" icon="pi pi-pencil" class="p-button-sm"></button>
-          <button
-            pButton
-            type="button"
-            icon="pi pi-times"
-            class="p-button-sm p-button-text"
-            (click)="clearSelection()"
-            aria-label="Clear selection"
-          ></button>
-        </div>
-
+        @if (multiSelection().length > 1) {
+          <div class="bulk-edit-bar">
+            <span>{{ multiSelection().length }} members selected</span>
+            <button pButton type="button" label="Bulk Edit" icon="pi pi-pencil" class="p-button-sm"></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-times"
+              class="p-button-sm p-button-text"
+              (click)="clearSelection()"
+              aria-label="Clear selection"
+            ></button>
+          </div>
+        }
+    
         <!-- Legend (bottom-left) -->
-        <app-chart-legend
-          *ngIf="legendVisible()"
-          [viewMode]="viewMode()"
-        ></app-chart-legend>
-
+        @if (legendVisible()) {
+          <app-chart-legend
+            [viewMode]="viewMode()"
+          ></app-chart-legend>
+        }
+    
         <!-- Minimap (bottom-right) -->
-        <div class="chart-minimap" *ngIf="!embedded" aria-hidden="true">
-          <svg #minimapSvg class="minimap-svg" width="200" height="130">
-            <!-- Content cloned and scaled by D3 -->
-          </svg>
-          <!-- Viewport rectangle -->
-          <div
-            class="minimap-viewport"
-            [style.left.px]="minimapViewport().x"
-            [style.top.px]="minimapViewport().y"
-            [style.width.px]="minimapViewport().w"
-            [style.height.px]="minimapViewport().h"
-          ></div>
-        </div>
-
+        @if (!embedded) {
+          <div class="chart-minimap" aria-hidden="true">
+            <svg #minimapSvg class="minimap-svg" width="200" height="130">
+              <!-- Content cloned and scaled by D3 -->
+            </svg>
+            <!-- Viewport rectangle -->
+            <div
+              class="minimap-viewport"
+              [style.left.px]="minimapViewport().x"
+              [style.top.px]="minimapViewport().y"
+              [style.width.px]="minimapViewport().w"
+              [style.height.px]="minimapViewport().h"
+            ></div>
+          </div>
+        }
+    
       </main>
-
+    
       <!-- ── RIGHT DETAIL PANEL ─────────────────────────────────────────── -->
-      <aside
-        *ngIf="!embedded"
-        class="chart-detail-sidebar"
-        [class.collapsed]="!detailPanelOpen()"
-        aria-label="Member details"
-      >
-        <app-chart-detail-panel
-          [member]="selectedMember()"
-          [pet]="selectedPet()"
-          (closed)="closeDetailPanel()"
-        ></app-chart-detail-panel>
-      </aside>
-
+      @if (!embedded) {
+        <aside
+          class="chart-detail-sidebar"
+          [class.collapsed]="!detailPanelOpen()"
+          aria-label="Member details"
+          >
+          <app-chart-detail-panel
+            [member]="selectedMember()"
+            [pet]="selectedPet()"
+            (closed)="closeDetailPanel()"
+          ></app-chart-detail-panel>
+        </aside>
+      }
+    
     </div>
-  `,
+    `,
   styles: [`
     :host {
       display: block;

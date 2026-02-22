@@ -1,5 +1,5 @@
-import { inject, Injectable, signal } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { inject, Injectable, signal, DOCUMENT } from '@angular/core';
+
 import { hiTranslations, taTranslations, bnTranslations } from './translations-indic';
 import { viTranslations, zhTranslations, tlTranslations, htTranslations } from './translations-additional';
 import { teTranslations, mrTranslations, knTranslations } from './translations-indic-extra';

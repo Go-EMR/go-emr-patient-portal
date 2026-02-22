@@ -3,10 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { DialogModule } from 'primeng/dialog';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -65,10 +65,10 @@ interface PastAppointment {
     FormsModule,
     CardModule,
     ButtonModule,
-    TabViewModule,
+    TabsModule,
     DialogModule,
-    CalendarModule,
-    DropdownModule,
+    DatePickerModule,
+    SelectModule,
     TooltipModule,
     TagModule,
     ProgressBarModule,
@@ -81,9 +81,15 @@ interface PastAppointment {
         <button pButton label="Book Appointment" icon="pi pi-plus" (click)="openBookingWizard()"></button>
       </header>
 
-      <p-tabView>
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab [value]="0">Upcoming</p-tab>
+          <p-tab [value]="1">Past</p-tab>
+          <p-tab [value]="2">Health Classes</p-tab>
+        </p-tablist>
+        <p-tabpanels>
         <!-- ─── Upcoming Tab ─── -->
-        <p-tabPanel header="Upcoming">
+        <p-tabpanel [value]="0">
           <div class="filter-chips">
             <button pButton
                     [class]="activeFilter() === 'all' ? 'filter-chip active' : 'filter-chip p-button-outlined'"
@@ -108,7 +114,7 @@ interface PastAppointment {
                   <div class="info-header">
                     <h3>{{ appt.appointmentType }}</h3>
                     @if (waitlistedAppointments().has(appt.id)) {
-                      <p-tag value="Waitlisted" severity="warning" icon="pi pi-clock"></p-tag>
+                      <p-tag value="Waitlisted" severity="warn" icon="pi pi-clock"></p-tag>
                     }
                   </div>
                   <p><i class="pi pi-user"></i> {{ appt.providerName }}</p>
@@ -165,11 +171,11 @@ interface PastAppointment {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- ─── Past Tab ─── -->
         <!-- Feature 9.6: Past appointments with repeat referral -->
-        <p-tabPanel header="Past">
+        <p-tabpanel [value]="1">
           <div class="appointments-list">
             @for (past of pastAppointments; track past.id) {
               <div class="appointment-card past-card">
@@ -198,10 +204,10 @@ interface PastAppointment {
               </div>
             }
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- Feature 9.2: Health Classes Tab -->
-        <p-tabPanel header="Health Classes">
+        <p-tabpanel [value]="2">
           <div class="classes-header">
             <h3>Group Health Sessions</h3>
             <p>Join educational workshops and group sessions led by our healthcare team</p>
@@ -248,8 +254,9 @@ interface PastAppointment {
               </div>
             }
           </div>
-        </p-tabPanel>
-      </p-tabView>
+        </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
 
       <!-- ═══════════════════════════════════════════════════════════════
            BOOKING WIZARD DIALOG
@@ -292,7 +299,7 @@ interface PastAppointment {
             <div class="booking-filters">
               <div class="booking-filter-group">
                 <label class="booking-filter-label" for="insurance-filter">Insurance Plan</label>
-                <p-dropdown
+                <p-select
                   inputId="insurance-filter"
                   [options]="insuranceOptions"
                   [(ngModel)]="selectedInsuranceModel"
@@ -301,11 +308,11 @@ interface PastAppointment {
                   placeholder="Select your insurance"
                   [style]="{width:'100%'}"
                   (onChange)="selectedInsurance.set($event.value)">
-                </p-dropdown>
+                </p-select>
               </div>
               <div class="booking-filter-group">
                 <label class="booking-filter-label" for="language-filter">Provider Language</label>
-                <p-dropdown
+                <p-select
                   inputId="language-filter"
                   [options]="languageOptions"
                   [(ngModel)]="selectedLanguageModel"
@@ -314,7 +321,7 @@ interface PastAppointment {
                   placeholder="Provider language"
                   [style]="{width:'100%'}"
                   (onChange)="selectedLanguage.set($event.value)">
-                </p-dropdown>
+                </p-select>
               </div>
             </div>
 
@@ -427,11 +434,11 @@ interface PastAppointment {
             <div class="datetime-layout">
               <div class="calendar-section">
                 <p class="step-hint">Select a date.</p>
-                <p-calendar
+                <p-datepicker
                   [(ngModel)]="selectedDate"
                   [minDate]="minDate"
                   [inline]="true"
-                  [style]="{width:'100%'}"></p-calendar>
+                  [style]="{width:'100%'}"></p-datepicker>
               </div>
               <div class="slots-section">
                 <p class="step-hint">Available times.</p>
@@ -573,13 +580,13 @@ interface PastAppointment {
 
             <div class="field">
               <label for="cancel-reason">Reason for cancellation <span class="required-mark">*</span></label>
-              <p-dropdown
+              <p-select
                 inputId="cancel-reason"
                 [options]="cancelReasons"
                 [(ngModel)]="selectedCancelReason"
                 placeholder="Select a reason"
                 [style]="{width:'100%'}">
-              </p-dropdown>
+              </p-select>
             </div>
 
             <div class="field">

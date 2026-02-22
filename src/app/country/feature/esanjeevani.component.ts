@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -31,7 +31,7 @@ interface PastConsultation {
   selector: 'app-esanjeevani',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
+  imports: [CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
   providers: [MessageService],
   template: `
     <div class="esanjeevani-page">

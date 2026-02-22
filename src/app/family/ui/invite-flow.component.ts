@@ -571,10 +571,10 @@ export class InviteFlowComponent implements OnInit {
     return map[status] ?? status;
   }
 
-  protected getStatusSeverity(status: InviteStatus): 'success' | 'info' | 'warning' | 'danger' | 'secondary' | undefined {
-    const map: Record<InviteStatus, 'success' | 'info' | 'warning' | 'danger' | 'secondary'> = {
+  protected getStatusSeverity(status: InviteStatus): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | undefined {
+    const map: Record<InviteStatus, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       'not-sent': 'secondary',
-      pending: 'warning',
+      pending: 'warn',
       accepted: 'success',
       declined: 'danger',
     };

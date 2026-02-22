@@ -1,11 +1,11 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -25,7 +25,7 @@ interface TisBooking {
   selector: 'app-tis-interpreter',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, DividerModule, DropdownModule, SelectButtonModule, ToastModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, DividerModule, SelectModule, SelectButtonModule, ToastModule],
   providers: [MessageService],
   template: `
     <div class="tis-page">
@@ -68,14 +68,14 @@ interface TisBooking {
               <i class="pi pi-language"></i>
               Select Language
             </label>
-            <p-dropdown
+            <p-select
               [options]="languages"
               [(ngModel)]="selectedLanguage"
               optionLabel="label"
               optionValue="value"
               placeholder="Choose your language"
               [style]="{ width: '100%', maxWidth: '360px' }"
-            ></p-dropdown>
+            ></p-select>
           </div>
 
           <!-- Appointment Date/Time -->
@@ -361,10 +361,10 @@ export class TisInterpreterComponent {
     return icons[type] ?? 'pi-language';
   }
 
-  getBookingStatusSeverity(status: string): 'success' | 'info' | 'warning' | 'danger' {
-    const map: Record<string, 'success' | 'info' | 'warning' | 'danger'> = {
+  getBookingStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger'> = {
       Confirmed: 'success',
-      Pending: 'warning',
+      Pending: 'warn',
       Completed: 'info'
     };
     return map[status] ?? 'info';

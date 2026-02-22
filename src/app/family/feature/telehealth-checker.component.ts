@@ -5,9 +5,9 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
@@ -36,15 +36,14 @@ interface StateOption {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
-    DropdownModule,
+    SelectModule,
     ButtonModule,
     CardModule,
     TagModule,
     DividerModule,
-    MessageModule,
-  ],
+    MessageModule
+],
   template: `
     <div class="telehealth-checker p-4">
       <div class="page-header mb-4">
@@ -73,7 +72,7 @@ interface StateOption {
 
               <div class="mb-3">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                <p-dropdown
+                <p-select
                   [options]="countryOptions"
                   [(ngModel)]="patientCountry"
                   optionLabel="label"
@@ -82,13 +81,13 @@ interface StateOption {
                   styleClass="w-full"
                   (onChange)="onPatientCountryChange()"
                   appendTo="body">
-                </p-dropdown>
+                </p-select>
               </div>
 
               @if (patientCountry === 'US') {
                 <div class="mb-2 animate-fadein">
                   <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
-                  <p-dropdown
+                  <p-select
                     [options]="usStateOptions()"
                     [(ngModel)]="patientState"
                     optionLabel="label"
@@ -98,7 +97,7 @@ interface StateOption {
                     filterPlaceholder="Search..."
                     styleClass="w-full"
                     appendTo="body">
-                  </p-dropdown>
+                  </p-select>
                 </div>
               }
 
@@ -142,7 +141,7 @@ interface StateOption {
 
               <div class="mb-3">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                <p-dropdown
+                <p-select
                   [options]="countryOptions"
                   [(ngModel)]="doctorCountry"
                   optionLabel="label"
@@ -151,13 +150,13 @@ interface StateOption {
                   styleClass="w-full"
                   (onChange)="onDoctorCountryChange()"
                   appendTo="body">
-                </p-dropdown>
+                </p-select>
               </div>
 
               @if (doctorCountry === 'US') {
                 <div class="mb-2 animate-fadein">
                   <label class="block text-sm font-medium text-gray-700 mb-2">State</label>
-                  <p-dropdown
+                  <p-select
                     [options]="usStateOptions()"
                     [(ngModel)]="doctorState"
                     optionLabel="label"
@@ -167,7 +166,7 @@ interface StateOption {
                     filterPlaceholder="Search..."
                     styleClass="w-full"
                     appendTo="body">
-                  </p-dropdown>
+                  </p-select>
                 </div>
               }
 

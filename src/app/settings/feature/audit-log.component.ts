@@ -5,10 +5,10 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TableModule } from 'primeng/table';
-import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { SelectModule } from 'primeng/select';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DividerModule } from 'primeng/divider';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 
@@ -46,8 +46,8 @@ interface DropdownOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, FormsModule, CardModule, ButtonModule, TagModule,
-    TableModule, DropdownModule, CalendarModule, DividerModule,
-    TabViewModule, TooltipModule, InputTextModule
+    TableModule, SelectModule, DatePickerModule, DividerModule,
+    TabsModule, TooltipModule, InputTextModule
   ],
   template: `
     <div class="audit-page">
@@ -71,56 +71,58 @@ interface DropdownOption {
         </div>
       </header>
 
-      <p-tabView>
+      <p-tabs [value]="0">
+        <p-tablist>
+          <p-tab [value]="0"><i class="pi pi-list" style="margin-right:0.4rem"></i>Access Log</p-tab>
+          <p-tab [value]="1"><i class="pi pi-desktop" style="margin-right:0.4rem"></i>Session History</p-tab>
+        </p-tablist>
+        <p-tabpanels>
         <!-- TAB 1: Access Audit Log -->
-        <p-tabPanel header="Access Log">
-          <ng-template pTemplate="header">
-            <span><i class="pi pi-list" style="margin-right:0.4rem"></i>Access Log</span>
-          </ng-template>
+        <p-tabpanel [value]="0">
 
           <!-- Filter Bar -->
           <div class="filter-bar">
             <div class="filter-group">
               <label class="filter-label">Date Range</label>
-              <p-calendar
+              <p-datepicker
                 [(ngModel)]="filterDateFrom"
                 placeholder="From"
                 dateFormat="mm/dd/yy"
                 [showIcon]="true"
                 inputStyleClass="filter-calendar-input"
                 styleClass="filter-calendar"
-              ></p-calendar>
+              ></p-datepicker>
               <span class="filter-sep">to</span>
-              <p-calendar
+              <p-datepicker
                 [(ngModel)]="filterDateTo"
                 placeholder="To"
                 dateFormat="mm/dd/yy"
                 [showIcon]="true"
                 inputStyleClass="filter-calendar-input"
                 styleClass="filter-calendar"
-              ></p-calendar>
+              ></p-datepicker>
             </div>
             <div class="filter-group">
               <label class="filter-label">User / System</label>
-              <p-dropdown
+              <p-select
                 [options]="userFilterOptions"
                 [(ngModel)]="selectedUserFilter"
                 placeholder="All Users"
                 optionLabel="label"
                 optionValue="value"
                 [style]="{ minWidth: '180px' }"
-              ></p-dropdown>
+              ></p-select>
             </div>
             <div class="filter-group">
               <label class="filter-label">Action Type</label>
-              <p-dropdown
+              <p-select
                 [options]="actionFilterOptions"
                 [(ngModel)]="selectedActionFilter"
                 placeholder="All Actions"
                 optionLabel="label"
                 optionValue="value"
                 [style]="{ minWidth: '160px' }"
-              ></p-dropdown>
+              ></p-select>
             </div>
             <div class="filter-actions">
               <button pButton label="Apply Filters" icon="pi pi-filter" class="p-button-sm" (click)="applyFilters()"></button>
@@ -239,13 +241,10 @@ interface DropdownOption {
               Audit logs are retained for 6 years per HIPAA requirements.
             </span>
           </div>
-        </p-tabPanel>
+        </p-tabpanel>
 
         <!-- TAB 2: Session History -->
-        <p-tabPanel>
-          <ng-template pTemplate="header">
-            <span><i class="pi pi-desktop" style="margin-right:0.4rem"></i>Session History</span>
-          </ng-template>
+        <p-tabpanel [value]="1">
 
           <div class="session-header-row">
             <div>
@@ -311,8 +310,9 @@ interface DropdownOption {
             <i class="pi pi-info-circle"></i>
             <span>If you notice any unrecognized sessions, sign out immediately and contact support. Session data is retained for 90 days.</span>
           </div>
-        </p-tabPanel>
-      </p-tabView>
+        </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
     </div>
   `,
   styles: [`

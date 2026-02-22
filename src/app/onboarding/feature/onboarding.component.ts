@@ -1,5 +1,5 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 
@@ -7,7 +7,7 @@ import { ButtonModule } from 'primeng/button';
   selector: 'app-onboarding',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ButtonModule],
+  imports: [ButtonModule],
   template: `
     <div class="onboarding-container">
       <div class="onboarding-card">

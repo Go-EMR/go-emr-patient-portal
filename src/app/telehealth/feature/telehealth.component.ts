@@ -5,13 +5,13 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TooltipModule } from 'primeng/tooltip';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TelehealthService } from '../data-access';
 
 @Component({
   selector: 'app-telehealth',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TooltipModule, DropdownModule],
+  imports: [CommonModule, FormsModule, ButtonModule, CardModule, TooltipModule, SelectModule],
   template: `
     <div class="telehealth-page">
       <!-- ==================== DEVICE CHECK ==================== -->
@@ -229,12 +229,12 @@ import { TelehealthService } from '../data-access';
                       </div>
                       <!-- Feature 9.4: Share specific tab dropdown -->
                       <div class="share-tab-selector">
-                        <p-dropdown
+                        <p-select
                           [options]="shareTabOptions"
                           [(ngModel)]="selectedShareTab"
                           [style]="{maxWidth:'220px'}"
                           styleClass="share-tab-dropdown">
-                        </p-dropdown>
+                        </p-select>
                       </div>
                     </div>
                     <div class="browser-content">

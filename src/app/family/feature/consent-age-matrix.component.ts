@@ -8,7 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -93,7 +93,7 @@ const MOCK_AUDIT: AuditRow[] = [
     CommonModule,
     FormsModule,
     SelectButtonModule,
-    DropdownModule,
+    SelectModule,
     TableModule,
     TagModule,
     ButtonModule,
@@ -129,7 +129,7 @@ const MOCK_AUDIT: AuditRow[] = [
           @if (selectedCountry() === 'US') {
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">State Override</label>
-              <p-dropdown
+              <p-select
                 [options]="usStateOptions()"
                 [(ngModel)]="selectedState"
                 optionLabel="label"
@@ -138,7 +138,7 @@ const MOCK_AUDIT: AuditRow[] = [
                 [showClear]="true"
                 appendTo="body"
                 [style]="{'min-width': '200px'}">
-              </p-dropdown>
+              </p-select>
             </div>
           }
 

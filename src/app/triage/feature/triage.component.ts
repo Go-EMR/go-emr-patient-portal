@@ -1,5 +1,5 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -9,7 +9,7 @@ import { TriageService, TriageCategory } from '../data-access';
   selector: 'app-triage',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ButtonModule, TagModule],
+  imports: [ButtonModule, TagModule],
   template: `
     <div class="triage-page">
 

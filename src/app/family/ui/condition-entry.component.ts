@@ -14,13 +14,13 @@ import {
   ChangeDetectionStrategy,
   OnInit,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { Textarea } from 'primeng/textarea';
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
 import { DividerModule } from 'primeng/divider';
@@ -44,17 +44,16 @@ interface ConditionSuggestion {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
     AutoCompleteModule,
     SelectButtonModule,
     InputNumberModule,
-    InputSwitchModule,
-    InputTextarea,
+    ToggleSwitchModule,
+    Textarea,
     ButtonModule,
     ChipModule,
-    DividerModule,
-  ],
+    DividerModule
+],
   template: `
     <div class="condition-entry">
       <!-- AutoComplete search -->
@@ -125,7 +124,7 @@ interface ConditionSuggestion {
         <!-- Contributed to death -->
         <div class="field field-row">
           <label class="field-label">Contributed to death</label>
-          <p-inputSwitch [(ngModel)]="form.contributedToDeath"></p-inputSwitch>
+          <p-toggleswitch [(ngModel)]="form.contributedToDeath"></p-toggleswitch>
         </div>
 
         <!-- Notes -->

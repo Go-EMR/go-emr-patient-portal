@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -31,7 +31,7 @@ interface AccessHistoryItem {
   selector: 'app-my-health-record',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, ToggleButtonModule],
+  imports: [FormsModule, CardModule, ButtonModule, TagModule, TableModule, DividerModule, ToggleButtonModule],
   template: `
     <div class="mhr-page">
       <header class="page-header">

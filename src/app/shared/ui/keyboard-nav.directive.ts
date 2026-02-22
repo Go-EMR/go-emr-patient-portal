@@ -75,20 +75,20 @@ export class KeyboardNavDirective implements OnInit, OnDestroy {
   // ── Focus trap (modal/dialog use) ─────────────────────────────────────────
 
   @HostListener('keydown.Tab', ['$event'])
-  onTab(event: KeyboardEvent): void {
+  onTab(event: Event): void {
     if (this.mode !== 'trap') return;
-    this.trapFocus(event, false);
+    this.trapFocus(event as KeyboardEvent, false);
   }
 
   @HostListener('keydown.shift.Tab', ['$event'])
-  onShiftTab(event: KeyboardEvent): void {
+  onShiftTab(event: Event): void {
     if (this.mode !== 'trap') return;
-    this.trapFocus(event, true);
+    this.trapFocus(event as KeyboardEvent, true);
   }
 
   /** Escape closes focustrap containers — callers should handle (click.outside). */
   @HostListener('keydown.Escape', ['$event'])
-  onEscape(event: KeyboardEvent): void {
+  onEscape(event: Event): void {
     if (this.mode !== 'trap') return;
     // Dispatch a custom event so parent components can react without coupling
     this.hostEl.dispatchEvent(

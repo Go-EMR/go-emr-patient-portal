@@ -1,10 +1,10 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 
@@ -26,15 +26,14 @@ interface FeedbackEntry {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
     ButtonModule,
     CardModule,
     TagModule,
-    DropdownModule,
+    SelectModule,
     InputTextModule,
     TextareaModule
-  ],
+],
   template: `
     <div class="feedback-page">
 
@@ -99,14 +98,14 @@ interface FeedbackEntry {
               <div class="form-row-2col">
                 <div class="form-field">
                   <label class="field-label">Category <span class="required">*</span></label>
-                  <p-dropdown
+                  <p-select
                     [(ngModel)]="selectedCategory"
                     [options]="categoryOptions"
                     optionLabel="label"
                     optionValue="value"
                     placeholder="Select category"
                     styleClass="w-full"
-                  ></p-dropdown>
+                  ></p-select>
                 </div>
                 <div class="form-field">
                   <label class="field-label">Priority</label>

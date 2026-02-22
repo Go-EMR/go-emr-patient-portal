@@ -10,15 +10,15 @@ import {
   inject,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
-import { TabViewModule } from 'primeng/tabview';
+import { TabsModule } from 'primeng/tabs';
 import { TagModule } from 'primeng/tag';
 import { TimelineModule } from 'primeng/timeline';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
 import { DividerModule } from 'primeng/divider';
 
 import {
@@ -53,17 +53,16 @@ interface EditForm {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
-    TabViewModule,
+    TabsModule,
     TagModule,
     TimelineModule,
     ButtonModule,
     InputTextModule,
-    CalendarModule,
-    DropdownModule,
-    DividerModule,
-  ],
+    DatePickerModule,
+    SelectModule,
+    DividerModule
+],
   template: `
     <div class="detail-panel" role="complementary" aria-label="Member detail panel">
       <!-- Header -->
@@ -84,304 +83,338 @@ interface EditForm {
           (click)="onClose()"
         ></button>
       </div>
-
+    
       <p-divider styleClass="my-0"></p-divider>
-
+    
       <!-- No selection state -->
-      <div *ngIf="!member && !pet" class="detail-empty">
-        <i class="pi pi-user" style="font-size: 2rem; color: #d1d5db;"></i>
-        <p>Select a member to view details</p>
-      </div>
-
+      @if (!member && !pet) {
+        <div class="detail-empty">
+          <i class="pi pi-user" style="font-size: 2rem; color: #d1d5db;"></i>
+          <p>Select a member to view details</p>
+        </div>
+      }
+    
       <!-- Member detail tabs -->
-      <p-tabView *ngIf="member || pet" styleClass="detail-tabs">
-
-        <!-- ── Health Tab ─────────────────────────────────────────────────── -->
-        <p-tabPanel header="Health" leftIcon="pi pi-heart">
-          <div class="tab-content" *ngIf="member">
-
-            <!-- Risk level badge -->
-            <div class="health-risk-row" *ngIf="overallRisk()">
-              <span class="risk-label">Overall Risk:</span>
-              <p-tag
-                [value]="overallRisk()"
-                [severity]="riskSeverity()"
-                styleClass="risk-tag"
-              ></p-tag>
-            </div>
-
-            <!-- Conditions list -->
-            <div class="section-header">
-              <i class="pi pi-exclamation-circle"></i>
-              <span>Conditions ({{ member.conditions.length }})</span>
-            </div>
-
-            <div
-              *ngFor="let cond of member.conditions; trackBy: trackCondition"
-              class="condition-card"
-            >
-              <div class="condition-top">
-                <span class="condition-name">{{ cond.conditionName }}</span>
-                <p-tag
-                  [value]="cond.status"
-                  [severity]="conditionSeverity(cond.status)"
-                  styleClass="status-tag"
-                ></p-tag>
-              </div>
-              <div class="condition-meta">
-                <span class="meta-item" *ngIf="cond.onsetAge">
-                  <i class="pi pi-clock"></i> Age {{ cond.onsetAge }}
-                </span>
-                <span class="meta-item">
-                  <i class="pi pi-tag"></i> {{ cond.category }}
-                </span>
-                <span class="meta-item death-flag" *ngIf="cond.contributedToDeath">
-                  <i class="pi pi-flag-fill"></i> Contributing cause
-                </span>
-              </div>
-              <p class="condition-notes" *ngIf="cond.notes">{{ cond.notes }}</p>
-            </div>
-
-            <div class="empty-state" *ngIf="member.conditions.length === 0">
-              <i class="pi pi-check-circle"></i>
-              No conditions recorded
-            </div>
-
-            <p-divider *ngIf="member.geneticTests.length > 0"></p-divider>
-
-            <!-- Genetic tests -->
-            <div class="section-header" *ngIf="member.geneticTests.length > 0">
-              <i class="pi pi-dna"></i>
-              <span>Genetic Tests ({{ member.geneticTests.length }})</span>
-            </div>
-
-            <div
-              *ngFor="let test of member.geneticTests; trackBy: trackTest"
-              class="genetic-test-card"
-            >
-              <div class="test-top">
-                <span class="test-name">{{ test.testName }}</span>
-                <p-tag
-                  [value]="test.classification"
-                  [severity]="classificationSeverity(test.classification)"
-                  styleClass="class-tag"
-                ></p-tag>
-              </div>
-              <div class="test-meta">
-                <span class="meta-item"><i class="pi pi-dna"></i> {{ test.geneName }}: {{ test.variant ?? '—' }}</span>
-                <span class="meta-item"><i class="pi pi-building"></i> {{ test.lab }}</span>
-                <span class="meta-item"><i class="pi pi-calendar"></i> {{ formatDate(test.testDate) }}</span>
-              </div>
-              <p class="test-summary">{{ test.resultSummary }}</p>
-            </div>
-          </div>
-
-          <!-- Pet health tab -->
-          <div class="tab-content" *ngIf="pet && !member">
-            <div class="section-header">
-              <i class="pi pi-heart"></i>
-              <span>Vaccinations ({{ pet.vaccinations.length }})</span>
-            </div>
-            <div *ngFor="let vac of pet.vaccinations" class="condition-card">
-              <div class="condition-top">
-                <span class="condition-name">{{ vac.vaccineName }}</span>
-                <p-tag value="vaccinated" severity="success"></p-tag>
-              </div>
-              <div class="condition-meta">
-                <span class="meta-item"><i class="pi pi-calendar"></i> {{ formatDate(vac.administeredDate) }}</span>
-                <span class="meta-item" *ngIf="vac.nextDueDate">Next: {{ formatDate(vac.nextDueDate) }}</span>
-              </div>
-            </div>
-
-            <p-divider *ngIf="pet.allergies.length > 0"></p-divider>
-            <div class="section-header" *ngIf="pet.allergies.length > 0">
-              <i class="pi pi-exclamation-triangle"></i>
-              <span>Allergies ({{ pet.allergies.length }})</span>
-            </div>
-            <div *ngFor="let allergy of pet.allergies" class="condition-card">
-              <div class="condition-top">
-                <span class="condition-name">{{ allergy.allergen }}</span>
-                <p-tag [value]="allergy.severity" [severity]="allergySeverity(allergy.severity)"></p-tag>
-              </div>
-              <p class="condition-notes">{{ allergy.reaction }}</p>
-            </div>
-          </div>
-        </p-tabPanel>
-
-        <!-- ── Access Tab ─────────────────────────────────────────────────── -->
-        <p-tabPanel header="Access" leftIcon="pi pi-lock" *ngIf="member">
-          <div class="tab-content">
-            <!-- Overall access level -->
-            <div class="access-level-row">
-              <span class="access-label">Access Level:</span>
-              <p-tag
-                [value]="member.accessLevel"
-                [severity]="accessSeverity(member.accessLevel)"
-              ></p-tag>
-            </div>
-
-            <p-divider></p-divider>
-
-            <!-- Per-category permissions grid -->
-            <div class="section-header">
-              <i class="pi pi-table"></i>
-              <span>Record Category Permissions</span>
-            </div>
-
-            <div class="permissions-grid">
-              <div
-                *ngFor="let entry of memberPermissions(); trackBy: trackPermission"
-                class="permission-row"
-              >
-                <span class="perm-category">{{ formatCategory(entry.category) }}</span>
-                <span class="perm-level" [class]="'perm-' + entry.level">
-                  {{ entry.level }}
-                </span>
-              </div>
-              <div class="empty-state" *ngIf="memberPermissions().length === 0">
-                <i class="pi pi-info-circle"></i>
-                No permissions configured
-              </div>
-            </div>
-
-            <div class="proxy-status" *ngIf="member.proxyStatus">
-              <i class="pi pi-shield"></i>
-              Proxy Status: <strong>{{ member.proxyStatus }}</strong>
-            </div>
-          </div>
-        </p-tabPanel>
-
-        <!-- ── History Tab ────────────────────────────────────────────────── -->
-        <p-tabPanel header="History" leftIcon="pi pi-history">
-          <div class="tab-content">
-            <p-timeline
-              [value]="memberAuditLog()"
-              styleClass="audit-timeline"
-            >
-              <ng-template pTemplate="marker" let-event>
-                <span class="timeline-marker" [class]="'marker-' + event.category">
-                  <i [class]="auditIcon(event.action)"></i>
-                </span>
-              </ng-template>
-              <ng-template pTemplate="content" let-event>
-                <div class="timeline-content">
-                  <div class="timeline-header">
-                    <span class="timeline-action">{{ formatAction(event.action) }}</span>
-                    <span class="timeline-date">{{ formatDateShort(event.timestamp) }}</span>
+      @if (member || pet) {
+        <p-tabs [value]="0" styleClass="detail-tabs">
+          <p-tablist>
+            <p-tab [value]="0"><i class="pi pi-heart"></i> Health</p-tab>
+            @if (member) {
+              <p-tab [value]="1"><i class="pi pi-lock"></i> Access</p-tab>
+            }
+            <p-tab [value]="2"><i class="pi pi-history"></i> History</p-tab>
+            @if (member) {
+              <p-tab [value]="3"><i class="pi pi-pencil"></i> Edit</p-tab>
+            }
+          </p-tablist>
+          <p-tabpanels>
+            <!-- ── Health Panel ───────────────────────────────────────────────── -->
+            <p-tabpanel [value]="0">
+              @if (member) {
+                <div class="tab-content">
+                  <!-- Risk level badge -->
+                  @if (overallRisk()) {
+                    <div class="health-risk-row">
+                      <span class="risk-label">Overall Risk:</span>
+                      <p-tag
+                        [value]="overallRisk()"
+                        [severity]="riskSeverity()"
+                        styleClass="risk-tag"
+                      ></p-tag>
+                    </div>
+                  }
+                  <!-- Conditions list -->
+                  <div class="section-header">
+                    <i class="pi pi-exclamation-circle"></i>
+                    <span>Conditions ({{ member.conditions.length }})</span>
                   </div>
-                  <p class="timeline-details">{{ event.details }}</p>
-                  <span class="timeline-actor">by {{ event.actorName }}</span>
+                  @for (cond of member.conditions; track trackCondition($index, cond)) {
+                    <div
+                      class="condition-card"
+                      >
+                      <div class="condition-top">
+                        <span class="condition-name">{{ cond.conditionName }}</span>
+                        <p-tag
+                          [value]="cond.status"
+                          [severity]="conditionSeverity(cond.status)"
+                          styleClass="status-tag"
+                        ></p-tag>
+                      </div>
+                      <div class="condition-meta">
+                        @if (cond.onsetAge) {
+                          <span class="meta-item">
+                            <i class="pi pi-clock"></i> Age {{ cond.onsetAge }}
+                          </span>
+                        }
+                        <span class="meta-item">
+                          <i class="pi pi-tag"></i> {{ cond.category }}
+                        </span>
+                        @if (cond.contributedToDeath) {
+                          <span class="meta-item death-flag">
+                            <i class="pi pi-flag-fill"></i> Contributing cause
+                          </span>
+                        }
+                      </div>
+                      @if (cond.notes) {
+                        <p class="condition-notes">{{ cond.notes }}</p>
+                      }
+                    </div>
+                  }
+                  @if (member.conditions.length === 0) {
+                    <div class="empty-state">
+                      <i class="pi pi-check-circle"></i>
+                      No conditions recorded
+                    </div>
+                  }
+                  @if (member.geneticTests.length > 0) {
+                    <p-divider></p-divider>
+                  }
+                  <!-- Genetic tests -->
+                  @if (member.geneticTests.length > 0) {
+                    <div class="section-header">
+                      <i class="pi pi-dna"></i>
+                      <span>Genetic Tests ({{ member.geneticTests.length }})</span>
+                    </div>
+                  }
+                  @for (test of member.geneticTests; track trackTest($index, test)) {
+                    <div
+                      class="genetic-test-card"
+                      >
+                      <div class="test-top">
+                        <span class="test-name">{{ test.testName }}</span>
+                        <p-tag
+                          [value]="test.classification"
+                          [severity]="classificationSeverity(test.classification)"
+                          styleClass="class-tag"
+                        ></p-tag>
+                      </div>
+                      <div class="test-meta">
+                        <span class="meta-item"><i class="pi pi-dna"></i> {{ test.geneName }}: {{ test.variant ?? '—' }}</span>
+                        <span class="meta-item"><i class="pi pi-building"></i> {{ test.lab }}</span>
+                        <span class="meta-item"><i class="pi pi-calendar"></i> {{ formatDate(test.testDate) }}</span>
+                      </div>
+                      <p class="test-summary">{{ test.resultSummary }}</p>
+                    </div>
+                  }
                 </div>
-              </ng-template>
-            </p-timeline>
-
-            <div class="empty-state" *ngIf="memberAuditLog().length === 0">
-              <i class="pi pi-history"></i>
-              No history entries
-            </div>
-          </div>
-        </p-tabPanel>
-
-        <!-- ── Edit Tab ───────────────────────────────────────────────────── -->
-        <p-tabPanel header="Edit" leftIcon="pi pi-pencil" *ngIf="member">
-          <div class="tab-content">
-            <div class="edit-form" *ngIf="editForm()">
-              <div class="form-row">
-                <label for="edit-first-name">First Name</label>
-                <input
-                  id="edit-first-name"
-                  pInputText
-                  [(ngModel)]="editFormValue.firstName"
-                  placeholder="First name"
-                  class="w-full"
-                />
+              }
+              <!-- Pet health panel -->
+              @if (pet && !member) {
+                <div class="tab-content">
+                  <div class="section-header">
+                    <i class="pi pi-heart"></i>
+                    <span>Vaccinations ({{ pet.vaccinations.length }})</span>
+                  </div>
+                  @for (vac of pet.vaccinations; track vac) {
+                    <div class="condition-card">
+                      <div class="condition-top">
+                        <span class="condition-name">{{ vac.vaccineName }}</span>
+                        <p-tag value="vaccinated" severity="success"></p-tag>
+                      </div>
+                      <div class="condition-meta">
+                        <span class="meta-item"><i class="pi pi-calendar"></i> {{ formatDate(vac.administeredDate) }}</span>
+                        @if (vac.nextDueDate) {
+                          <span class="meta-item">Next: {{ formatDate(vac.nextDueDate) }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                  @if (pet.allergies.length > 0) {
+                    <p-divider></p-divider>
+                  }
+                  @if (pet.allergies.length > 0) {
+                    <div class="section-header">
+                      <i class="pi pi-exclamation-triangle"></i>
+                      <span>Allergies ({{ pet.allergies.length }})</span>
+                    </div>
+                  }
+                  @for (allergy of pet.allergies; track allergy) {
+                    <div class="condition-card">
+                      <div class="condition-top">
+                        <span class="condition-name">{{ allergy.allergen }}</span>
+                        <p-tag [value]="allergy.severity" [severity]="allergySeverity(allergy.severity)"></p-tag>
+                      </div>
+                      <p class="condition-notes">{{ allergy.reaction }}</p>
+                    </div>
+                  }
+                </div>
+              }
+            </p-tabpanel>
+            <!-- ── Access Panel ───────────────────────────────────────────────── -->
+            @if (member) {
+              <p-tabpanel [value]="1">
+                <div class="tab-content">
+                  <!-- Overall access level -->
+                  <div class="access-level-row">
+                    <span class="access-label">Access Level:</span>
+                    <p-tag
+                      [value]="member.accessLevel"
+                      [severity]="accessSeverity(member.accessLevel)"
+                    ></p-tag>
+                  </div>
+                  <p-divider></p-divider>
+                  <!-- Per-category permissions grid -->
+                  <div class="section-header">
+                    <i class="pi pi-table"></i>
+                    <span>Record Category Permissions</span>
+                  </div>
+                  <div class="permissions-grid">
+                    @for (entry of memberPermissions(); track trackPermission($index, entry)) {
+                      <div
+                        class="permission-row"
+                        >
+                        <span class="perm-category">{{ formatCategory(entry.category) }}</span>
+                        <span class="perm-level" [class]="'perm-' + entry.level">
+                          {{ entry.level }}
+                        </span>
+                      </div>
+                    }
+                    @if (memberPermissions().length === 0) {
+                      <div class="empty-state">
+                        <i class="pi pi-info-circle"></i>
+                        No permissions configured
+                      </div>
+                    }
+                  </div>
+                  @if (member.proxyStatus) {
+                    <div class="proxy-status">
+                      <i class="pi pi-shield"></i>
+                      Proxy Status: <strong>{{ member.proxyStatus }}</strong>
+                    </div>
+                  }
+                </div>
+              </p-tabpanel>
+            }
+            <!-- ── History Panel ──────────────────────────────────────────────── -->
+            <p-tabpanel [value]="2">
+              <div class="tab-content">
+                <p-timeline
+                  [value]="memberAuditLog()"
+                  styleClass="audit-timeline"
+                  >
+                  <ng-template pTemplate="marker" let-event>
+                    <span class="timeline-marker" [class]="'marker-' + event.category">
+                      <i [class]="auditIcon(event.action)"></i>
+                    </span>
+                  </ng-template>
+                  <ng-template pTemplate="content" let-event>
+                    <div class="timeline-content">
+                      <div class="timeline-header">
+                        <span class="timeline-action">{{ formatAction(event.action) }}</span>
+                        <span class="timeline-date">{{ formatDateShort(event.timestamp) }}</span>
+                      </div>
+                      <p class="timeline-details">{{ event.details }}</p>
+                      <span class="timeline-actor">by {{ event.actorName }}</span>
+                    </div>
+                  </ng-template>
+                </p-timeline>
+                @if (memberAuditLog().length === 0) {
+                  <div class="empty-state">
+                    <i class="pi pi-history"></i>
+                    No history entries
+                  </div>
+                }
               </div>
-
-              <div class="form-row">
-                <label for="edit-last-name">Last Name</label>
-                <input
-                  id="edit-last-name"
-                  pInputText
-                  [(ngModel)]="editFormValue.lastName"
-                  placeholder="Last name"
-                  class="w-full"
-                />
-              </div>
-
-              <div class="form-row">
-                <label for="edit-dob">Date of Birth</label>
-                <p-calendar
-                  id="edit-dob"
-                  [(ngModel)]="editFormValue.dateOfBirth"
-                  dateFormat="mm/dd/yy"
-                  [showIcon]="true"
-                  placeholder="MM/DD/YYYY"
-                  styleClass="w-full"
-                ></p-calendar>
-              </div>
-
-              <div class="form-row">
-                <label for="edit-relationship">Relationship</label>
-                <p-dropdown
-                  id="edit-relationship"
-                  [(ngModel)]="editFormValue.relationship"
-                  [options]="relationshipOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select relationship"
-                  styleClass="w-full"
-                ></p-dropdown>
-              </div>
-
-              <div class="form-row">
-                <label for="edit-bio-relation">Biological Relation</label>
-                <p-dropdown
-                  id="edit-bio-relation"
-                  [(ngModel)]="editFormValue.biologicalRelation"
-                  [options]="biologicalOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select relation type"
-                  styleClass="w-full"
-                ></p-dropdown>
-              </div>
-
-              <div class="form-row">
-                <label for="edit-notes">Notes</label>
-                <textarea
-                  id="edit-notes"
-                  [(ngModel)]="editFormValue.notes"
-                  class="w-full edit-notes-input"
-                  rows="3"
-                  placeholder="Clinical notes..."
-                ></textarea>
-              </div>
-
-              <div class="edit-actions">
-                <button
-                  pButton
-                  type="button"
-                  label="Save Changes"
-                  icon="pi pi-check"
-                  class="p-button-sm"
-                  (click)="saveEdit()"
-                ></button>
-                <button
-                  pButton
-                  type="button"
-                  label="Cancel"
-                  icon="pi pi-times"
-                  class="p-button-sm p-button-text"
-                  (click)="resetEdit()"
-                ></button>
-              </div>
-            </div>
-          </div>
-        </p-tabPanel>
-
-      </p-tabView>
+            </p-tabpanel>
+            <!-- ── Edit Panel ─────────────────────────────────────────────────── -->
+            @if (member) {
+              <p-tabpanel [value]="3">
+                <div class="tab-content">
+                  @if (editForm()) {
+                    <div class="edit-form">
+                      <div class="form-row">
+                        <label for="edit-first-name">First Name</label>
+                        <input
+                          id="edit-first-name"
+                          pInputText
+                          [(ngModel)]="editFormValue.firstName"
+                          placeholder="First name"
+                          class="w-full"
+                          />
+                      </div>
+                      <div class="form-row">
+                        <label for="edit-last-name">Last Name</label>
+                        <input
+                          id="edit-last-name"
+                          pInputText
+                          [(ngModel)]="editFormValue.lastName"
+                          placeholder="Last name"
+                          class="w-full"
+                          />
+                      </div>
+                      <div class="form-row">
+                        <label for="edit-dob">Date of Birth</label>
+                        <p-datepicker
+                          id="edit-dob"
+                          [(ngModel)]="editFormValue.dateOfBirth"
+                          dateFormat="mm/dd/yy"
+                          [showIcon]="true"
+                          placeholder="MM/DD/YYYY"
+                          styleClass="w-full"
+                        ></p-datepicker>
+                      </div>
+                      <div class="form-row">
+                        <label for="edit-relationship">Relationship</label>
+                        <p-select
+                          id="edit-relationship"
+                          [(ngModel)]="editFormValue.relationship"
+                          [options]="relationshipOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          placeholder="Select relationship"
+                          styleClass="w-full"
+                        ></p-select>
+                      </div>
+                      <div class="form-row">
+                        <label for="edit-bio-relation">Biological Relation</label>
+                        <p-select
+                          id="edit-bio-relation"
+                          [(ngModel)]="editFormValue.biologicalRelation"
+                          [options]="biologicalOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          placeholder="Select relation type"
+                          styleClass="w-full"
+                        ></p-select>
+                      </div>
+                      <div class="form-row">
+                        <label for="edit-notes">Notes</label>
+                        <textarea
+                          id="edit-notes"
+                          [(ngModel)]="editFormValue.notes"
+                          class="w-full edit-notes-input"
+                          rows="3"
+                          placeholder="Clinical notes..."
+                        ></textarea>
+                      </div>
+                      <div class="edit-actions">
+                        <button
+                          pButton
+                          type="button"
+                          label="Save Changes"
+                          icon="pi pi-check"
+                          class="p-button-sm"
+                          (click)="saveEdit()"
+                        ></button>
+                        <button
+                          pButton
+                          type="button"
+                          label="Cancel"
+                          icon="pi pi-times"
+                          class="p-button-sm p-button-text"
+                          (click)="resetEdit()"
+                        ></button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </p-tabpanel>
+            }
+          </p-tabpanels>
+        </p-tabs>
+      }
     </div>
-  `,
+    `,
   styles: [`
     .detail-panel {
       height: 100%;
@@ -448,13 +481,13 @@ interface EditForm {
       font-size: 13px;
     }
 
-    :host ::ng-deep .detail-tabs .p-tabview-panels {
+    :host ::ng-deep .detail-tabs .p-tabpanels {
       padding: 0;
       overflow-y: auto;
       max-height: calc(100vh - 200px);
     }
 
-    :host ::ng-deep .detail-tabs .p-tabview-nav {
+    :host ::ng-deep .detail-tabs .p-tablist {
       font-size: 12px;
     }
 
@@ -802,10 +835,10 @@ export class ChartDetailPanelComponent implements OnChanges {
     return '';
   });
 
-  readonly riskSeverity = computed<string>(() => {
+  readonly riskSeverity = computed<'success' | 'info' | 'warn' | 'danger' | 'secondary'>(() => {
     const r = this.overallRisk();
     if (r === 'High')     return 'danger';
-    if (r === 'Moderate') return 'warning';
+    if (r === 'Moderate') return 'warn';
     return 'success';
   });
 
@@ -879,44 +912,44 @@ export class ChartDetailPanelComponent implements OnChanges {
 
   // ── Template helpers ─────────────────────────────────────────────────────
 
-  conditionSeverity(status: string): string {
-    const map: Record<string, string> = {
+  conditionSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       affected:   'danger',
-      carrier:    'warning',
+      carrier:    'warn',
       unaffected: 'success',
       unknown:    'secondary',
     };
-    return map[status] ?? 'secondary';
+    return (map[status] ?? 'secondary') as 'success' | 'info' | 'warn' | 'danger' | 'secondary';
   }
 
-  classificationSeverity(classification: string): string {
-    const map: Record<string, string> = {
+  classificationSeverity(classification: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       pathogenic:         'danger',
-      'likely-pathogenic':'warning',
+      'likely-pathogenic':'warn',
       vus:                'secondary',
       'likely-benign':    'info',
       benign:             'success',
     };
-    return map[classification] ?? 'secondary';
+    return (map[classification] ?? 'secondary') as 'success' | 'info' | 'warn' | 'danger' | 'secondary';
   }
 
-  accessSeverity(level: AccessLevel): string {
-    const map: Record<AccessLevel, string> = {
+  accessSeverity(level: AccessLevel): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const map: Record<AccessLevel, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       full:             'success',
-      partial:          'warning',
+      partial:          'warn',
       none:             'danger',
       'emergency-only': 'info',
     };
-    return map[level] ?? 'secondary';
+    return (map[level] ?? 'secondary') as 'success' | 'info' | 'warn' | 'danger' | 'secondary';
   }
 
-  allergySeverity(severity: string): string {
-    const map: Record<string, string> = {
+  allergySeverity(severity: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
       mild:     'success',
-      moderate: 'warning',
+      moderate: 'warn',
       severe:   'danger',
     };
-    return map[severity] ?? 'secondary';
+    return (map[severity] ?? 'secondary') as 'success' | 'info' | 'warn' | 'danger' | 'secondary';
   }
 
   auditIcon(action: string): string {

@@ -1,5 +1,5 @@
 import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -27,7 +27,7 @@ interface ComplianceItem {
   selector: 'app-cures-act',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
+  imports: [CardModule, ButtonModule, TagModule, DividerModule, ToastModule],
   providers: [MessageService],
   template: `
     <div class="cures-page">
@@ -344,10 +344,10 @@ export class CuresActComponent {
     return icons[status] ?? 'pi-circle';
   }
 
-  getComplianceSeverity(status: string): 'success' | 'warning' | 'info' | 'danger' {
-    const map: Record<string, 'success' | 'warning' | 'info' | 'danger'> = {
+  getComplianceSeverity(status: string): 'success' | 'warn' | 'info' | 'danger' {
+    const map: Record<string, 'success' | 'warn' | 'info' | 'danger'> = {
       Compliant: 'success',
-      'In Progress': 'warning',
+      'In Progress': 'warn',
       Pending: 'info'
     };
     return map[status] ?? 'info';

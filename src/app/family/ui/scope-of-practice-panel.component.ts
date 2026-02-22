@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
-import { AccordionModule } from 'primeng/accordion';
+import { Accordion, AccordionPanel, AccordionHeader, AccordionContent } from 'primeng/accordion';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { RulesetService } from '../data-access/ruleset.service';
@@ -92,7 +92,10 @@ const COUNTRY_CONTENT: Record<SupportedCountry, CountryContent> = {
   imports: [
     CommonModule,
     CardModule,
-    AccordionModule,
+    Accordion,
+    AccordionPanel,
+    AccordionHeader,
+    AccordionContent,
     TagModule,
     DividerModule,
   ],
@@ -123,20 +126,23 @@ const COUNTRY_CONTENT: Record<SupportedCountry, CountryContent> = {
           </div>
 
           <!-- Key features accordion -->
-          <p-accordion>
+          <p-accordion value="0">
             <!-- System features -->
-            <p-accordionTab header="Key System Features">
-              <ul class="m-0 pl-4">
-                @for (feature of content.keyFeatures; track feature) {
-                  <li class="text-sm text-gray-700 mb-2">{{ feature }}</li>
-                }
-              </ul>
-            </p-accordionTab>
+            <p-accordion-panel value="0">
+              <p-accordion-header>Key System Features</p-accordion-header>
+              <p-accordion-content>
+                <ul class="m-0 pl-4">
+                  @for (feature of content.keyFeatures; track feature) {
+                    <li class="text-sm text-gray-700 mb-2">{{ feature }}</li>
+                  }
+                </ul>
+              </p-accordion-content>
+            </p-accordion-panel>
 
             <!-- Physician scope -->
             @if (physicianScope) {
-              <p-accordionTab>
-                <ng-template pTemplate="header">
+              <p-accordion-panel value="1">
+                <p-accordion-header>
                   <div class="flex align-items-center gap-2 w-full">
                     <i class="pi pi-user text-blue-600"></i>
                     <span class="font-semibold text-sm">Physician (MD/DO) Scope</span>
@@ -153,30 +159,31 @@ const COUNTRY_CONTENT: Record<SupportedCountry, CountryContent> = {
                       </p-tag>
                     </div>
                   </div>
-                </ng-template>
+                </p-accordion-header>
+                <p-accordion-content>
+                  <div class="mb-3">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Special Notes</p>
+                    <ul class="m-0 pl-4">
+                      @for (note of physicianScope.specialNotes; track note) {
+                        <li class="text-sm text-gray-700 mb-1">{{ note }}</li>
+                      }
+                    </ul>
+                  </div>
 
-                <div class="mb-3">
-                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Special Notes</p>
-                  <ul class="m-0 pl-4">
-                    @for (note of physicianScope.specialNotes; track note) {
-                      <li class="text-sm text-gray-700 mb-1">{{ note }}</li>
-                    }
-                  </ul>
-                </div>
+                  <p-divider styleClass="my-2"></p-divider>
 
-                <p-divider styleClass="my-2"></p-divider>
-
-                <div>
-                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Insurance Requirements</p>
-                  <p class="text-sm text-gray-700 mb-0">{{ physicianScope.insuranceRequirements }}</p>
-                </div>
-              </p-accordionTab>
+                  <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Insurance Requirements</p>
+                    <p class="text-sm text-gray-700 mb-0">{{ physicianScope.insuranceRequirements }}</p>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
             }
 
             <!-- NP scope -->
             @if (npScope) {
-              <p-accordionTab>
-                <ng-template pTemplate="header">
+              <p-accordion-panel value="2">
+                <p-accordion-header>
                   <div class="flex align-items-center gap-2 w-full">
                     <i class="pi pi-user-plus text-purple-600"></i>
                     <span class="font-semibold text-sm">Nurse Practitioner (NP) Scope</span>
@@ -193,113 +200,126 @@ const COUNTRY_CONTENT: Record<SupportedCountry, CountryContent> = {
                       </p-tag>
                     </div>
                   </div>
-                </ng-template>
+                </p-accordion-header>
+                <p-accordion-content>
+                  <div class="mb-3">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Special Notes</p>
+                    <ul class="m-0 pl-4">
+                      @for (note of npScope.specialNotes; track note) {
+                        <li class="text-sm text-gray-700 mb-1">{{ note }}</li>
+                      }
+                    </ul>
+                  </div>
 
-                <div class="mb-3">
-                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Special Notes</p>
-                  <ul class="m-0 pl-4">
-                    @for (note of npScope.specialNotes; track note) {
-                      <li class="text-sm text-gray-700 mb-1">{{ note }}</li>
-                    }
-                  </ul>
-                </div>
+                  <p-divider styleClass="my-2"></p-divider>
 
-                <p-divider styleClass="my-2"></p-divider>
-
-                <div>
-                  <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Insurance / Billing Requirements</p>
-                  <p class="text-sm text-gray-700 mb-0">{{ npScope.insuranceRequirements }}</p>
-                </div>
-              </p-accordionTab>
+                  <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">Insurance / Billing Requirements</p>
+                    <p class="text-sm text-gray-700 mb-0">{{ npScope.insuranceRequirements }}</p>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
             }
 
             <!-- Insurance types (US only) -->
             @if (country === 'US') {
-              <p-accordionTab header="Insurance Plan Types (US)">
-                <div class="grid text-sm">
-                  <div class="col-12 mb-3">
-                    <div class="insurance-card p-3 border-round border-1 border-blue-200 bg-blue-50">
-                      <p class="font-semibold text-blue-800 mb-1">HMO (Health Maintenance Organization)</p>
-                      <p class="text-blue-700 mb-0 text-xs">Requires PCP designation and specialist referrals. Lower premiums, restricted network. No out-of-network coverage except emergencies.</p>
+              <p-accordion-panel value="3">
+                <p-accordion-header>Insurance Plan Types (US)</p-accordion-header>
+                <p-accordion-content>
+                  <div class="grid text-sm">
+                    <div class="col-12 mb-3">
+                      <div class="insurance-card p-3 border-round border-1 border-blue-200 bg-blue-50">
+                        <p class="font-semibold text-blue-800 mb-1">HMO (Health Maintenance Organization)</p>
+                        <p class="text-blue-700 mb-0 text-xs">Requires PCP designation and specialist referrals. Lower premiums, restricted network. No out-of-network coverage except emergencies.</p>
+                      </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <div class="insurance-card p-3 border-round border-1 border-green-200 bg-green-50">
+                        <p class="font-semibold text-green-800 mb-1">PPO (Preferred Provider Organization)</p>
+                        <p class="text-green-700 mb-0 text-xs">No referral required. Larger network. Higher premiums. Out-of-network care covered at lower rate.</p>
+                      </div>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <div class="insurance-card p-3 border-round border-1 border-orange-200 bg-orange-50">
+                        <p class="font-semibold text-orange-800 mb-1">HDHP (High Deductible Health Plan)</p>
+                        <p class="text-orange-700 mb-0 text-xs">Lower premiums, high deductible. Works with HSA. PPO-style referral flexibility. Patient responsible until deductible met.</p>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-12 mb-3">
-                    <div class="insurance-card p-3 border-round border-1 border-green-200 bg-green-50">
-                      <p class="font-semibold text-green-800 mb-1">PPO (Preferred Provider Organization)</p>
-                      <p class="text-green-700 mb-0 text-xs">No referral required. Larger network. Higher premiums. Out-of-network care covered at lower rate.</p>
-                    </div>
-                  </div>
-                  <div class="col-12 mb-3">
-                    <div class="insurance-card p-3 border-round border-1 border-orange-200 bg-orange-50">
-                      <p class="font-semibold text-orange-800 mb-1">HDHP (High Deductible Health Plan)</p>
-                      <p class="text-orange-700 mb-0 text-xs">Lower premiums, high deductible. Works with HSA. PPO-style referral flexibility. Patient responsible until deductible met.</p>
-                    </div>
-                  </div>
-                </div>
-              </p-accordionTab>
+                </p-accordion-content>
+              </p-accordion-panel>
             }
 
             <!-- AU Medicare info -->
             @if (country === 'AU') {
-              <p-accordionTab header="Medicare & PBS Pathways">
-                <div class="text-sm">
-                  <p class="text-gray-700 mb-2">
-                    <strong>Medicare:</strong> GP referral required for MBS specialist rebate.
-                    Referrals are valid for 12 months for most specialists (3 months for psychiatrists and some others).
-                  </p>
-                  <p class="text-gray-700 mb-2">
-                    <strong>PBS:</strong> Pharmaceutical Benefits Scheme subsidises medicines.
-                    S4 authority prescriptions require PBS approval form for certain medications.
-                  </p>
-                  <p class="text-gray-700 mb-0">
-                    <strong>Telehealth MBS:</strong> Item numbers available for GP and specialist teleconsultations.
-                    Patients must have an existing relationship with the practice for most items.
-                  </p>
-                </div>
-              </p-accordionTab>
+              <p-accordion-panel value="3">
+                <p-accordion-header>Medicare &amp; PBS Pathways</p-accordion-header>
+                <p-accordion-content>
+                  <div class="text-sm">
+                    <p class="text-gray-700 mb-2">
+                      <strong>Medicare:</strong> GP referral required for MBS specialist rebate.
+                      Referrals are valid for 12 months for most specialists (3 months for psychiatrists and some others).
+                    </p>
+                    <p class="text-gray-700 mb-2">
+                      <strong>PBS:</strong> Pharmaceutical Benefits Scheme subsidises medicines.
+                      S4 authority prescriptions require PBS approval form for certain medications.
+                    </p>
+                    <p class="text-gray-700 mb-0">
+                      <strong>Telehealth MBS:</strong> Item numbers available for GP and specialist teleconsultations.
+                      Patients must have an existing relationship with the practice for most items.
+                    </p>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
             }
 
             <!-- IN Ayushman Bharat info -->
             @if (country === 'IN') {
-              <p-accordionTab header="Ayushman Bharat (PMJAY) Details">
-                <div class="text-sm text-gray-700">
-                  <p class="mb-2">
-                    <strong>Eligibility:</strong> Lower-income families identified via SECC data.
-                    Approximately 50 crore beneficiaries covered.
-                  </p>
-                  <p class="mb-2">
-                    <strong>Coverage:</strong> Hospitalisation costs up to ₹5 lakh per family per year.
-                    Covers secondary and tertiary care at empanelled hospitals.
-                  </p>
-                  <p class="mb-2">
-                    <strong>ABDM Integration:</strong> Ayushman Bharat Digital Mission provides ABHA (health ID),
-                    linked health records, and interoperable PHR apps.
-                  </p>
-                  <p class="mb-0">
-                    <strong>Empanelment:</strong> Providers must be empanelled with PMJAY for government-scheme billing.
-                  </p>
-                </div>
-              </p-accordionTab>
+              <p-accordion-panel value="3">
+                <p-accordion-header>Ayushman Bharat (PMJAY) Details</p-accordion-header>
+                <p-accordion-content>
+                  <div class="text-sm text-gray-700">
+                    <p class="mb-2">
+                      <strong>Eligibility:</strong> Lower-income families identified via SECC data.
+                      Approximately 50 crore beneficiaries covered.
+                    </p>
+                    <p class="mb-2">
+                      <strong>Coverage:</strong> Hospitalisation costs up to ₹5 lakh per family per year.
+                      Covers secondary and tertiary care at empanelled hospitals.
+                    </p>
+                    <p class="mb-2">
+                      <strong>ABDM Integration:</strong> Ayushman Bharat Digital Mission provides ABHA (health ID),
+                      linked health records, and interoperable PHR apps.
+                    </p>
+                    <p class="mb-0">
+                      <strong>Empanelment:</strong> Providers must be empanelled with PMJAY for government-scheme billing.
+                    </p>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
             }
 
             <!-- RO CNAS info -->
             @if (country === 'RO') {
-              <p-accordionTab header="CNAS Insurance System Details">
-                <div class="text-sm text-gray-700">
-                  <p class="mb-2">
-                    <strong>CNAS Contract:</strong> Providers must have an active CNAS contract to bill publicly insured patients.
-                    Private practice is permitted without CNAS contract but is fully out-of-pocket.
-                  </p>
-                  <p class="mb-2">
-                    <strong>Bilet de trimitere:</strong> GP referral form required for CNAS-covered specialist access.
-                    Valid for 3 months. Annual budget limits apply per specialty.
-                  </p>
-                  <p class="mb-0">
-                    <strong>GDPR:</strong> All patient health data processing must comply with EU GDPR.
-                    Romanian DPA (ANSPDCP) has enforcement authority.
-                  </p>
-                </div>
-              </p-accordionTab>
+              <p-accordion-panel value="3">
+                <p-accordion-header>CNAS Insurance System Details</p-accordion-header>
+                <p-accordion-content>
+                  <div class="text-sm text-gray-700">
+                    <p class="mb-2">
+                      <strong>CNAS Contract:</strong> Providers must have an active CNAS contract to bill publicly insured patients.
+                      Private practice is permitted without CNAS contract but is fully out-of-pocket.
+                    </p>
+                    <p class="mb-2">
+                      <strong>Bilet de trimitere:</strong> GP referral form required for CNAS-covered specialist access.
+                      Valid for 3 months. Annual budget limits apply per specialty.
+                    </p>
+                    <p class="mb-0">
+                      <strong>GDPR:</strong> All patient health data processing must comply with EU GDPR.
+                      Romanian DPA (ANSPDCP) has enforcement authority.
+                    </p>
+                  </div>
+                </p-accordion-content>
+              </p-accordion-panel>
             }
           </p-accordion>
         </p-card>

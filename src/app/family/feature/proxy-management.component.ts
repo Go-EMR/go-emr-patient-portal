@@ -8,11 +8,11 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
-import { SidebarModule } from 'primeng/sidebar';
+import { DrawerModule } from 'primeng/drawer';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TimelineModule } from 'primeng/timeline';
-import { Textarea } from 'primeng/inputtextarea';
+import { Textarea } from 'primeng/textarea';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { BadgeModule } from 'primeng/badge';
 import { CardModule } from 'primeng/card';
@@ -172,7 +172,7 @@ const MOCK_PROXY_ACCOUNTS: ProxyAccount[] = [
     CommonModule,
     FormsModule,
     TableModule,
-    SidebarModule,
+    DrawerModule,
     ButtonModule,
     TagModule,
     TimelineModule,
@@ -334,7 +334,7 @@ const MOCK_PROXY_ACCOUNTS: ProxyAccount[] = [
     </div>
 
     <!-- Review Sidebar -->
-    <p-sidebar
+    <p-drawer
       [(visible)]="sidebarVisible"
       position="right"
       [style]="{ width: '480px' }"
@@ -491,7 +491,7 @@ const MOCK_PROXY_ACCOUNTS: ProxyAccount[] = [
           </div>
         </div>
       }
-    </p-sidebar>
+    </p-drawer>
   `,
   styles: [`
     .proxy-management {
@@ -507,7 +507,7 @@ const MOCK_PROXY_ACCOUNTS: ProxyAccount[] = [
     .review-sidebar {
       padding: 0 0.5rem;
     }
-    :host ::ng-deep .p-sidebar-content {
+    :host ::ng-deep .p-drawer-content {
       padding: 1rem 1.25rem;
     }
     :host ::ng-deep .p-timeline-event-content {

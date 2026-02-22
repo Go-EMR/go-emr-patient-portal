@@ -1,11 +1,11 @@
 import { Component, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TagModule } from 'primeng/tag';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
+import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
@@ -23,16 +23,15 @@ interface PreviousRequest {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule,
     FormsModule,
     ButtonModule,
     CardModule,
     TagModule,
-    CalendarModule,
-    DropdownModule,
+    DatePickerModule,
+    SelectModule,
     TextareaModule,
     SelectButtonModule
-  ],
+],
   template: `
     <div class="sick-note-page">
 
@@ -89,28 +88,28 @@ interface PreviousRequest {
                 <div class="date-row">
                   <div class="form-field">
                     <label class="field-label">From Date <span class="required">*</span></label>
-                    <p-calendar
+                    <p-datepicker
                       [(ngModel)]="dateFrom"
                       [showIcon]="true"
                       [maxDate]="dateTo ?? undefined"
                       placeholder="Select start date"
                       styleClass="w-full"
                       dateFormat="mm/dd/yy"
-                    ></p-calendar>
+                    ></p-datepicker>
                   </div>
                   <div class="date-separator">
                     <i class="pi pi-arrow-right"></i>
                   </div>
                   <div class="form-field">
                     <label class="field-label">To Date <span class="required">*</span></label>
-                    <p-calendar
+                    <p-datepicker
                       [(ngModel)]="dateTo"
                       [showIcon]="true"
                       [minDate]="dateFrom ?? undefined"
                       placeholder="Select end date"
                       styleClass="w-full"
                       dateFormat="mm/dd/yy"
-                    ></p-calendar>
+                    ></p-datepicker>
                   </div>
                 </div>
                 @if (dateFrom && dateTo) {
@@ -126,14 +125,14 @@ interface PreviousRequest {
                 <h3 class="form-section-title">Reason for Absence</h3>
                 <div class="form-field">
                   <label class="field-label">Category <span class="required">*</span></label>
-                  <p-dropdown
+                  <p-select
                     [(ngModel)]="selectedReason"
                     [options]="reasonOptions"
                     optionLabel="label"
                     optionValue="value"
                     placeholder="Select a reason"
                     styleClass="w-full"
-                  ></p-dropdown>
+                  ></p-select>
                 </div>
                 <div class="form-field">
                   <label class="field-label">Additional Notes</label>
