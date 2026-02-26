@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed } from '@angular/core';
+import { Component, inject, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -8,9 +8,20 @@ import { DashboardDataService, HealthAlert } from '../data-access';
 import { StatCardComponent, AppointmentCardComponent, VitalsGridComponent } from '../ui';
 import { AuthService } from '../../auth/data-access';
 
+interface ContextualAction {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  route: string;
+  color: 'teal' | 'blue' | 'orange' | 'purple' | 'green';
+  priority: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, CardModule, ButtonModule, SkeletonModule, StatCardComponent, AppointmentCardComponent, VitalsGridComponent],
   template: `
     <div class="dashboard">
@@ -40,6 +51,40 @@ import { AuthService } from '../../auth/data-access';
           <app-stat-card [value]="summary().recentLabResults" label="New Lab Results" icon="pi pi-file" variant="labs" [badge]="summary().recentLabResults > 0 ? 'New' : undefined" badgeVariant="alert" (clicked)="navigate('/records')"></app-stat-card>
           <app-stat-card [value]="'$' + summary().outstandingBalance.toFixed(2)" label="Outstanding Balance" icon="pi pi-credit-card" variant="balance" (clicked)="navigate('/billing')"></app-stat-card>
         </div>
+      }
+
+      <!-- Contextual Quick Actions -->
+      @if (contextualActions().length > 0) {
+        <section class="quick-actions">
+          <h2 class="section-title">
+            <i class="pi pi-sparkles section-title-icon"></i>
+            Suggested For You
+          </h2>
+          <div class="action-cards">
+            @for (action of contextualActions(); track action.id; let idx = $index) {
+              <div
+                class="action-card"
+                [class]="'action-card--' + action.color"
+                [style.animation-delay]="(idx * 60) + 'ms'"
+                (click)="navigate(action.route)"
+                role="button"
+                tabindex="0"
+                [attr.aria-label]="action.title + ': ' + action.description"
+                (keydown.enter)="navigate(action.route)"
+                (keydown.space)="navigate(action.route)"
+              >
+                <div class="action-icon">
+                  <i [class]="action.icon" aria-hidden="true"></i>
+                </div>
+                <div class="action-content">
+                  <h3>{{ action.title }}</h3>
+                  <p>{{ action.description }}</p>
+                </div>
+                <i class="pi pi-arrow-right action-arrow" aria-hidden="true"></i>
+              </div>
+            }
+          </div>
+        </section>
       }
 
       @if (activeAlerts().length > 0) {
@@ -131,6 +176,8 @@ import { AuthService } from '../../auth/data-access';
   `,
   styles: [`
     .dashboard { max-width: 1400px; margin: 0 auto; }
+
+    /* Welcome Banner */
     .welcome-banner { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, var(--primary-50) 0%, var(--surface-0) 100%); border-radius: var(--border-radius); padding: 2rem; margin-bottom: 1.5rem; }
     .greeting { font-size: 1rem; color: var(--text-color-secondary); }
     .name { font-size: 2rem; font-weight: 700; margin: 0.25rem 0; }
@@ -138,7 +185,126 @@ import { AuthService } from '../../auth/data-access';
     .current-date { color: var(--text-color-secondary); margin: 0.5rem 0 0; font-size: 0.875rem; display: flex; align-items: center; gap: 0.5rem; }
     .welcome-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1rem; }
     .welcome-actions { display: flex; gap: 1rem; }
+
+    /* Stats Grid */
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+
+    /* Quick Actions Section */
+    .quick-actions { margin-bottom: 1.5rem; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0 0 1rem;
+    }
+
+    .section-title-icon {
+      color: #0d9488;
+      font-size: 1rem;
+    }
+
+    .action-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.875rem;
+    }
+
+    .action-card {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 1rem 1.125rem;
+      background: var(--surface-0);
+      border: 1px solid var(--surface-border);
+      border-left: 4px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-left-color 0.15s;
+      animation: action-card-in 0.3s ease-out both;
+      outline: none;
+      position: relative;
+    }
+
+    @keyframes action-card-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .action-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-card:focus-visible {
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.3);
+    }
+
+    /* Color variants */
+    .action-card--teal   { border-left-color: #0d9488; }
+    .action-card--blue   { border-left-color: #3b82f6; }
+    .action-card--orange { border-left-color: #f97316; }
+    .action-card--purple { border-left-color: #8b5cf6; }
+    .action-card--green  { border-left-color: #22c55e; }
+
+    .action-card--teal:hover   { background: #f0fdfa; }
+    .action-card--blue:hover   { background: #eff6ff; }
+    .action-card--orange:hover { background: #fff7ed; }
+    .action-card--purple:hover { background: #faf5ff; }
+    .action-card--green:hover  { background: #f0fdf4; }
+
+    /* Action icon circle */
+    .action-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.125rem;
+    }
+
+    .action-card--teal   .action-icon { background: rgba(13, 148, 136, 0.1);  color: #0d9488; }
+    .action-card--blue   .action-icon { background: rgba(59, 130, 246, 0.1);  color: #3b82f6; }
+    .action-card--orange .action-icon { background: rgba(249, 115, 22, 0.1);  color: #f97316; }
+    .action-card--purple .action-icon { background: rgba(139, 92, 246, 0.1);  color: #8b5cf6; }
+    .action-card--green  .action-icon { background: rgba(34, 197, 94, 0.1);   color: #22c55e; }
+
+    .action-content { flex: 1; min-width: 0; }
+
+    .action-content h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0 0 0.2rem;
+      color: var(--text-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .action-content p {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .action-arrow {
+      font-size: 0.875rem;
+      color: var(--text-color-secondary);
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+
+    .action-card:hover .action-arrow { transform: translateX(3px); }
+
+    /* Content Grid */
     .content-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--surface-border); }
     .panel-header h2 { margin: 0; font-size: 1.125rem; font-weight: 600; }
@@ -159,6 +325,8 @@ import { AuthService } from '../../auth/data-access';
     .message-preview { display: block; font-size: 0.875rem; color: var(--text-color-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .message-time { font-size: 0.75rem; color: var(--text-color-secondary); }
     .empty-state { text-align: center; padding: 2rem; color: var(--text-color-secondary); }
+
+    /* Alerts Panel */
     .alerts-panel { background: var(--surface-0); border: 1px solid var(--surface-border); border-radius: var(--border-radius); margin-bottom: 1.5rem; overflow: hidden; }
     .alerts-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid var(--surface-border); background: var(--surface-50); }
     .alerts-title-group { display: flex; align-items: center; gap: 0.75rem; }
@@ -187,27 +355,182 @@ import { AuthService } from '../../auth/data-access';
     .alert-action-btn--warning { color: #f97316 !important; }
     .alert-action-btn--info { color: #3b82f6 !important; }
     .alert-dismiss-btn { color: var(--text-color-secondary) !important; }
-    @media (max-width: 768px) { .alert-card { flex-wrap: wrap; } .alert-actions { width: 100%; justify-content: flex-end; padding-top: 0.5rem; } }
-    @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } .content-grid { grid-template-columns: 1fr; } }
-    @media (max-width: 768px) { .welcome-banner { flex-direction: column; text-align: center; } .welcome-right { align-items: center; } .welcome-actions { flex-direction: column; width: 100%; } .stats-grid { grid-template-columns: 1fr; } }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .content-grid { grid-template-columns: 1fr; }
+      .action-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .welcome-banner { flex-direction: column; text-align: center; }
+      .welcome-right { align-items: center; }
+      .welcome-actions { flex-direction: column; width: 100%; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .action-cards { grid-template-columns: 1fr; }
+      .alert-card { flex-wrap: wrap; }
+      .alert-actions { width: 100%; justify-content: flex-end; padding-top: 0.5rem; }
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
   readonly dataService = inject(DashboardDataService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+
   readonly summary = computed(() => this.dataService.healthSummary());
-  readonly userName = computed(() => { const user = this.authService.user(); return user ? `${user.firstName} ${user.lastName}` : 'Patient'; });
+  readonly userName = computed(() => {
+    const user = this.authService.user();
+    return user ? `${user.firstName} ${user.lastName}` : 'Patient';
+  });
   readonly activeAlerts = computed(() => this.dataService.activeAlerts());
   readonly todayDate = new Date();
-  get greeting(): string { const hour = new Date().getHours(); return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'; }
-  ngOnInit(): void { this.dataService.loadDashboardData(); }
-  navigate(route: string): void { this.router.navigate([route]); }
-  checkIn(): void { console.log('Check in'); }
-  joinVideo(): void { console.log('Join video'); }
-  reschedule(): void { this.navigate('/appointments'); }
-  requestRefill(medId: string): void { this.dataService.requestRefill(medId); }
-  openMessage(threadId: string): void { this.router.navigate(['/messages', threadId]); }
-  dismissAlert(id: string): void { this.dataService.dismissAlert(id); }
-  navigateAlert(route: string): void { this.router.navigate([route]); }
+
+  readonly contextualActions = computed<ContextualAction[]>(() => {
+    const actions: ContextualAction[] = [];
+    const summary = this.summary();
+    const nextAppt = this.dataService.nextAppointment();
+
+    // If there's an upcoming appointment today → suggest check-in
+    if (nextAppt && this.isToday(nextAppt.date)) {
+      actions.push({
+        id: 'checkin',
+        title: "Check In for Today's Visit",
+        description: `${nextAppt.providerName} at ${nextAppt.startTime}`,
+        icon: 'pi pi-check-circle',
+        route: `/check-in/${nextAppt.id}`,
+        color: 'teal',
+        priority: 1
+      });
+    }
+
+    // If telehealth appointment → join video
+    if (nextAppt?.telehealth) {
+      actions.push({
+        id: 'telehealth',
+        title: 'Join Video Visit',
+        description: `Telehealth with ${nextAppt.providerName}`,
+        icon: 'pi pi-video',
+        route: `/telehealth/${nextAppt.id}`,
+        color: 'blue',
+        priority: 1
+      });
+    }
+
+    // If there are new lab results → view them
+    if (summary.recentLabResults > 0) {
+      actions.push({
+        id: 'labs',
+        title: 'New Lab Results Available',
+        description: `${summary.recentLabResults} new result(s) ready for review`,
+        icon: 'pi pi-file',
+        route: '/records',
+        color: 'orange',
+        priority: 2
+      });
+    }
+
+    // If there are unread messages
+    if (summary.unreadMessages > 0) {
+      actions.push({
+        id: 'messages',
+        title: `${summary.unreadMessages} Unread Message(s)`,
+        description: 'From your care team',
+        icon: 'pi pi-envelope',
+        route: '/messages',
+        color: 'purple',
+        priority: 2
+      });
+    }
+
+    // If there are pending forms
+    if (summary.pendingForms > 0) {
+      actions.push({
+        id: 'forms',
+        title: 'Forms Pending',
+        description: `${summary.pendingForms} form(s) need your attention`,
+        icon: 'pi pi-file-edit',
+        route: '/forms',
+        color: 'orange',
+        priority: 3
+      });
+    }
+
+    // If outstanding balance
+    if (summary.outstandingBalance > 0) {
+      actions.push({
+        id: 'billing',
+        title: 'Outstanding Balance',
+        description: `$${summary.outstandingBalance.toFixed(2)} due`,
+        icon: 'pi pi-credit-card',
+        route: '/billing',
+        color: 'orange',
+        priority: 4
+      });
+    }
+
+    // Always show: quick search hint
+    actions.push({
+      id: 'search',
+      title: 'Quick Search',
+      description: 'Press Ctrl+K to find any feature instantly',
+      icon: 'pi pi-search',
+      route: '/dashboard',
+      color: 'green',
+      priority: 10
+    });
+
+    return actions.sort((a, b) => a.priority - b.priority).slice(0, 4);
+  });
+
+  get greeting(): string {
+    const hour = new Date().getHours();
+    return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  }
+
+  ngOnInit(): void {
+    this.dataService.loadDashboardData();
+  }
+
+  navigate(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  checkIn(): void {
+    console.log('Check in');
+  }
+
+  joinVideo(): void {
+    console.log('Join video');
+  }
+
+  reschedule(): void {
+    this.navigate('/appointments');
+  }
+
+  requestRefill(medId: string): void {
+    this.dataService.requestRefill(medId);
+  }
+
+  openMessage(threadId: string): void {
+    this.router.navigate(['/messages', threadId]);
+  }
+
+  dismissAlert(id: string): void {
+    this.dataService.dismissAlert(id);
+  }
+
+  navigateAlert(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  private isToday(date: Date): boolean {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }
 }

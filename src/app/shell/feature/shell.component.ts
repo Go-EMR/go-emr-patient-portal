@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
 
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -9,19 +9,29 @@ import { AuthService } from '../../auth/data-access';
 import { ThemeService } from '../../shared/data-access';
 import { IdleTimeoutService } from '../../shared/utils';
 import { SkipLinkComponent } from '../../shared/ui';
+import { CountryFeaturesService } from '../../shared/data-access/country-features.service';
+
+type NavTier = 'core' | 'extended' | 'specialist';
+type CountryCode = 'US' | 'IN' | 'RO' | 'AU';
 
 interface NavItem {
   label: string;
   icon: string;
   route: string;
   badge?: number;
+  tier: NavTier;
+  keywords?: string[];
 }
 
 interface NavGroup {
   label: string;
   collapsed: boolean;
   items: NavItem[];
+  country?: CountryCode;
 }
+
+const LS_PINNED_KEY = 'portal_pinned_nav';
+const MAX_PINS = 6;
 
 @Component({
   selector: 'app-shell',
@@ -46,7 +56,33 @@ interface NavGroup {
         </div>
 
         <nav class="sidebar-nav">
-          @for (group of navGroups; track group.label) {
+          <!-- Feature 3: Pinned Items Section -->
+          @if (pinnedNavItems().length > 0 && !sidebarCollapsed()) {
+            <div class="pinned-section" role="region" aria-label="Pinned items">
+              <div class="pinned-header">
+                <i class="pi pi-star-fill" aria-hidden="true"></i>
+                <span>Pinned</span>
+              </div>
+              @for (item of pinnedNavItems(); track item.route) {
+                <a [routerLink]="item.route" routerLinkActive="active" class="nav-item pinned-nav-item" pRipple
+                   [attr.aria-label]="item.label + (item.badge ? ', ' + item.badge + ' unread' : '')">
+                  <i [class]="item.icon" aria-hidden="true"></i>
+                  <span>{{ item.label }}</span>
+                  @if (item.badge && item.badge > 0) {
+                    <span class="nav-badge" [attr.aria-label]="item.badge + ' unread'">{{ item.badge }}</span>
+                  }
+                  <button class="unpin-btn"
+                          (click)="togglePin(item.route); $event.preventDefault(); $event.stopPropagation()"
+                          [attr.aria-label]="'Unpin ' + item.label">
+                    <i class="pi pi-times" aria-hidden="true"></i>
+                  </button>
+                </a>
+              }
+            </div>
+          }
+
+          <!-- Feature 1: Core nav groups (always visible) -->
+          @for (group of visibleNavGroups(); track group.label) {
             @if (!sidebarCollapsed()) {
               <div class="nav-group-header"
                    (click)="group.collapsed = !group.collapsed"
@@ -71,9 +107,75 @@ interface NavGroup {
                   @if (item.badge && item.badge > 0) {
                     <span class="nav-badge" [attr.aria-label]="item.badge + ' unread'">{{ item.badge }}</span>
                   }
+                  @if (!sidebarCollapsed()) {
+                    <button class="pin-btn"
+                            [class.pinned]="isPinned(item.route)"
+                            (click)="togglePin(item.route); $event.preventDefault(); $event.stopPropagation()"
+                            [attr.aria-label]="isPinned(item.route) ? 'Unpin ' + item.label : 'Pin ' + item.label">
+                      <i [class]="isPinned(item.route) ? 'pi pi-star-fill' : 'pi pi-star'" aria-hidden="true"></i>
+                    </button>
+                  }
                 </a>
               }
             }
+          }
+
+          <!-- Feature 1: More Features toggle -->
+          @if (!sidebarCollapsed()) {
+            <div class="more-toggle"
+                 (click)="toggleExtended()"
+                 role="button"
+                 tabindex="0"
+                 [attr.aria-expanded]="showExtended()"
+                 aria-controls="extended-nav-region"
+                 (keydown.enter)="toggleExtended()"
+                 (keydown.space)="toggleExtended()">
+              <span>More Features</span>
+              <i [class]="showExtended() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" aria-hidden="true"></i>
+            </div>
+          }
+
+          <!-- Feature 1+2: Extended nav groups (visible when expanded, country-gated) -->
+          @if (showExtended() || sidebarCollapsed()) {
+            <div id="extended-nav-region">
+              @for (group of extendedNavGroups(); track group.label) {
+                @if (!sidebarCollapsed()) {
+                  <div class="nav-group-header extended-group-header"
+                       (click)="group.collapsed = !group.collapsed"
+                       [attr.aria-expanded]="!group.collapsed"
+                       role="button"
+                       tabindex="0"
+                       (keydown.enter)="group.collapsed = !group.collapsed"
+                       (keydown.space)="group.collapsed = !group.collapsed">
+                    <span class="nav-group-label">{{ group.label }}</span>
+                    <i [class]="group.collapsed ? 'pi pi-plus' : 'pi pi-minus'" class="nav-group-toggle" aria-hidden="true"></i>
+                  </div>
+                }
+                @if (!group.collapsed || sidebarCollapsed()) {
+                  @for (item of group.items; track item.route) {
+                    <a [routerLink]="item.route" routerLinkActive="active" class="nav-item" pRipple
+                       [pTooltip]="sidebarCollapsed() ? item.label : ''" tooltipPosition="right"
+                       [attr.aria-label]="item.label + (item.badge ? ', ' + item.badge + ' unread' : '')">
+                      <i [class]="item.icon" aria-hidden="true"></i>
+                      @if (!sidebarCollapsed()) {
+                        <span>{{ item.label }}</span>
+                      }
+                      @if (item.badge && item.badge > 0) {
+                        <span class="nav-badge" [attr.aria-label]="item.badge + ' unread'">{{ item.badge }}</span>
+                      }
+                      @if (!sidebarCollapsed()) {
+                        <button class="pin-btn"
+                                [class.pinned]="isPinned(item.route)"
+                                (click)="togglePin(item.route); $event.preventDefault(); $event.stopPropagation()"
+                                [attr.aria-label]="isPinned(item.route) ? 'Unpin ' + item.label : 'Pin ' + item.label">
+                          <i [class]="isPinned(item.route) ? 'pi pi-star-fill' : 'pi pi-star'" aria-hidden="true"></i>
+                        </button>
+                      }
+                    </a>
+                  }
+                }
+              }
+            </div>
           }
         </nav>
 
@@ -705,12 +807,156 @@ interface NavGroup {
       width: 100%;
       justify-content: center;
     }
+
+    /* =====================================================
+       Feature 1: More Features Toggle
+       ===================================================== */
+    .more-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      margin-top: 0.75rem;
+      cursor: pointer;
+      user-select: none;
+      border-top: 1px solid var(--surface-border);
+      border-bottom: 1px solid var(--surface-border);
+      color: var(--text-color-secondary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transition: color 0.15s ease, background 0.15s ease;
+      border-radius: var(--border-radius);
+    }
+
+    .more-toggle:hover {
+      background: var(--surface-hover);
+      color: var(--text-color);
+    }
+
+    .more-toggle:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+
+    .more-toggle i {
+      font-size: 0.65rem;
+      transition: transform 0.2s ease;
+    }
+
+    .extended-group-header {
+      opacity: 0.85;
+    }
+
+    /* =====================================================
+       Feature 3: Pinned Items
+       ===================================================== */
+    .pinned-section {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .pinned-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--yellow-600);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.25rem 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .pinned-nav-item {
+      padding-right: 2.5rem;
+    }
+
+    .unpin-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-color-secondary);
+      font-size: 0.7rem;
+      padding: 0.25rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s ease, color 0.15s ease;
+    }
+
+    .pinned-nav-item:hover .unpin-btn {
+      opacity: 1;
+    }
+
+    .unpin-btn:hover {
+      color: var(--red-500);
+    }
+
+    .unpin-btn:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+      opacity: 1;
+    }
+
+    .pin-btn {
+      position: absolute;
+      right: 0.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      transition: opacity 0.15s ease, color 0.15s ease;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-color-secondary);
+      font-size: 0.75rem;
+      padding: 0.25rem;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-item:hover .pin-btn {
+      opacity: 1;
+    }
+
+    .pin-btn.pinned {
+      opacity: 1;
+      color: var(--yellow-600);
+    }
+
+    .pin-btn:hover {
+      color: var(--yellow-500);
+    }
+
+    .pin-btn:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+      opacity: 1;
+    }
+
+    /* Ensure badge doesn't overlap pin button when both visible */
+    .nav-item:has(.pin-btn) .nav-badge {
+      margin-right: 1.75rem;
+    }
   `]
 })
 export class ShellComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   readonly themeService = inject(ThemeService);
   readonly idleService = inject(IdleTimeoutService);
+  private countryService = inject(CountryFeaturesService);
 
   sidebarCollapsed = signal(false);
 
@@ -718,142 +964,215 @@ export class ShellComponent implements OnInit, OnDestroy {
   currentRole = this.authService.role;
   roleDropdownOpen = signal(false);
 
+  // Feature 1: Extended nav toggle
+  showExtended = signal(false);
+
+  // Feature 3: Pinned routes persisted to localStorage
+  pinnedRoutes = signal<string[]>(this.loadPinnedRoutes());
+
   readonly roleOptions: { value: 'patient' | 'caregiver' | 'proxy'; label: string }[] = [
     { value: 'patient', label: 'Patient' },
     { value: 'caregiver', label: 'Caregiver' },
     { value: 'proxy', label: 'Proxy' },
   ];
 
-  navGroups: NavGroup[] = [
+  // All nav groups — core groups contain only 'core' tier items shown by default.
+  // Extended/specialist groups are shown under "More Features".
+  private readonly allCoreGroups: NavGroup[] = [
     {
       label: 'Overview',
       collapsed: false,
       items: [
-        { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
-        { label: 'Quick Help', icon: 'pi pi-question-circle', route: '/triage' },
+        { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard', tier: 'core', keywords: ['home', 'overview', 'summary'] },
+        { label: 'Quick Help', icon: 'pi pi-question-circle', route: '/triage', tier: 'core', keywords: ['help', 'triage', 'urgent'] },
       ]
     },
     {
       label: 'Care & Appointments',
       collapsed: false,
       items: [
-        { label: 'Appointments', icon: 'pi pi-calendar', route: '/appointments' },
-        { label: 'Telehealth', icon: 'pi pi-video', route: '/telehealth' },
-        { label: 'Symptom Checker', icon: 'pi pi-heart', route: '/symptom-checker' },
-        { label: 'Referrals', icon: 'pi pi-directions', route: '/referrals' },
-        { label: 'Providers', icon: 'pi pi-users', route: '/providers' },
-        { label: 'Care Team', icon: 'pi pi-users', route: '/care-team' },
-        { label: 'Queue Status', icon: 'pi pi-clock', route: '/queue-status' },
-        { label: 'Check-In', icon: 'pi pi-check-circle', route: '/check-in/APT-001' },
-        { label: 'Waitlist', icon: 'pi pi-hourglass', route: '/waitlist' },
+        { label: 'Appointments', icon: 'pi pi-calendar', route: '/appointments', tier: 'core', keywords: ['schedule', 'visit', 'booking'] },
       ]
     },
     {
       label: 'Health Records',
       collapsed: false,
       items: [
-        { label: 'Health Records', icon: 'pi pi-folder', route: '/records' },
-        { label: 'Visit Summaries', icon: 'pi pi-file-check', route: '/visit-summaries' },
-        { label: 'Care Plans', icon: 'pi pi-clipboard', route: '/care-plans' },
-        { label: 'Health Analytics', icon: 'pi pi-chart-bar', route: '/health-analytics' },
-        { label: 'Timeline', icon: 'pi pi-history', route: '/health-timeline' },
-        { label: 'Lab Trends', icon: 'pi pi-chart-line', route: '/lab-trends' },
-        { label: 'Questionnaires', icon: 'pi pi-list-check', route: '/questionnaires' },
-        { label: 'Prescriptions', icon: 'pi pi-box', route: '/prescriptions' },
-        { label: 'Devices', icon: 'pi pi-mobile', route: '/devices' },
+        { label: 'Health Records', icon: 'pi pi-folder', route: '/records', tier: 'core', keywords: ['records', 'history', 'chart'] },
+        { label: 'Prescriptions', icon: 'pi pi-box', route: '/prescriptions', tier: 'core', keywords: ['medications', 'drugs', 'rx', 'pharmacy'] },
       ]
     },
     {
       label: 'Billing & Insurance',
       collapsed: false,
       items: [
-        { label: 'Billing', icon: 'pi pi-credit-card', route: '/billing' },
-        { label: 'Insurance', icon: 'pi pi-id-card', route: '/insurance' },
-        { label: 'Pre-Auth', icon: 'pi pi-verified', route: '/preauth-request' },
-        { label: 'Forms', icon: 'pi pi-file-edit', route: '/forms' },
+        { label: 'Billing', icon: 'pi pi-credit-card', route: '/billing', tier: 'core', keywords: ['payment', 'invoice', 'statement', 'cost'] },
       ]
     },
     {
       label: 'Communication',
       collapsed: false,
       items: [
-        { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3 },
-        { label: 'Feedback', icon: 'pi pi-comment', route: '/feedback' },
-        { label: 'Audit Log', icon: 'pi pi-shield', route: '/audit-log' },
-        { label: 'Settings', icon: 'pi pi-cog', route: '/settings' },
+        { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3, tier: 'core', keywords: ['inbox', 'chat', 'doctor', 'secure'] },
+        { label: 'Settings', icon: 'pi pi-cog', route: '/settings', tier: 'core', keywords: ['preferences', 'account', 'profile', 'notifications'] },
+      ]
+    },
+  ];
+
+  // Extended groups — shown when "More Features" is expanded.
+  // Specialist items (rarely used) are grouped in collapsed state.
+  private readonly allExtendedGroups: NavGroup[] = [
+    {
+      label: 'Care & Appointments',
+      collapsed: false,
+      items: [
+        { label: 'Telehealth', icon: 'pi pi-video', route: '/telehealth', tier: 'extended', keywords: ['video', 'virtual visit', 'remote'] },
+        { label: 'Symptom Checker', icon: 'pi pi-heart', route: '/symptom-checker', tier: 'extended', keywords: ['symptoms', 'ai', 'check'] },
+        { label: 'Referrals', icon: 'pi pi-directions', route: '/referrals', tier: 'extended', keywords: ['specialist', 'refer'] },
+        { label: 'Providers', icon: 'pi pi-users', route: '/providers', tier: 'extended', keywords: ['doctors', 'physicians', 'find'] },
+        { label: 'Care Team', icon: 'pi pi-users', route: '/care-team', tier: 'extended', keywords: ['team', 'nurses', 'coordinators'] },
+        { label: 'Queue Status', icon: 'pi pi-clock', route: '/queue-status', tier: 'specialist', keywords: ['wait', 'queue', 'line'] },
+        { label: 'Check-In', icon: 'pi pi-check-circle', route: '/check-in/APT-001', tier: 'specialist', keywords: ['arrive', 'check in'] },
+        { label: 'Waitlist', icon: 'pi pi-hourglass', route: '/waitlist', tier: 'specialist', keywords: ['waitlist', 'cancellation'] },
+      ]
+    },
+    {
+      label: 'Health Records',
+      collapsed: false,
+      items: [
+        { label: 'Visit Summaries', icon: 'pi pi-file-check', route: '/visit-summaries', tier: 'extended', keywords: ['after visit', 'notes', 'summary'] },
+        { label: 'Care Plans', icon: 'pi pi-clipboard', route: '/care-plans', tier: 'extended', keywords: ['plan', 'goals', 'treatment'] },
+        { label: 'Health Analytics', icon: 'pi pi-chart-bar', route: '/health-analytics', tier: 'extended', keywords: ['trends', 'analytics', 'data'] },
+        { label: 'Timeline', icon: 'pi pi-history', route: '/health-timeline', tier: 'extended', keywords: ['history', 'events', 'timeline'] },
+        { label: 'Lab Trends', icon: 'pi pi-chart-line', route: '/lab-trends', tier: 'extended', keywords: ['labs', 'results', 'graph'] },
+        { label: 'Questionnaires', icon: 'pi pi-list-check', route: '/questionnaires', tier: 'extended', keywords: ['forms', 'survey', 'assessment'] },
+        { label: 'Devices', icon: 'pi pi-mobile', route: '/devices', tier: 'extended', keywords: ['wearable', 'monitor', 'connected'] },
+      ]
+    },
+    {
+      label: 'Billing & Insurance',
+      collapsed: false,
+      items: [
+        { label: 'Insurance', icon: 'pi pi-id-card', route: '/insurance', tier: 'extended', keywords: ['coverage', 'plan', 'benefits'] },
+        { label: 'Pre-Auth', icon: 'pi pi-verified', route: '/preauth-request', tier: 'extended', keywords: ['authorization', 'approval', 'prior auth'] },
+        { label: 'Forms', icon: 'pi pi-file-edit', route: '/forms', tier: 'extended', keywords: ['documents', 'paperwork'] },
+      ]
+    },
+    {
+      label: 'Communication',
+      collapsed: false,
+      items: [
+        { label: 'Feedback', icon: 'pi pi-comment', route: '/feedback', tier: 'specialist', keywords: ['review', 'rating', 'experience'] },
+        { label: 'Audit Log', icon: 'pi pi-shield', route: '/audit-log', tier: 'specialist', keywords: ['access log', 'privacy', 'security'] },
       ]
     },
     {
       label: 'Family',
       collapsed: false,
       items: [
-        { label: 'Family Dashboard', icon: 'pi pi-users', route: '/family' },
-        { label: 'Family Chart', icon: 'pi pi-sitemap', route: '/family/chart' },
-        { label: 'Permissions', icon: 'pi pi-lock', route: '/family/permissions' },
-        { label: 'Family History', icon: 'pi pi-history', route: '/health/family-history' },
-        { label: 'Genetic Tests', icon: 'pi pi-sliders-h', route: '/health/genetic-tests' },
-        { label: 'Genetic Risk', icon: 'pi pi-exclamation-triangle', route: '/health/genetic-risk' },
-        { label: 'Jurisdiction', icon: 'pi pi-globe', route: '/settings/jurisdiction' },
-        { label: 'Drug Schedules', icon: 'pi pi-list', route: '/medications/schedule-reference' },
-        { label: 'Telehealth Check', icon: 'pi pi-video', route: '/telehealth/jurisdiction-check' },
-        { label: 'Consent Rules', icon: 'pi pi-shield', route: '/admin/consent-rules' },
-        { label: 'Proxy Accounts', icon: 'pi pi-user-edit', route: '/admin/proxy-accounts' },
+        { label: 'Family Dashboard', icon: 'pi pi-users', route: '/family', tier: 'specialist', keywords: ['family', 'dependents', 'relatives'] },
+        { label: 'Family Chart', icon: 'pi pi-sitemap', route: '/family/chart', tier: 'specialist', keywords: ['pedigree', 'tree', 'chart'] },
+        { label: 'Permissions', icon: 'pi pi-lock', route: '/family/permissions', tier: 'specialist', keywords: ['access', 'sharing', 'delegate'] },
+        { label: 'Family History', icon: 'pi pi-history', route: '/health/family-history', tier: 'specialist', keywords: ['hereditary', 'history', 'conditions'] },
+        { label: 'Genetic Tests', icon: 'pi pi-sliders-h', route: '/health/genetic-tests', tier: 'specialist', keywords: ['dna', 'genomics', 'testing'] },
+        { label: 'Genetic Risk', icon: 'pi pi-exclamation-triangle', route: '/health/genetic-risk', tier: 'specialist', keywords: ['risk', 'hereditary', 'genomics'] },
+        { label: 'Jurisdiction', icon: 'pi pi-globe', route: '/settings/jurisdiction', tier: 'specialist', keywords: ['region', 'location', 'laws'] },
+        { label: 'Drug Schedules', icon: 'pi pi-list', route: '/medications/schedule-reference', tier: 'specialist', keywords: ['controlled', 'schedules', 'drugs'] },
+        { label: 'Telehealth Check', icon: 'pi pi-video', route: '/telehealth/jurisdiction-check', tier: 'specialist', keywords: ['eligibility', 'telehealth', 'rules'] },
+        { label: 'Consent Rules', icon: 'pi pi-shield', route: '/admin/consent-rules', tier: 'specialist', keywords: ['consent', 'minor', 'admin'] },
+        { label: 'Proxy Accounts', icon: 'pi pi-user-edit', route: '/admin/proxy-accounts', tier: 'specialist', keywords: ['proxy', 'caregiver', 'admin'] },
       ]
     },
     {
       label: 'Tools',
       collapsed: true,
       items: [
-        { label: 'Sick Note', icon: 'pi pi-file', route: '/sick-note' },
-        { label: 'Record Sharing', icon: 'pi pi-share-alt', route: '/record-sharing' },
-        { label: 'Survey', icon: 'pi pi-star', route: '/survey' },
+        { label: 'Sick Note', icon: 'pi pi-file', route: '/sick-note', tier: 'specialist', keywords: ['excuse', 'work', 'school'] },
+        { label: 'Record Sharing', icon: 'pi pi-share-alt', route: '/record-sharing', tier: 'specialist', keywords: ['share', 'export', 'transfer'] },
+        { label: 'Survey', icon: 'pi pi-star', route: '/survey', tier: 'specialist', keywords: ['satisfaction', 'feedback', 'survey'] },
       ]
     },
     {
       label: 'India Services',
       collapsed: true,
+      country: 'IN',
       items: [
-        { label: 'ABHA Health ID', icon: 'pi pi-id-card', route: '/abha' },
-        { label: 'ABDM Health Locker', icon: 'pi pi-database', route: '/abdm-locker' },
-        { label: 'eSanjeevani', icon: 'pi pi-video', route: '/esanjeevani' },
-        { label: 'CoWIN Certificate', icon: 'pi pi-verified', route: '/cowin' },
-        { label: 'Jan Aushadhi', icon: 'pi pi-map-marker', route: '/jan-aushadhi' },
-        { label: 'Digital Queue', icon: 'pi pi-clock', route: '/digital-queue' },
+        { label: 'ABHA Health ID', icon: 'pi pi-id-card', route: '/abha', tier: 'specialist', keywords: ['abha', 'ayushman', 'health id'] },
+        { label: 'ABDM Health Locker', icon: 'pi pi-database', route: '/abdm-locker', tier: 'specialist', keywords: ['locker', 'records', 'abdm'] },
+        { label: 'eSanjeevani', icon: 'pi pi-video', route: '/esanjeevani', tier: 'specialist', keywords: ['telemedicine', 'government', 'india'] },
+        { label: 'CoWIN Certificate', icon: 'pi pi-verified', route: '/cowin', tier: 'specialist', keywords: ['vaccination', 'covid', 'certificate'] },
+        { label: 'Jan Aushadhi', icon: 'pi pi-map-marker', route: '/jan-aushadhi', tier: 'specialist', keywords: ['pharmacy', 'generic', 'medicine'] },
+        { label: 'Digital Queue', icon: 'pi pi-clock', route: '/digital-queue', tier: 'specialist', keywords: ['queue', 'token', 'opd'] },
       ]
     },
     {
       label: 'Romania / EU Services',
       collapsed: true,
+      country: 'RO',
       items: [
-        { label: 'DES Viewer', icon: 'pi pi-file-pdf', route: '/des' },
-        { label: 'CNAS E-Prescriptions', icon: 'pi pi-file-edit', route: '/cnas' },
-        { label: 'EHDS Roadmap', icon: 'pi pi-globe', route: '/ehds' },
+        { label: 'DES Viewer', icon: 'pi pi-file-pdf', route: '/des', tier: 'specialist', keywords: ['medical record', 'des', 'romania'] },
+        { label: 'CNAS E-Prescriptions', icon: 'pi pi-file-edit', route: '/cnas', tier: 'specialist', keywords: ['prescription', 'cnas', 'reimbursement'] },
+        { label: 'EHDS Roadmap', icon: 'pi pi-globe', route: '/ehds', tier: 'specialist', keywords: ['european', 'health data', 'ehds'] },
       ]
     },
     {
       label: 'Australia Services',
       collapsed: true,
+      country: 'AU',
       items: [
-        { label: 'My Health Record', icon: 'pi pi-shield', route: '/my-health-record' },
-        { label: 'Bulk Billing', icon: 'pi pi-search', route: '/bulk-billing' },
-        { label: 'Medicare Benefits', icon: 'pi pi-shield', route: '/medicare-benefits' },
-        { label: 'PBS Prescriptions', icon: 'pi pi-box', route: '/pbs' },
-        { label: 'First Nations Health', icon: 'pi pi-heart-fill', route: '/first-nations' },
-        { label: 'TIS Interpreter', icon: 'pi pi-language', route: '/tis' },
+        { label: 'My Health Record', icon: 'pi pi-shield', route: '/my-health-record', tier: 'specialist', keywords: ['my health record', 'mhr', 'australia'] },
+        { label: 'Bulk Billing', icon: 'pi pi-search', route: '/bulk-billing', tier: 'specialist', keywords: ['bulk billing', 'gp', 'medicare'] },
+        { label: 'Medicare Benefits', icon: 'pi pi-shield', route: '/medicare-benefits', tier: 'specialist', keywords: ['medicare', 'rebate', 'australia'] },
+        { label: 'PBS Prescriptions', icon: 'pi pi-box', route: '/pbs', tier: 'specialist', keywords: ['pbs', 'pharmaceutical', 'subsidy'] },
+        { label: 'First Nations Health', icon: 'pi pi-heart-fill', route: '/first-nations', tier: 'specialist', keywords: ['indigenous', 'aboriginal', 'torres strait'] },
+        { label: 'TIS Interpreter', icon: 'pi pi-language', route: '/tis', tier: 'specialist', keywords: ['interpreter', 'language', 'translation'] },
       ]
     },
     {
       label: 'USA Services',
       collapsed: true,
+      country: 'US',
       items: [
-        { label: 'OpenNotes', icon: 'pi pi-book', route: '/open-notes' },
-        { label: 'Blue Button 2.0', icon: 'pi pi-cloud-download', route: '/blue-button' },
-        { label: 'Cures Act Rights', icon: 'pi pi-verified', route: '/cures-act' },
-        { label: 'SMART on FHIR', icon: 'pi pi-shield', route: '/smart-fhir' },
-        { label: 'CommonWell / Carequality', icon: 'pi pi-share-alt', route: '/commonwell' },
+        { label: 'OpenNotes', icon: 'pi pi-book', route: '/open-notes', tier: 'specialist', keywords: ['notes', 'transparency', 'records'] },
+        { label: 'Blue Button 2.0', icon: 'pi pi-cloud-download', route: '/blue-button', tier: 'specialist', keywords: ['cms', 'medicare', 'download'] },
+        { label: 'Cures Act Rights', icon: 'pi pi-verified', route: '/cures-act', tier: 'specialist', keywords: ['21st century cures', 'information blocking', 'rights'] },
+        { label: 'SMART on FHIR', icon: 'pi pi-shield', route: '/smart-fhir', tier: 'specialist', keywords: ['fhir', 'api', 'apps'] },
+        { label: 'CommonWell / Carequality', icon: 'pi pi-share-alt', route: '/commonwell', tier: 'specialist', keywords: ['interoperability', 'exchange', 'network'] },
       ]
     },
   ];
+
+  // Feature 1: Computed — only core groups with items (non-empty after tier filter)
+  visibleNavGroups = computed<NavGroup[]>(() => {
+    return this.allCoreGroups
+      .map(g => ({ ...g, items: g.items.filter(i => i.tier === 'core') }))
+      .filter(g => g.items.length > 0);
+  });
+
+  // Feature 1 + 2: Computed — extended/specialist groups, filtered by country
+  extendedNavGroups = computed<NavGroup[]>(() => {
+    const userCountry = this.countryService.country();
+    return this.allExtendedGroups
+      .filter(g => !g.country || g.country === userCountry)
+      .map(g => ({ ...g, items: g.items }))
+      .filter(g => g.items.length > 0);
+  });
+
+  // Feature 3: Flat lookup of all nav items across both core and extended groups
+  private get allNavItems(): NavItem[] {
+    const coreItems = this.allCoreGroups.flatMap(g => g.items);
+    const extendedItems = this.allExtendedGroups.flatMap(g => g.items);
+    return [...coreItems, ...extendedItems];
+  }
+
+  // Feature 3: Computed — resolve pinned route strings to full NavItem objects
+  pinnedNavItems = computed<NavItem[]>(() => {
+    const routes = this.pinnedRoutes();
+    const itemMap = new Map(this.allNavItems.map(item => [item.route, item]));
+    return routes
+      .map(r => itemMap.get(r))
+      .filter((item): item is NavItem => item !== undefined);
+  });
 
   userName = computed(() => {
     const user = this.authService.user();
@@ -870,6 +1189,16 @@ export class ShellComponent implements OnInit, OnDestroy {
     return user?.mrn || '';
   });
 
+  constructor() {
+    // Feature 3: Persist pinned routes to localStorage whenever they change
+    effect(() => {
+      const pins = this.pinnedRoutes();
+      try {
+        localStorage.setItem(LS_PINNED_KEY, JSON.stringify(pins));
+      } catch { /* storage quota or private browsing */ }
+    });
+  }
+
   ngOnInit(): void {
     // Feature 6.4: Start idle tracking; pass logout callback
     this.idleService.startTracking(() => this.authService.logout());
@@ -882,6 +1211,11 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update(v => !v);
+  }
+
+  // Feature 1: Toggle extended nav section
+  toggleExtended(): void {
+    this.showExtended.update(v => !v);
   }
 
   logout(): void {
@@ -912,5 +1246,40 @@ export class ShellComponent implements OnInit, OnDestroy {
 
   idleLogout(): void {
     this.idleService.triggerLogout();
+  }
+
+  // Feature 3: Pin/unpin a nav item by route
+
+  togglePin(route: string): void {
+    this.pinnedRoutes.update(current => {
+      const idx = current.indexOf(route);
+      if (idx !== -1) {
+        // Already pinned — remove it
+        return current.filter(r => r !== route);
+      }
+      if (current.length >= MAX_PINS) {
+        // Silently enforce the 6-pin cap
+        return current;
+      }
+      return [...current, route];
+    });
+  }
+
+  isPinned(route: string): boolean {
+    return this.pinnedRoutes().includes(route);
+  }
+
+  // Feature 3: Load pinned routes from localStorage on startup
+  private loadPinnedRoutes(): string[] {
+    try {
+      const stored = localStorage.getItem(LS_PINNED_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          return parsed.slice(0, MAX_PINS);
+        }
+      }
+    } catch { /* ignore parse errors */ }
+    return [];
   }
 }
