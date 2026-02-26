@@ -5,6 +5,8 @@ export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'onboarding', loadComponent: () => import('./onboarding/feature/onboarding.component').then(m => m.OnboardingComponent) },
   { path: 'login', canActivate: [guestGuard], loadComponent: () => import('./auth/feature/login.component').then(m => m.LoginComponent) },
+  { path: 'forgot-password', canActivate: [guestGuard], loadComponent: () => import('./auth/feature/forgot-password.component').then(m => m.ForgotPasswordComponent) },
+  { path: 'reset-password', canActivate: [guestGuard], loadComponent: () => import('./auth/feature/reset-password.component').then(m => m.ResetPasswordComponent) },
   { path: 'mfa', loadComponent: () => import('./auth/feature/mfa.component').then(m => m.MfaComponent) },
   {
     path: '',
@@ -64,6 +66,10 @@ export const routes: Routes = [
       { path: 'smart-fhir', loadComponent: () => import('./country/feature/smart-on-fhir.component').then(m => m.SmartOnFhirComponent) },
       { path: 'commonwell', loadComponent: () => import('./country/feature/commonwell.component').then(m => m.CommonwellComponent) },
       { path: 'audit-log', loadComponent: () => import('./settings/feature/audit-log.component').then(m => m.AuditLogComponent) },
+      // Visit Summaries, Care Plans, Waitlist
+      { path: 'visit-summaries', loadComponent: () => import('./visit-summaries/feature/visit-summaries.component').then(m => m.VisitSummariesComponent) },
+      { path: 'care-plans', loadComponent: () => import('./care-plans/feature/care-plans.component').then(m => m.CarePlansComponent) },
+      { path: 'waitlist', loadComponent: () => import('./waitlist/feature/waitlist.component').then(m => m.WaitlistComponent) },
       // Family Management routes
       { path: 'family', loadComponent: () => import('./family/feature/family-dashboard.component').then(m => m.FamilyDashboardComponent) },
       { path: 'family/permissions', loadComponent: () => import('./family/feature/permission-management.component').then(m => m.PermissionManagementComponent) },
@@ -78,7 +84,10 @@ export const routes: Routes = [
       { path: 'medications/schedule-reference', loadComponent: () => import('./family/feature/medication-schedule.component').then(m => m.MedicationScheduleComponent) },
       { path: 'telehealth/jurisdiction-check', loadComponent: () => import('./family/feature/telehealth-checker.component').then(m => m.TelehealthCheckerComponent) },
       { path: 'admin/consent-rules', loadComponent: () => import('./family/feature/consent-age-matrix.component').then(m => m.ConsentAgeMatrixComponent) },
-      { path: 'admin/proxy-accounts', loadComponent: () => import('./family/feature/proxy-management.component').then(m => m.ProxyManagementComponent) }
+      { path: 'admin/proxy-accounts', loadComponent: () => import('./family/feature/proxy-management.component').then(m => m.ProxyManagementComponent) },
+      // Check-In & Queue routes
+      { path: 'check-in/:appointmentId', loadComponent: () => import('./check-in/feature/check-in.component').then(m => m.CheckInComponent) },
+      { path: 'queue-status', loadComponent: () => import('./queue-status/feature/queue-status.component').then(m => m.QueueStatusComponent) }
     ]
   },
   { path: '**', redirectTo: 'dashboard' }

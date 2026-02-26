@@ -743,6 +743,9 @@ export class ShellComponent implements OnInit, OnDestroy {
         { label: 'Referrals', icon: 'pi pi-directions', route: '/referrals' },
         { label: 'Providers', icon: 'pi pi-users', route: '/providers' },
         { label: 'Care Team', icon: 'pi pi-users', route: '/care-team' },
+        { label: 'Queue Status', icon: 'pi pi-clock', route: '/queue-status' },
+        { label: 'Check-In', icon: 'pi pi-check-circle', route: '/check-in/APT-001' },
+        { label: 'Waitlist', icon: 'pi pi-hourglass', route: '/waitlist' },
       ]
     },
     {
@@ -750,6 +753,8 @@ export class ShellComponent implements OnInit, OnDestroy {
       collapsed: false,
       items: [
         { label: 'Health Records', icon: 'pi pi-folder', route: '/records' },
+        { label: 'Visit Summaries', icon: 'pi pi-file-check', route: '/visit-summaries' },
+        { label: 'Care Plans', icon: 'pi pi-clipboard', route: '/care-plans' },
         { label: 'Health Analytics', icon: 'pi pi-chart-bar', route: '/health-analytics' },
         { label: 'Timeline', icon: 'pi pi-history', route: '/health-timeline' },
         { label: 'Lab Trends', icon: 'pi pi-chart-line', route: '/lab-trends' },

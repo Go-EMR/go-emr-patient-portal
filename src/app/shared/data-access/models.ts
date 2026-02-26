@@ -236,7 +236,142 @@ export interface ConsentItem {
   expiresAt?: Date;
 }
 
+// =============================================================================
+// Visit Summary (After-Visit Summary / Clinical Encounter)
+// =============================================================================
+export interface VisitSummaryVitals {
+  bloodPressure?: string;
+  heartRate?: number;
+  temperature?: string;
+  weight?: string;
+  height?: string;
+  bmi?: number;
+  oxygenSaturation?: number;
+  respiratoryRate?: number;
+}
+
+export interface VisitDiagnosis {
+  icdCode: string;
+  description: string;
+  plainLanguage: string;
+  type: 'primary' | 'secondary';
+}
+
+export interface VisitMedication {
+  name: string;
+  dosage: string;
+  frequency: string;
+  instructions: string;
+  changeType: 'new' | 'modified' | 'discontinued' | 'continued';
+}
+
+export interface VisitLabOrder {
+  testName: string;
+  reason: string;
+  status: 'ordered' | 'collected' | 'resulted';
+  resultDate?: Date;
+}
+
+export interface VisitReferral {
+  specialty: string;
+  providerName?: string;
+  reason: string;
+  urgency: 'routine' | 'urgent' | 'emergent';
+  status: 'pending' | 'scheduled' | 'completed';
+}
+
+export interface VisitSummary {
+  id: string;
+  visitDate: Date;
+  providerName: string;
+  providerSpecialty: string;
+  visitType: string;
+  locationName: string;
+  locationAddress?: string;
+  durationMinutes: number;
+  status: 'new' | 'reviewed';
+  chiefComplaint: string;
+  diagnoses: VisitDiagnosis[];
+  treatmentPlan: string;
+  medicationChanges: VisitMedication[];
+  labOrders: VisitLabOrder[];
+  followUpInstructions: string;
+  warningSignsToWatch: string[];
+  referrals: VisitReferral[];
+  vitals: VisitSummaryVitals;
+  providerNotes?: string;
+}
+
+// =============================================================================
+// Care Plans (FHIR CarePlan resource)
+// =============================================================================
+export interface CarePlanGoal {
+  id: string;
+  description: string;
+  targetDate?: Date;
+  progress: number;
+  status: 'not-started' | 'on-track' | 'at-risk' | 'completed';
+  milestonesAchieved: string[];
+}
+
+export interface CarePlanActivity {
+  id: string;
+  description: string;
+  category: 'medication' | 'exercise' | 'diet' | 'monitoring' | 'appointment' | 'other';
+  frequency: string;
+  completed: boolean;
+  notes?: string;
+}
+
+export interface CarePlan {
+  id: string;
+  title: string;
+  description: string;
+  managingProvider: string;
+  careTeamMembers: string[];
+  startDate: Date;
+  nextReviewDate?: Date;
+  endDate?: Date;
+  status: 'active' | 'completed' | 'on-hold';
+  priority: 'routine' | 'urgent';
+  overallProgress: number;
+  goals: CarePlanGoal[];
+  activities: CarePlanActivity[];
+  providerNotes?: string;
+  category: string;
+}
+
+// =============================================================================
+// Waitlist Management
+// =============================================================================
+export interface WaitlistNotificationPreferences {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+}
+
+export interface WaitlistEntry {
+  id: string;
+  providerName: string;
+  providerSpecialty: string;
+  appointmentType: string;
+  dateAdded: Date;
+  position?: number;
+  totalInQueue?: number;
+  estimatedWaitWeeks?: number;
+  status: 'waiting' | 'slot-available' | 'expired' | 'cancelled' | 'completed';
+  priority: 'routine' | 'urgent';
+  slotOfferedDate?: Date;
+  slotOfferExpiresAt?: Date;
+  slotOfferedTime?: string;
+  completedDate?: Date;
+  notificationPreferences: WaitlistNotificationPreferences;
+  notes?: string;
+}
+
+// =============================================================================
 // User
+// =============================================================================
 export interface PatientUser {
   id: string;
   patientId: string;
