@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import {
@@ -998,8 +998,12 @@ function makePlot<T>(data: T[], getValue: (d: T) => number, padFactor = 0.1) {
     }
   `]
 })
-export class HealthAnalyticsComponent {
+export class HealthAnalyticsComponent implements OnInit {
   readonly svc = inject(HealthAnalyticsService);
+
+  ngOnInit(): void {
+    this.svc.loadHealthAnalytics();
+  }
 
   // Expose chart constants to template
   readonly CW = CHART_W;

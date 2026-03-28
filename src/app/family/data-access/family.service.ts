@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import {
   FamilyGroup,
   FamilyMember,
@@ -11,681 +11,34 @@ import {
   RecordCategory,
   AccessLevel,
 } from './family.models';
+import { GovetApiAdapter } from '../../shared/data-access/govet-api.adapter';
+import { GOVET_ENABLED, GOVET_DEMO_OWNER_ID } from '../../shared/data-access/govet.config';
+import { AuthService } from '../../auth/data-access/auth.service';
+import { forkJoin } from 'rxjs';
+
+// TODO: Implement backend endpoint for GET /api/v1/portal/patients/{id}/family
+// TODO: Implement backend endpoint for POST /api/v1/portal/patients/{id}/family/members
+// TODO: Implement backend endpoint for PUT /api/v1/portal/patients/{id}/family/members/{memberId}
+// TODO: Implement backend endpoint for DELETE /api/v1/portal/patients/{id}/family/members/{memberId}
 
 // =============================================================================
-// Date Helper
+// Empty family group seed (used when no API data is available)
 // =============================================================================
 
-function daysAgo(n: number): Date {
-  const d = new Date(2026, 1, 22);
-  d.setDate(d.getDate() - n);
-  return d;
+function makeEmptyFamilyGroup(patientId: string): FamilyGroup {
+  const now = new Date();
+  return {
+    id: `fg-${patientId}`,
+    name: 'My Family',
+    primaryMemberId: `fm-self`,
+    members: [],
+    pets: [],
+    permissionMatrix: [],
+    auditLog: [],
+    createdAt: now,
+    updatedAt: now,
+  };
 }
-
-// =============================================================================
-// Mock Conditions
-// =============================================================================
-
-const CONDITIONS_PATRICIA: FamilyCondition[] = [
-  {
-    id: 'fc-001',
-    memberId: 'fm-005',
-    snomedCode: '254837009',
-    conditionName: 'Breast Cancer',
-    category: 'Oncology',
-    status: 'affected',
-    onsetAge: 52,
-    contributedToDeath: false,
-    notes: 'Stage II, hormone receptor positive. Currently in remission after lumpectomy and adjuvant therapy.',
-  },
-  {
-    id: 'fc-002',
-    memberId: 'fm-005',
-    snomedCode: '44054006',
-    conditionName: 'Type 2 Diabetes',
-    category: 'Endocrinology',
-    status: 'affected',
-    onsetAge: 58,
-    contributedToDeath: false,
-    notes: 'Well-controlled on oral agents.',
-  },
-];
-
-const CONDITIONS_ROBERT: FamilyCondition[] = [
-  {
-    id: 'fc-003',
-    memberId: 'fm-006',
-    snomedCode: '44054006',
-    conditionName: 'Type 2 Diabetes',
-    category: 'Endocrinology',
-    status: 'affected',
-    onsetAge: 54,
-    contributedToDeath: false,
-    notes: 'Managed with Metformin and lifestyle changes.',
-  },
-  {
-    id: 'fc-004',
-    memberId: 'fm-006',
-    snomedCode: '38341003',
-    conditionName: 'Hypertension',
-    category: 'Cardiology',
-    status: 'affected',
-    onsetAge: 50,
-    contributedToDeath: false,
-    notes: 'Controlled on ACE inhibitor.',
-  },
-  {
-    id: 'fc-005',
-    memberId: 'fm-006',
-    snomedCode: '53741008',
-    conditionName: 'Coronary Artery Disease',
-    category: 'Cardiology',
-    status: 'affected',
-    onsetAge: 60,
-    contributedToDeath: false,
-    notes: 'Stent placed 2020. On dual antiplatelet therapy.',
-  },
-];
-
-const CONDITIONS_ELENA: FamilyCondition[] = [
-  {
-    id: 'fc-006',
-    memberId: 'fm-007',
-    snomedCode: '254837009',
-    conditionName: 'Breast Cancer',
-    category: 'Oncology',
-    status: 'affected',
-    onsetAge: 62,
-    contributedToDeath: true,
-    notes: 'Metastatic breast cancer. Primary cause of death.',
-  },
-];
-
-const CONDITIONS_WILLIAM: FamilyCondition[] = [
-  {
-    id: 'fc-007',
-    memberId: 'fm-008',
-    snomedCode: '26929004',
-    conditionName: "Alzheimer's Disease",
-    category: 'Neurology',
-    status: 'affected',
-    onsetAge: 80,
-    contributedToDeath: false,
-    notes: 'Moderate stage. Currently in memory care facility.',
-  },
-  {
-    id: 'fc-008',
-    memberId: 'fm-008',
-    snomedCode: '38341003',
-    conditionName: 'Hypertension',
-    category: 'Cardiology',
-    status: 'affected',
-    onsetAge: 60,
-    contributedToDeath: false,
-  },
-];
-
-const CONDITIONS_DAVID: FamilyCondition[] = [
-  {
-    id: 'fc-009',
-    memberId: 'fm-009',
-    snomedCode: '40108008',
-    conditionName: 'Beta-Thalassemia Trait',
-    category: 'Hematology',
-    status: 'carrier',
-    onsetAge: undefined,
-    contributedToDeath: false,
-    notes: 'Incidentally found on CBC. Genetic counseling completed.',
-  },
-];
-
-const CONDITIONS_JAMES: FamilyCondition[] = [
-  {
-    id: 'fc-010',
-    memberId: 'fm-010',
-    snomedCode: '363406005',
-    conditionName: 'Colon Cancer',
-    category: 'Oncology',
-    status: 'affected',
-    onsetAge: 53,
-    contributedToDeath: true,
-    notes: 'Stage IV at diagnosis. Died 2 years post-diagnosis.',
-  },
-];
-
-// =============================================================================
-// Mock Genetic Tests
-// =============================================================================
-
-const GENETIC_TESTS_PATRICIA: GeneticTestResult[] = [
-  {
-    id: 'gt-001',
-    memberId: 'fm-005',
-    testName: 'BRCA1/2 Panel',
-    geneName: 'BRCA2',
-    variant: 'c.5946delT (p.Ser1982ArgfsTer22)',
-    classification: 'pathogenic',
-    testDate: new Date(2024, 3, 15),
-    lab: 'Myriad Genetics',
-    resultSummary: 'Pathogenic BRCA2 variant identified. Significantly elevated lifetime risk for breast and ovarian cancer.',
-    consentGiven: true,
-    consentDate: new Date(2024, 2, 28),
-  },
-];
-
-const GENETIC_TESTS_DAVID: GeneticTestResult[] = [
-  {
-    id: 'gt-002',
-    memberId: 'fm-009',
-    testName: 'Hemoglobinopathy Panel',
-    geneName: 'HBB',
-    variant: 'c.92+5G>C',
-    classification: 'pathogenic',
-    testDate: new Date(2023, 8, 10),
-    lab: 'Quest Diagnostics',
-    resultSummary: 'Carrier for beta-thalassemia. Reproductive counseling recommended if partner carrier status unknown.',
-    consentGiven: true,
-    consentDate: new Date(2023, 7, 22),
-  },
-];
-
-// =============================================================================
-// Mock Permission Entries
-// =============================================================================
-
-const MOCK_PERMISSIONS: PermissionEntry[] = [
-  // Maria (spouse) → Alex: full access to all categories
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'appointments', level: 'full', setBy: 'fm-001', setAt: daysAgo(120) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'medications', level: 'full', setBy: 'fm-001', setAt: daysAgo(120) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'lab-results', level: 'full', setBy: 'fm-001', setAt: daysAgo(120) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'immunizations', level: 'full', setBy: 'fm-001', setAt: daysAgo(120) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'allergies', level: 'full', setBy: 'fm-001', setAt: daysAgo(120) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'mental-health', level: 'partial', setBy: 'fm-001', setAt: daysAgo(120) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'reproductive', level: 'none', setBy: 'fm-002', setAt: daysAgo(90) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'billing', level: 'full', setBy: 'fm-001', setAt: daysAgo(120) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'genetic', level: 'partial', setBy: 'fm-001', setAt: daysAgo(60) },
-  { memberId: 'fm-002', targetMemberId: 'fm-001', category: 'sti', level: 'none', setBy: 'fm-002', setAt: daysAgo(90) },
-  // Marcus (teen) → Alex: partial
-  { memberId: 'fm-004', targetMemberId: 'fm-001', category: 'appointments', level: 'full', setBy: 'fm-001', setAt: daysAgo(60) },
-  { memberId: 'fm-004', targetMemberId: 'fm-001', category: 'medications', level: 'partial', setBy: 'fm-001', setAt: daysAgo(60) },
-  { memberId: 'fm-004', targetMemberId: 'fm-001', category: 'mental-health', level: 'none', setBy: 'fm-004', setAt: daysAgo(30) },
-];
-
-// =============================================================================
-// Mock Audit Log
-// =============================================================================
-
-const MOCK_AUDIT_LOG: AuditLogEntry[] = [
-  {
-    id: 'al-001',
-    timestamp: daysAgo(2),
-    actorId: 'fm-001',
-    actorName: 'Alex Johnson',
-    action: 'PERMISSION_UPDATED',
-    targetMemberId: 'fm-002',
-    targetMemberName: 'Maria Johnson',
-    details: 'Updated mental-health access level from "full" to "partial".',
-    category: 'permissions',
-  },
-  {
-    id: 'al-002',
-    timestamp: daysAgo(7),
-    actorId: 'fm-001',
-    actorName: 'Alex Johnson',
-    action: 'MEMBER_ADDED',
-    targetMemberId: 'fm-010',
-    targetMemberName: 'James Johnson',
-    details: 'Added history-only record for paternal uncle James Johnson (deceased).',
-    category: 'member-management',
-  },
-  {
-    id: 'al-003',
-    timestamp: daysAgo(14),
-    actorId: 'fm-001',
-    actorName: 'Alex Johnson',
-    action: 'CONDITION_ADDED',
-    targetMemberId: 'fm-005',
-    targetMemberName: 'Patricia Johnson',
-    details: 'Added condition "Type 2 Diabetes" for Patricia Johnson.',
-    category: 'health-records',
-  },
-  {
-    id: 'al-004',
-    timestamp: daysAgo(21),
-    actorId: 'fm-001',
-    actorName: 'Alex Johnson',
-    action: 'PET_ADDED',
-    details: 'Added pet profile for Buddy (Golden Retriever).',
-    category: 'pet-management',
-  },
-  {
-    id: 'al-005',
-    timestamp: daysAgo(45),
-    actorId: 'fm-001',
-    actorName: 'Alex Johnson',
-    action: 'GENETIC_TEST_LINKED',
-    targetMemberId: 'fm-005',
-    targetMemberName: 'Patricia Johnson',
-    details: 'Linked BRCA2 pathogenic variant test result from Myriad Genetics.',
-    category: 'health-records',
-  },
-  {
-    id: 'al-006',
-    timestamp: daysAgo(90),
-    actorId: 'fm-001',
-    actorName: 'Alex Johnson',
-    action: 'FAMILY_GROUP_CREATED',
-    details: 'Family group "Johnson Family" created with Alex Johnson as primary member.',
-    category: 'member-management',
-  },
-];
-
-// =============================================================================
-// Mock Pets
-// =============================================================================
-
-const MOCK_PETS: PetProfile[] = [
-  {
-    id: 'pet-001',
-    familyGroupId: 'fg-001',
-    name: 'Buddy',
-    species: 'dog',
-    breed: 'Golden Retriever',
-    dateOfBirth: new Date(2021, 3, 10),
-    weight: 32.5,
-    weightUnit: 'kg',
-    avatarColor: '#ca8a04',
-    vaccinations: [
-      {
-        id: 'pv-001',
-        vaccineName: 'Rabies',
-        administeredDate: daysAgo(365),
-        nextDueDate: daysAgo(-365),
-        veterinarian: 'Dr. Janet Moore, DVM',
-        batchNumber: 'RB-2025-44821',
-      },
-      {
-        id: 'pv-002',
-        vaccineName: 'DHPP (Distemper/Hepatitis/Parvovirus/Parainfluenza)',
-        administeredDate: daysAgo(365),
-        nextDueDate: daysAgo(-730),
-        veterinarian: 'Dr. Janet Moore, DVM',
-        batchNumber: 'DHPP-2025-31104',
-      },
-      {
-        id: 'pv-003',
-        vaccineName: 'Bordetella (Kennel Cough)',
-        administeredDate: daysAgo(180),
-        nextDueDate: daysAgo(-185),
-        veterinarian: 'Dr. Janet Moore, DVM',
-      },
-      {
-        id: 'pv-004',
-        vaccineName: 'Leptospirosis',
-        administeredDate: daysAgo(365),
-        nextDueDate: daysAgo(-365),
-        veterinarian: 'Dr. Janet Moore, DVM',
-        batchNumber: 'LEPTO-2025-88302',
-      },
-    ],
-    medications: [
-      {
-        id: 'pm-001',
-        medicationName: 'Simparica Trio',
-        dosage: '48 mg (20-40 kg range)',
-        frequency: 'Once monthly',
-        startDate: new Date(2024, 0, 1),
-        prescribedBy: 'Dr. Janet Moore, DVM',
-        status: 'active',
-      },
-    ],
-    allergies: [],
-    weightHistory: [
-      { date: daysAgo(365), weight: 30.2, unit: 'kg' },
-      { date: daysAgo(270), weight: 31.0, unit: 'kg' },
-      { date: daysAgo(180), weight: 31.8, unit: 'kg' },
-      { date: daysAgo(90), weight: 32.1, unit: 'kg' },
-      { date: daysAgo(30), weight: 32.5, unit: 'kg' },
-    ],
-    vetVisits: [
-      {
-        id: 'vv-001',
-        date: daysAgo(30),
-        reason: 'Annual wellness exam and vaccinations',
-        veterinarian: 'Dr. Janet Moore, DVM',
-        clinic: 'Riverside Animal Hospital',
-        notes: 'Good overall health. Slight tartar buildup — dental cleaning recommended in 6 months. Weight stable.',
-        followUpDate: daysAgo(-180),
-      },
-    ],
-    zoonoticFlags: {
-      rabiesVaccinated: true,
-      regularFleaTick: true,
-      recentTravel: false,
-      contactWithWildlife: false,
-    },
-  },
-  {
-    id: 'pet-002',
-    familyGroupId: 'fg-001',
-    name: 'Whiskers',
-    species: 'cat',
-    breed: 'Domestic Shorthair',
-    dateOfBirth: new Date(2023, 5, 3),
-    weight: 4.2,
-    weightUnit: 'kg',
-    avatarColor: '#be185d',
-    vaccinations: [
-      {
-        id: 'pv-005',
-        vaccineName: 'Rabies',
-        administeredDate: daysAgo(200),
-        nextDueDate: daysAgo(-165),
-        veterinarian: 'Dr. Samuel Park, DVM',
-        batchNumber: 'RB-2025-72931',
-      },
-      {
-        id: 'pv-006',
-        vaccineName: 'FVRCP (Feline Viral Rhinotracheitis/Calicivirus/Panleukopenia)',
-        administeredDate: daysAgo(200),
-        nextDueDate: daysAgo(-1095),
-        veterinarian: 'Dr. Samuel Park, DVM',
-        batchNumber: 'FVRCP-2025-50417',
-      },
-    ],
-    medications: [],
-    allergies: [
-      {
-        id: 'pa-001',
-        allergen: 'Fish-based cat food',
-        reaction: 'Vomiting, gastrointestinal upset',
-        severity: 'moderate',
-      },
-      {
-        id: 'pa-002',
-        allergen: 'Certain plastic food bowls',
-        reaction: 'Facial dermatitis around chin',
-        severity: 'mild',
-      },
-    ],
-    weightHistory: [
-      { date: daysAgo(200), weight: 3.8, unit: 'kg' },
-      { date: daysAgo(120), weight: 4.0, unit: 'kg' },
-      { date: daysAgo(30), weight: 4.2, unit: 'kg' },
-    ],
-    vetVisits: [
-      {
-        id: 'vv-002',
-        date: daysAgo(200),
-        reason: 'Initial wellness exam, vaccinations, and spay procedure',
-        veterinarian: 'Dr. Samuel Park, DVM',
-        clinic: 'Paws & Claws Veterinary Clinic',
-        notes: 'Healthy young adult cat. Spayed uneventfully. Discuss food allergies on next visit.',
-        followUpDate: daysAgo(-165),
-      },
-    ],
-    zoonoticFlags: {
-      rabiesVaccinated: true,
-      indoorOnly: true,
-      regularFleaTick: false,
-      recentTravel: false,
-    },
-  },
-];
-
-// =============================================================================
-// Mock Family Group
-// =============================================================================
-
-const BASE = new Date(2026, 1, 22);
-
-function birthDate(yearsAgo: number): Date {
-  const d = new Date(BASE);
-  d.setFullYear(d.getFullYear() - yearsAgo);
-  return d;
-}
-
-const MOCK_FAMILY_GROUP: FamilyGroup = {
-  id: 'fg-001',
-  name: 'Johnson Family',
-  primaryMemberId: 'fm-001',
-  members: [
-    // ── Proband: Alex Johnson ──────────────────────────────────────────────
-    {
-      id: 'fm-001',
-      firstName: 'Alex',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(35),
-      sexAtBirth: 'male',
-      relationship: 'sibling', // self/proband — relationship to group is proband
-      biologicalRelation: 'biological',
-      isDeceased: false,
-      isProband: true,
-      isPet: false,
-      avatarColor: '#0d9488',
-      source: 'portal-linked',
-      linkedPatientId: 'patient-demo-001',
-      identifiers: [{ type: 'MRN', value: 'MRN-20240001', country: 'US' }],
-      accessLevel: 'full',
-      proxyStatus: 'active',
-      conditions: [],
-      geneticTests: [],
-      notes: 'Primary portal account holder.',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(2),
-    },
-    // ── Spouse: Maria Johnson ──────────────────────────────────────────────
-    {
-      id: 'fm-002',
-      firstName: 'Maria',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(33),
-      sexAtBirth: 'female',
-      relationship: 'spouse',
-      biologicalRelation: 'none',
-      isDeceased: false,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#be185d',
-      source: 'portal-linked',
-      linkedPatientId: 'patient-demo-002',
-      identifiers: [{ type: 'MRN', value: 'MRN-20240002', country: 'US' }],
-      accessLevel: 'partial',
-      proxyStatus: 'active',
-      conditions: [],
-      geneticTests: [],
-      notes: 'Née Garcia. Linked via GoHealth portal account.',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(7),
-    },
-    // ── Minor child: Lily Johnson ──────────────────────────────────────────
-    {
-      id: 'fm-003',
-      firstName: 'Lily',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(8),
-      sexAtBirth: 'female',
-      relationship: 'child',
-      biologicalRelation: 'biological',
-      isDeceased: false,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#7c3aed',
-      source: 'manual-entry',
-      identifiers: [],
-      accessLevel: 'full',
-      proxyStatus: 'active',
-      conditions: [],
-      geneticTests: [],
-      notes: 'Minor — proxy access managed by parents.',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(30),
-    },
-    // ── Teen child: Marcus Johnson ─────────────────────────────────────────
-    {
-      id: 'fm-004',
-      firstName: 'Marcus',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(15),
-      sexAtBirth: 'male',
-      relationship: 'child',
-      biologicalRelation: 'biological',
-      isDeceased: false,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#2563eb',
-      source: 'portal-linked',
-      linkedPatientId: 'patient-demo-004',
-      identifiers: [{ type: 'MRN', value: 'MRN-20240004', country: 'US' }],
-      accessLevel: 'partial',
-      proxyStatus: 'active',
-      conditions: [],
-      geneticTests: [],
-      notes: 'Adolescent — some records restricted per patient preference.',
-      createdAt: daysAgo(60),
-      updatedAt: daysAgo(30),
-    },
-    // ── Mother: Patricia Johnson ───────────────────────────────────────────
-    {
-      id: 'fm-005',
-      firstName: 'Patricia',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(62),
-      sexAtBirth: 'female',
-      relationship: 'parent',
-      biologicalRelation: 'biological',
-      isDeceased: false,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#ea580c',
-      source: 'manual-entry',
-      identifiers: [],
-      accessLevel: 'partial',
-      conditions: CONDITIONS_PATRICIA,
-      geneticTests: GENETIC_TESTS_PATRICIA,
-      notes: 'BRCA2 carrier. In remission from breast cancer (Stage II, diagnosed age 52).',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(14),
-    },
-    // ── Father: Robert Johnson ─────────────────────────────────────────────
-    {
-      id: 'fm-006',
-      firstName: 'Robert',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(64),
-      sexAtBirth: 'male',
-      relationship: 'parent',
-      biologicalRelation: 'biological',
-      isDeceased: false,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#dc2626',
-      source: 'manual-entry',
-      identifiers: [],
-      accessLevel: 'partial',
-      conditions: CONDITIONS_ROBERT,
-      geneticTests: [],
-      notes: 'Strong paternal history of cardiovascular disease and metabolic syndrome.',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(14),
-    },
-    // ── Maternal grandmother: Elena Garcia ────────────────────────────────
-    {
-      id: 'fm-007',
-      firstName: 'Elena',
-      lastName: 'Garcia',
-      dateOfBirth: birthDate(71),
-      sexAtBirth: 'female',
-      relationship: 'grandparent',
-      biologicalRelation: 'biological',
-      isDeceased: true,
-      deceasedAge: 71,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#16a34a',
-      source: 'history-only',
-      identifiers: [],
-      accessLevel: 'none',
-      conditions: CONDITIONS_ELENA,
-      geneticTests: [],
-      notes: 'Maternal grandmother. Died of metastatic breast cancer. BRCA2 inheritance likely from this line.',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(45),
-    },
-    // ── Paternal grandfather: William Johnson ──────────────────────────────
-    {
-      id: 'fm-008',
-      firstName: 'William',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(88),
-      sexAtBirth: 'male',
-      relationship: 'grandparent',
-      biologicalRelation: 'biological',
-      isDeceased: false,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#ca8a04',
-      source: 'history-only',
-      identifiers: [],
-      accessLevel: 'none',
-      conditions: CONDITIONS_WILLIAM,
-      geneticTests: [],
-      notes: 'Paternal grandfather. Currently in memory care facility. Advanced Alzheimer\'s disease.',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(45),
-    },
-    // ── Sibling: David Johnson ─────────────────────────────────────────────
-    {
-      id: 'fm-009',
-      firstName: 'David',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(32),
-      sexAtBirth: 'male',
-      relationship: 'sibling',
-      biologicalRelation: 'biological',
-      isDeceased: false,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#0d9488',
-      source: 'manual-entry',
-      identifiers: [],
-      accessLevel: 'partial',
-      conditions: CONDITIONS_DAVID,
-      geneticTests: GENETIC_TESTS_DAVID,
-      notes: 'Younger brother. Beta-thalassemia carrier — genetic counseling recommended before family planning.',
-      createdAt: daysAgo(90),
-      updatedAt: daysAgo(21),
-    },
-    // ── History-only uncle: James Johnson (deceased) ───────────────────────
-    {
-      id: 'fm-010',
-      firstName: 'James',
-      lastName: 'Johnson',
-      dateOfBirth: birthDate(57),
-      sexAtBirth: 'male',
-      relationship: 'aunt-uncle',
-      biologicalRelation: 'biological',
-      isDeceased: true,
-      deceasedAge: 55,
-      isProband: false,
-      isPet: false,
-      avatarColor: '#7c3aed',
-      source: 'history-only',
-      identifiers: [],
-      accessLevel: 'none',
-      conditions: CONDITIONS_JAMES,
-      geneticTests: [],
-      notes: 'Paternal uncle. Died of colon cancer age 55. Colonoscopy screening recommended for male relatives from age 40.',
-      createdAt: daysAgo(7),
-      updatedAt: daysAgo(7),
-    },
-  ],
-  pets: MOCK_PETS,
-  permissionMatrix: MOCK_PERMISSIONS,
-  auditLog: MOCK_AUDIT_LOG,
-  createdAt: daysAgo(90),
-  updatedAt: daysAgo(2),
-};
 
 // =============================================================================
 // All Record Categories (for permission matrix building)
@@ -723,13 +76,25 @@ function getGeneration(member: FamilyMember): GenerationKey {
 
 @Injectable({ providedIn: 'root' })
 export class FamilyService {
+  private readonly govetAdapter = inject(GovetApiAdapter);
+  private readonly authService = inject(AuthService);
+
   // ── Private signal state ─────────────────────────────────────────────────
 
-  private readonly _familyGroup = signal<FamilyGroup>(MOCK_FAMILY_GROUP);
-  private readonly _pets = signal<PetProfile[]>(MOCK_PETS);
+  private readonly _familyGroup = signal<FamilyGroup>(
+    makeEmptyFamilyGroup(localStorage.getItem('portal_patient_id') ?? 'unknown')
+  );
+  private readonly _pets = signal<PetProfile[]>([]);
   private readonly _selectedMemberId = signal<string | null>(null);
   private readonly _isLoading = signal<boolean>(false);
   private readonly _searchTerm = signal<string>('');
+  private readonly _govetLoaded = signal<boolean>(false);
+
+  constructor() {
+    if (GOVET_ENABLED) {
+      this.loadPetsFromGovet();
+    }
+  }
 
   // ── Public readonly signals ──────────────────────────────────────────────
 
@@ -834,6 +199,75 @@ export class FamilyService {
   readonly membersWithGeneticTests = computed<FamilyMember[]>(() =>
     this._familyGroup().members.filter(m => m.geneticTests.length > 0)
   );
+
+  // ── Methods: Load from API ────────────────────────────────────────────────
+
+  /**
+   * Loads family group data from the backend API.
+   * TODO: Implement backend endpoint GET /api/v1/portal/patients/{id}/family
+   */
+  async loadFamilyGroup(): Promise<void> {
+    const patientId = localStorage.getItem('portal_patient_id') || this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token');
+
+    if (!patientId || !token) {
+      return;
+    }
+
+    this._isLoading.set(true);
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/family`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (resp.ok) {
+        const data: { family_group: FamilyGroup } = await resp.json();
+        if (data.family_group) {
+          // Rehydrate Date objects that arrive as ISO strings
+          const group = this.rehydrateFamilyGroup(data.family_group);
+          this._familyGroup.set(group);
+          if (!GOVET_ENABLED) {
+            this._pets.set(group.pets);
+          }
+        }
+      }
+      // On non-OK response: leave as empty family group
+    } catch {
+      // On network error: leave as empty family group
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /** Converts ISO date strings back to Date instances after JSON parse. */
+  private rehydrateFamilyGroup(group: FamilyGroup): FamilyGroup {
+    return {
+      ...group,
+      createdAt: new Date(group.createdAt),
+      updatedAt: new Date(group.updatedAt),
+      members: group.members.map(m => ({
+        ...m,
+        dateOfBirth: m.dateOfBirth ? new Date(m.dateOfBirth) : undefined,
+        createdAt: new Date(m.createdAt),
+        updatedAt: new Date(m.updatedAt),
+        conditions: m.conditions ?? [],
+        geneticTests: (m.geneticTests ?? []).map(gt => ({
+          ...gt,
+          testDate: new Date(gt.testDate),
+          consentDate: gt.consentDate ? new Date(gt.consentDate) : undefined
+        }))
+      })),
+      auditLog: (group.auditLog ?? []).map(e => ({
+        ...e,
+        timestamp: new Date(e.timestamp)
+      })),
+      permissionMatrix: (group.permissionMatrix ?? []).map(p => ({
+        ...p,
+        setAt: new Date(p.setAt),
+        expiresAt: p.expiresAt ? new Date(p.expiresAt) : undefined
+      }))
+    };
+  }
 
   // ── Methods: Navigation ───────────────────────────────────────────────────
 
@@ -992,13 +426,14 @@ export class FamilyService {
     const setBy = proband?.id ?? 'unknown';
 
     this._familyGroup.update(g => {
+      const probandId = proband?.id ?? 'fm-001';
       const existing = g.permissionMatrix.find(
-        e => e.memberId === memberId && e.targetMemberId === 'fm-001' && e.category === category
+        e => e.memberId === memberId && e.targetMemberId === probandId && e.category === category
       );
 
       const updatedMatrix = existing
         ? g.permissionMatrix.map(e =>
-            e.memberId === memberId && e.targetMemberId === 'fm-001' && e.category === category
+            e.memberId === memberId && e.targetMemberId === probandId && e.category === category
               ? { ...e, level, setAt: now }
               : e
           )
@@ -1006,7 +441,7 @@ export class FamilyService {
             ...g.permissionMatrix,
             {
               memberId,
-              targetMemberId: 'fm-001',
+              targetMemberId: probandId,
               category,
               level,
               setBy,
@@ -1022,6 +457,69 @@ export class FamilyService {
       `Updated ${category} access for member ${memberId} to "${level}".`,
       memberId
     );
+  }
+
+  // ── Methods: GoVet Integration ────────────────────────────────────────────
+
+  /**
+   * Loads pet data from the GoVet mock API.
+   * On success, replaces the local pets with GoVet data.
+   * On failure, silently falls back to empty array.
+   */
+  private loadPetsFromGovet(): void {
+    this._isLoading.set(true);
+    const familyGroupId = this._familyGroup().id;
+    const ownerId = GOVET_DEMO_OWNER_ID;
+
+    this.govetAdapter.getOwnerPets(ownerId, familyGroupId).subscribe({
+      next: (pets) => {
+        if (pets.length > 0) {
+          const recordCalls = pets.map(pet =>
+            this.govetAdapter.getPetRecords(ownerId, pet.id, pet),
+          );
+          forkJoin(recordCalls).subscribe({
+            next: (enrichedPets) => {
+              const petsWithFlags = enrichedPets.map(pet => ({
+                ...pet,
+                zoonoticFlags: this.computeZoonoticFlags(pet),
+              }));
+              this._pets.set(petsWithFlags);
+              this._familyGroup.update(g => ({ ...g, pets: petsWithFlags }));
+              this._govetLoaded.set(true);
+              this._isLoading.set(false);
+            },
+            error: () => {
+              this._pets.set(pets);
+              this._familyGroup.update(g => ({ ...g, pets }));
+              this._govetLoaded.set(true);
+              this._isLoading.set(false);
+            },
+          });
+        } else {
+          // No pets found — leave as empty array
+          this._isLoading.set(false);
+        }
+      },
+      error: () => {
+        // GoVet API unreachable — leave as empty array
+        this._isLoading.set(false);
+      },
+    });
+  }
+
+  /**
+   * Derives zoonotic flags from vaccination records.
+   */
+  private computeZoonoticFlags(pet: PetProfile): Record<string, boolean> {
+    const hasRabies = pet.vaccinations.some(v =>
+      v.vaccineName.toLowerCase().includes('rabies'),
+    );
+    return {
+      rabiesVaccinated: hasRabies,
+      regularFleaTick: false,
+      recentTravel: false,
+      contactWithWildlife: false,
+    };
   }
 
   // ── Methods: Pet CRUD ─────────────────────────────────────────────────────
@@ -1077,11 +575,16 @@ export class FamilyService {
       }
     }
 
+    const user = this.authService.user();
     const entry: AuditLogEntry = {
       id,
       timestamp: new Date(),
-      actorId: proband?.id ?? 'system',
-      actorName: proband ? `${proband.firstName} ${proband.lastName}` : 'System',
+      actorId: proband?.id ?? user?.patientId ?? 'system',
+      actorName: proband
+        ? `${proband.firstName} ${proband.lastName}`
+        : user
+          ? `${user.firstName} ${user.lastName}`
+          : 'System',
       action,
       targetMemberId,
       targetMemberName,

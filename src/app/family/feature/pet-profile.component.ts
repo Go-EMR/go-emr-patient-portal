@@ -9,6 +9,7 @@ import {
   inject,
   signal,
   computed,
+  effect,
   ChangeDetectionStrategy,
   OnInit,
 } from '@angular/core';
@@ -397,6 +398,11 @@ const PB = 40;
           </p-tabpanels>
         </p-tabs>
 
+      } @else if (isLoading()) {
+        <div class="loading-state">
+          <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></i>
+          <p>Loading pet data...</p>
+        </div>
       } @else {
         <div class="not-found">
           <i class="pi pi-exclamation-triangle"></i>
@@ -674,7 +680,17 @@ const PB = 40;
 
     .zoonotic-note i { color: var(--blue-500); margin-top: 1px; flex-shrink: 0; }
 
-    /* Not found */
+    /* Loading / Not found */
+    .loading-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-color-secondary);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
     .not-found {
       text-align: center;
       padding: 4rem 2rem;
@@ -713,25 +729,32 @@ export class PetProfileComponent implements OnInit {
   ];
 
   private readonly _petId = signal<string>('');
+  readonly isLoading = this.familyService.isLoading;
   readonly pet = computed<PetProfile | null>(() => {
     const id = this._petId();
+    if (!id) return null;
     return this.familyService.pets().find(p => p.id === id) ?? null;
   });
 
   // Local mutable copy of zoonotic flags for checkboxes
   zoonoticValues: Record<string, boolean> = {};
 
+  constructor() {
+    // Re-initialize zoonotic values whenever the pet signal changes
+    // (handles async GoVet data arriving after component init)
+    effect(() => {
+      const p = this.pet();
+      if (p) {
+        this.ZOONOTIC_FLAGS.forEach(f => {
+          this.zoonoticValues[f.key] = !!p.zoonoticFlags[f.key];
+        });
+      }
+    });
+  }
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
     this._petId.set(id);
-
-    // Initialise checkbox values from pet data
-    const p = this.pet();
-    if (p) {
-      this.ZOONOTIC_FLAGS.forEach(f => {
-        this.zoonoticValues[f.key] = !!p.zoonoticFlags[f.key];
-      });
-    }
   }
 
   calcAge(dob: Date): string {

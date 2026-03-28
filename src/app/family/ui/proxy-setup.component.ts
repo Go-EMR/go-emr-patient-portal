@@ -8,7 +8,9 @@ import {
   computed,
   OnChanges,
   SimpleChanges,
+  inject,
 } from '@angular/core';
+import { AuthService } from '../../auth/data-access/auth.service';
 import { CommonModule } from '@angular/common';
 import { StepperModule } from 'primeng/stepper';
 import { FileUploadModule } from 'primeng/fileupload';
@@ -38,49 +40,6 @@ interface UploadedDocument {
   uploadedAt: Date;
   status: 'uploading' | 'uploaded' | 'verified';
 }
-
-const MOCK_ACTION_LOG: ProxyActionLog[] = [
-  {
-    id: 'pal-001',
-    date: new Date(2026, 1, 20),
-    action: 'Viewed appointment',
-    details: 'Viewed upcoming appointment on 2026-03-10 with Dr. Smith.',
-    actor: 'Alex Johnson (Proxy)',
-    category: 'appointments',
-  },
-  {
-    id: 'pal-002',
-    date: new Date(2026, 1, 18),
-    action: 'Viewed medications',
-    details: 'Viewed active medications list including Lisinopril 10mg.',
-    actor: 'Alex Johnson (Proxy)',
-    category: 'medications',
-  },
-  {
-    id: 'pal-003',
-    date: new Date(2026, 1, 15),
-    action: 'Proxy access granted',
-    details: 'Power of Attorney document verified. Proxy access activated.',
-    actor: 'GoHealth System',
-    category: 'proxy-management',
-  },
-  {
-    id: 'pal-004',
-    date: new Date(2026, 1, 12),
-    action: 'Document submitted',
-    details: 'Power of Attorney (POA) document submitted for verification.',
-    actor: 'Alex Johnson',
-    category: 'document-management',
-  },
-  {
-    id: 'pal-005',
-    date: new Date(2026, 1, 10),
-    action: 'Proxy account created',
-    details: 'Proxy setup initiated for William Johnson.',
-    actor: 'Alex Johnson',
-    category: 'proxy-management',
-  },
-];
 
 @Component({
   selector: 'app-proxy-setup',
@@ -903,6 +862,8 @@ export class ProxySetupComponent implements OnChanges {
   @Input({ required: true }) member!: FamilyMember;
   @Output() proxyStatusChanged = new EventEmitter<ProxyStatus>();
 
+  private readonly authService = inject(AuthService);
+
   protected readonly currentProxyStatus = signal<ProxyStatus>('pending-upload');
   protected readonly uploadedDocs = signal<UploadedDocument[]>([]);
 
@@ -923,11 +884,27 @@ export class ProxySetupComponent implements OnChanges {
     if (changes['member'] && this.member) {
       const status = this.member.proxyStatus ?? 'pending-upload';
       this.currentProxyStatus.set(status);
-      // Load mock audit data for demo
       if (status === 'active') {
-        this.actionLog.set(MOCK_ACTION_LOG);
+        this.loadActionLog();
       }
     }
+  }
+
+  private async loadActionLog(): Promise<void> {
+    const patientId = this.authService.user()?.patientId
+      ?? localStorage.getItem('portal_patient_id');
+    if (!patientId) return;
+
+    const token = localStorage.getItem('portal_token') || '';
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/family`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      // Endpoint not yet implemented — silently leave action log empty
+      if (!resp.ok) return;
+      // Future: parse proxy-specific action log from response
+    } catch { /* leave empty */ }
   }
 
   protected getStepIndex(status: ProxyStatus): number {
@@ -1006,7 +983,7 @@ export class ProxySetupComponent implements OnChanges {
   protected activateProxy(): void {
     this.currentProxyStatus.set('active');
     this.proxyStatusChanged.emit('active');
-    this.actionLog.set(MOCK_ACTION_LOG);
+    // TODO: wire to backend API — reload action log after activation
     this.addLogEntry(
       'Proxy access activated',
       `Proxy access activated for ${this.member.firstName} ${this.member.lastName}.`,

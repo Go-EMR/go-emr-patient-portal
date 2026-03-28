@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   signal,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -55,114 +56,7 @@ interface ProxyAccount {
   auditTrail: AuditEvent[];
 }
 
-function daysAgo(n: number): Date {
-  const d = new Date(2026, 1, 22);
-  d.setDate(d.getDate() - n);
-  return d;
-}
-
-const MOCK_PROXY_ACCOUNTS: ProxyAccount[] = [
-  {
-    id: 'proxy-001',
-    memberName: 'Alex Johnson',
-    memberMrn: 'MRN-20240001',
-    proxyFor: 'Lily Johnson',
-    proxyForMrn: 'MRN-20240003',
-    relationship: 'Parent/Guardian',
-    status: 'active',
-    documents: [
-      { name: 'Birth Certificate - Lily Johnson.pdf', type: 'Birth Certificate', uploadedAt: daysAgo(85) },
-      { name: 'Court Order - Minor Guardianship.pdf', type: 'Court Order', uploadedAt: daysAgo(85) },
-    ],
-    createdDate: daysAgo(90),
-    reviewedBy: 'Admin — Sarah Chen',
-    reviewedAt: daysAgo(83),
-    notes: 'Parental proxy verified. Both documents authenticated.',
-    auditTrail: [
-      { date: daysAgo(90), title: 'Account Created', description: 'Proxy request submitted by Alex Johnson.', icon: 'pi pi-plus', color: '#6366f1' },
-      { date: daysAgo(87), title: 'Documents Uploaded', description: 'Birth certificate and court order uploaded.', icon: 'pi pi-upload', color: '#0ea5e9' },
-      { date: daysAgo(83), title: 'Verified', description: 'Documents reviewed and verified by Admin Sarah Chen.', icon: 'pi pi-check', color: '#22c55e' },
-      { date: daysAgo(82), title: 'Activated', description: 'Proxy access activated for Lily Johnson records.', icon: 'pi pi-user-plus', color: '#22c55e' },
-    ],
-  },
-  {
-    id: 'proxy-002',
-    memberName: 'Maria Johnson',
-    memberMrn: 'MRN-20240002',
-    proxyFor: 'Marcus Johnson',
-    proxyForMrn: 'MRN-20240004',
-    relationship: 'Parent/Guardian',
-    status: 'active',
-    documents: [
-      { name: 'Birth Certificate - Marcus Johnson.pdf', type: 'Birth Certificate', uploadedAt: daysAgo(55) },
-    ],
-    createdDate: daysAgo(60),
-    reviewedBy: 'Admin — James Wright',
-    reviewedAt: daysAgo(52),
-    notes: 'Teen proxy — partial access per patient preference.',
-    auditTrail: [
-      { date: daysAgo(60), title: 'Account Created', description: 'Proxy request submitted by Maria Johnson.', icon: 'pi pi-plus', color: '#6366f1' },
-      { date: daysAgo(55), title: 'Document Uploaded', description: 'Birth certificate uploaded.', icon: 'pi pi-upload', color: '#0ea5e9' },
-      { date: daysAgo(52), title: 'Activated', description: 'Verified and activated by Admin James Wright.', icon: 'pi pi-check', color: '#22c55e' },
-    ],
-  },
-  {
-    id: 'proxy-003',
-    memberName: 'Elena Vasquez',
-    memberMrn: 'MRN-20250010',
-    proxyFor: 'Carlos Vasquez',
-    proxyForMrn: 'MRN-20250011',
-    relationship: 'Spouse/POA',
-    status: 'pending-verification',
-    documents: [
-      { name: 'Power of Attorney - Carlos Vasquez.pdf', type: 'Power of Attorney', uploadedAt: daysAgo(3) },
-      { name: 'Marriage Certificate.pdf', type: 'Marriage Certificate', uploadedAt: daysAgo(3) },
-    ],
-    createdDate: daysAgo(7),
-    notes: '',
-    auditTrail: [
-      { date: daysAgo(7), title: 'Account Created', description: 'Proxy request submitted by Elena Vasquez.', icon: 'pi pi-plus', color: '#6366f1' },
-      { date: daysAgo(3), title: 'Documents Uploaded', description: 'POA and marriage certificate uploaded.', icon: 'pi pi-upload', color: '#0ea5e9' },
-      { date: daysAgo(3), title: 'Pending Review', description: 'Documents queued for admin verification.', icon: 'pi pi-clock', color: '#f59e0b' },
-    ],
-  },
-  {
-    id: 'proxy-004',
-    memberName: 'Thomas Kim',
-    memberMrn: 'MRN-20250020',
-    proxyFor: 'Angela Kim',
-    proxyForMrn: 'MRN-20250021',
-    relationship: 'Adult Child POA',
-    status: 'pending-upload',
-    documents: [],
-    createdDate: daysAgo(2),
-    notes: '',
-    auditTrail: [
-      { date: daysAgo(2), title: 'Account Created', description: 'Proxy request submitted. Awaiting document upload.', icon: 'pi pi-plus', color: '#6366f1' },
-    ],
-  },
-  {
-    id: 'proxy-005',
-    memberName: 'Rebecca Torres',
-    memberMrn: 'MRN-20240050',
-    proxyFor: 'Michael Torres',
-    proxyForMrn: 'MRN-20240051',
-    relationship: 'Healthcare Proxy',
-    status: 'revoked',
-    documents: [
-      { name: 'Healthcare Proxy Form.pdf', type: 'Healthcare Proxy', uploadedAt: daysAgo(200) },
-    ],
-    createdDate: daysAgo(210),
-    reviewedBy: 'Admin — Sarah Chen',
-    reviewedAt: daysAgo(195),
-    notes: 'Revoked per patient request on 2025-08-05.',
-    auditTrail: [
-      { date: daysAgo(210), title: 'Account Created', description: 'Proxy request submitted.', icon: 'pi pi-plus', color: '#6366f1' },
-      { date: daysAgo(195), title: 'Activated', description: 'Verified and activated.', icon: 'pi pi-check', color: '#22c55e' },
-      { date: daysAgo(30), title: 'Revoked', description: 'Proxy access revoked per patient written request.', icon: 'pi pi-ban', color: '#ef4444' },
-    ],
-  },
-];
+import { AuthService } from '../../auth/data-access/auth.service';
 
 @Component({
   selector: 'app-proxy-management',
@@ -515,11 +409,33 @@ const MOCK_PROXY_ACCOUNTS: ProxyAccount[] = [
     }
   `],
 })
-export class ProxyManagementComponent {
+export class ProxyManagementComponent implements OnInit {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly authService = inject(AuthService);
 
-  readonly proxyAccounts = signal<ProxyAccount[]>(MOCK_PROXY_ACCOUNTS);
+  readonly proxyAccounts = signal<ProxyAccount[]>([]);
+
+  ngOnInit(): void {
+    this.loadProxyAccounts();
+  }
+
+  private async loadProxyAccounts(): Promise<void> {
+    const patientId = this.authService.user()?.patientId
+      ?? localStorage.getItem('portal_patient_id');
+    if (!patientId) return;
+
+    const token = localStorage.getItem('portal_token') || '';
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/family`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      // Endpoint not yet implemented or patient has no family records — silently leave empty
+      if (!resp.ok) return;
+      // Future: map resp.json() family members to ProxyAccount[] when backend returns proxy data
+    } catch { /* leave empty */ }
+  }
   sidebarVisible = false;
   selectedAccount: ProxyAccount | null = null;
   reviewAccount = signal<ProxyAccount | null>(null);

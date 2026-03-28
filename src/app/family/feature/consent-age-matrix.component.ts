@@ -4,6 +4,7 @@ import {
   computed,
   inject,
   signal,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -59,30 +60,6 @@ const RECORD_CATEGORIES = [
   { key: 'sti', label: 'STI Services' },
   { key: 'genetic', label: 'Genetic Testing' },
   { key: 'billing', label: 'Billing' },
-];
-
-const MOCK_AUDIT: AuditRow[] = [
-  {
-    timestamp: new Date(2026, 0, 15),
-    action: 'Ruleset Updated',
-    country: 'US',
-    category: 'mental-health',
-    changedBy: 'System (v2026.1)',
-  },
-  {
-    timestamp: new Date(2025, 11, 1),
-    action: 'Consent Age Revised',
-    country: 'AU',
-    category: 'reproductive',
-    changedBy: 'Admin (policy update)',
-  },
-  {
-    timestamp: new Date(2025, 9, 20),
-    action: 'New Rule Added',
-    country: 'RO',
-    category: 'sti',
-    changedBy: 'System (EU directive)',
-  },
 ];
 
 @Component({
@@ -227,7 +204,7 @@ const MOCK_AUDIT: AuditRow[] = [
           <i class="pi pi-history mr-2 text-gray-500"></i>Ruleset Audit Log
         </h2>
         <p-table
-          [value]="auditLog"
+          [value]="auditLog()"
           [paginator]="true"
           [rows]="5"
           styleClass="p-datatable-sm p-datatable-striped">
@@ -331,7 +308,7 @@ const MOCK_AUDIT: AuditRow[] = [
     }
   `],
 })
-export class ConsentAgeMatrixComponent {
+export class ConsentAgeMatrixComponent implements OnInit {
   private readonly rulesetService = inject(RulesetService);
 
   selectedCountry = signal<SupportedCountry>('US');
@@ -339,7 +316,40 @@ export class ConsentAgeMatrixComponent {
 
   readonly ageRanges = AGE_RANGES;
   readonly recordCategories = RECORD_CATEGORIES;
-  readonly auditLog = MOCK_AUDIT;
+  readonly auditLog = signal<AuditRow[]>([]);
+
+  ngOnInit(): void {
+    this.loadAuditLog();
+  }
+
+  private async loadAuditLog(): Promise<void> {
+    const token = localStorage.getItem('portal_token') || '';
+    try {
+      const resp = await fetch(
+        `/api/v1/compliance/consent-versions`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      // Endpoint may not exist yet — gracefully leave empty
+      if (!resp.ok) return;
+      const data: {
+        versions?: Array<{
+          timestamp: string;
+          action: string;
+          country: string;
+          category: string;
+          changed_by: string;
+        }>;
+      } = await resp.json();
+      const mapped: AuditRow[] = (data.versions ?? []).map(v => ({
+        timestamp: new Date(v.timestamp),
+        action: v.action,
+        country: v.country,
+        category: v.category,
+        changedBy: v.changed_by,
+      }));
+      this.auditLog.set(mapped);
+    } catch { /* leave empty */ }
+  }
 
   readonly countryOptions = [
     { label: '🇮🇳 India', value: 'IN' as SupportedCountry },

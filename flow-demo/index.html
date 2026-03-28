@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoHealth — Your Health, Connected</title>
+  <meta name="description" content="Explore the complete workflow of GoHealth Patient Portal — 15 real-world flows covering appointments, records, messaging, billing, and more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ── NAVIGATION ─────────────────────────────────────── -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-brand">
+        <div class="nav-brand-icon">G</div>
+        <span>GoHealth</span>
+      </a>
+      <div class="nav-links">
+        <a href="#mindmap">Mind Map</a>
+        <a href="#flows">Flows</a>
+        <a href="#benefits">Benefits</a>
+        <a href="#features">Features</a>
+      </div>
+      <button class="nav-toggle" aria-label="Toggle menu">&#9776;</button>
+    </div>
+  </nav>
+
+  <!-- ── HERO ───────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-badge">&#9679; Patient Portal by Aura Global Corporation</div>
+    <h1>Your Health, <em>Connected</em></h1>
+    <p class="hero-sub">
+      From booking appointments to reviewing lab results, GoHealth puts every aspect of your healthcare journey into one intelligent, patient-centered platform.
+    </p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">56+</div>
+        <div class="hero-stat-label">Feature Modules</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">30</div>
+        <div class="hero-stat-label">Connected Flows</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">HIPAA</div>
+        <div class="hero-stat-label">Compliant</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">24/7</div>
+        <div class="hero-stat-label">Patient Access</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MIND MAP ───────────────────────────────────────── -->
+  <section id="mindmap" class="section fade-section">
+    <div class="section-header">
+      <div class="section-label">Platform Overview</div>
+      <h2 class="section-title">The Complete Patient Ecosystem</h2>
+      <p class="section-desc">Every module connects to create a seamless patient healthcare experience. Click any flow card below to explore the journey.</p>
+    </div>
+
+    <div class="mindmap-wrap">
+      <div class="mm-game" id="mm-game">
+        <!-- Progress bar at top -->
+        <div class="mm-progress">
+          <div class="mm-progress-fill" id="mm-progress-fill"></div>
+          <span class="mm-progress-text" id="mm-progress-text">Click to begin</span>
+        </div>
+
+        <!-- SVG canvas for lines + HTML nodes overlaid -->
+        <div class="mm-stage" id="mm-stage">
+          <svg class="mm-lines" id="mm-lines"></svg>
+          <!-- Nodes injected by JS as absolutely positioned divs -->
+        </div>
+
+        <!-- Info panel slides up from bottom -->
+        <div class="mm-info" id="mm-info"></div>
+
+        <!-- Prompt/hint text -->
+        <div class="mm-hint" id="mm-hint">Click the center to begin exploring</div>
+
+        <!-- Business value reveal at the end -->
+        <div class="mm-finale" id="mm-finale"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FLOWS ──────────────────────────────────────────── -->
+  <section id="flows" class="section fade-section">
+    <div class="section-header">
+      <div class="section-label">Real-World Scenarios</div>
+      <h2 class="section-title">30 Connected Workflows</h2>
+      <p class="section-desc">Each flow demonstrates how GoHealth modules work together to solve real patient challenges. Click any card to explore the full journey.</p>
+    </div>
+    <div class="flow-grid" id="flow-grid"></div>
+  </section>
+
+  <!-- ── BENEFITS BANNER ────────────────────────────────── -->
+  <section id="benefits" class="benefits-banner fade-section">
+    <div class="benefits-inner">
+      <div class="section-label">Why GoHealth</div>
+      <h2 class="section-title">Business Impact at Every Level</h2>
+      <p class="section-desc">From the waiting room to the boardroom, GoHealth transforms how patients interact with their healthcare providers.</p>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128200;</div>
+          <div class="benefit-title">60% Fewer No-Shows</div>
+          <div class="benefit-text">Automated reminders, easy rescheduling, and pre-visit check-in eliminate missed appointments</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128336;</div>
+          <div class="benefit-title">5-Minute Check-In</div>
+          <div class="benefit-text">Digital forms, insurance verification, and pre-visit questionnaires completed before arrival</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128737;&#65039;</div>
+          <div class="benefit-title">100% HIPAA Compliant</div>
+          <div class="benefit-text">End-to-end encryption, role-based access, and complete audit trails protect patient data</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128241;</div>
+          <div class="benefit-title">Telehealth Ready</div>
+          <div class="benefit-text">Integrated video visits, screen sharing, and digital consent make virtual care seamless</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128176;</div>
+          <div class="benefit-title">35% Faster Payments</div>
+          <div class="benefit-text">Online bill pay, payment plans, and transparent cost estimates reduce collection cycles</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128172;</div>
+          <div class="benefit-title">Secure Messaging</div>
+          <div class="benefit-text">HIPAA-compliant communication with care teams replaces phone tag and voicemail</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128202;</div>
+          <div class="benefit-title">Patient Engagement</div>
+          <div class="benefit-text">Health tracking, wellness reminders, and family sharing keep patients actively involved</div>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">&#128274;</div>
+          <div class="benefit-title">Identity Verified</div>
+          <div class="benefit-text">Multi-factor authentication and identity proofing ensure only authorized access to records</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FEATURE MAP ────────────────────────────────────── -->
+  <section id="features" class="section fade-section">
+    <div class="section-header">
+      <div class="section-label">Complete Platform</div>
+      <h2 class="section-title">All 56+ Feature Modules</h2>
+      <p class="section-desc">Every module is purpose-built for patient engagement with deep HIPAA compliance and healthcare intelligence.</p>
+    </div>
+    <div class="feature-map-grid" id="feature-map"></div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────── -->
+  <footer class="footer">
+    <p>GoHealth &mdash; Your Health, Connected &middot; by Aura Global Corporation</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

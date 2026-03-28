@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Allergy & Medication Interaction Alerts — GoHealth Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .flow-page { padding: 80px 2rem 3rem; max-width: 900px; margin: 0 auto; }
+    .flow-page-header { margin-bottom: 2.5rem; }
+    .flow-page-num { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--maroon); margin-bottom: 0.4rem; }
+    .flow-page-title { font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800; color: var(--black); margin-bottom: 0.75rem; line-height: 1.2; }
+    .flow-page-desc { font-size: 1.05rem; color: var(--text-light); line-height: 1.7; margin-bottom: 1.5rem; }
+    .flow-page-features { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 2rem; }
+    .flow-page-features .feature-pill { font-size: 0.75rem; font-weight: 600; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--stone); color: var(--text-light); background: var(--white); }
+
+    /* Stage cards */
+    .stage { background: var(--white); border: 1px solid var(--stone-light); border-radius: var(--radius); margin-bottom: 1.5rem; overflow: hidden; transition: var(--transition); }
+    .stage:hover { box-shadow: var(--shadow-md); border-color: var(--orange); }
+    .stage-header { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; cursor: pointer; }
+    .stage-num { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: white; flex-shrink: 0; }
+    .stage-header-text { flex: 1; }
+    .stage-title { font-size: 1.05rem; font-weight: 700; color: var(--black); }
+    .stage-module { display: inline-block; font-size: 0.65rem; font-weight: 600; color: var(--maroon); background: rgba(120,41,15,0.1); padding: 2px 8px; border-radius: 4px; margin-top: 0.2rem; }
+    .stage-chevron { font-size: 1.2rem; color: var(--stone-dark); transition: transform 0.3s ease; }
+    .stage.open .stage-chevron { transform: rotate(180deg); }
+    .stage-body { padding: 0 1.5rem 1.5rem; display: none; }
+    .stage.open .stage-body { display: block; }
+    .stage-text { font-size: 0.9rem; color: var(--text-light); line-height: 1.7; margin-bottom: 1rem; padding-left: 56px; }
+    .stage-benefits-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--maroon); margin-bottom: 0.6rem; padding-left: 56px; }
+    .stage-benefits { list-style: none; padding-left: 56px; }
+    .stage-benefits li { position: relative; padding: 0.5rem 0 0.5rem 1.5rem; font-size: 0.85rem; color: var(--text); line-height: 1.5; border-bottom: 1px solid rgba(21,97,109,0.1); }
+    .stage-benefits li:last-child { border-bottom: none; }
+    .stage-benefits li::before { content: '\2713'; position: absolute; left: 0; color: var(--orange); font-weight: 700; }
+
+    /* Connector between stages */
+    .stage-connector { display: flex; justify-content: center; padding: 0.25rem 0; }
+    .stage-connector-line { width: 2px; height: 20px; background: var(--stone-light); }
+
+    /* Business value summary */
+    .bv-summary { margin-top: 2.5rem; }
+    .bv-summary-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--charcoal); margin-bottom: 1rem; }
+    .bv-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .bv-summary-item { background: var(--charcoal); border-radius: var(--radius-sm); padding: 1.25rem; text-align: center; }
+    .bv-summary-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .bv-summary-metric { font-size: 1.4rem; font-weight: 800; color: var(--orange); }
+    .bv-summary-desc { font-size: 0.78rem; color: var(--stone); margin-top: 0.15rem; }
+
+    /* Back link */
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-light); text-decoration: none; font-size: 0.85rem; font-weight: 500; padding: 8px 0; transition: var(--transition); margin-bottom: 1rem; }
+    .back-link:hover { color: var(--orange); }
+
+    /* Nav/Footer tweaks for flow pages */
+    .flow-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--stone-light); }
+    .flow-nav a { text-decoration: none; color: var(--text-light); font-size: 0.85rem; font-weight: 500; transition: var(--transition); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--stone-light); }
+    .flow-nav a:hover { color: var(--orange); border-color: var(--orange); }
+
+    @media (max-width: 600px) {
+      .stage-text, .stage-benefits-label, .stage-benefits { padding-left: 0; }
+      .bv-summary-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <div class="nav-brand-icon">G</div>
+        <span>GoHealth</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html#mindmap">Mind Map</a>
+        <a href="index.html#flows">All Flows</a>
+        <a href="index.html#benefits">Benefits</a>
+        <a href="index.html#features">Features</a>
+      </div>
+      <button class="nav-toggle" aria-label="Toggle menu">&#9776;</button>
+    </div>
+  </nav>
+
+  <div class="flow-page">
+    <a href="index.html#flows" class="back-link">&larr; Back to all flows</a>
+
+    <div class="flow-page-header">
+      <div class="flow-page-num">Flow 14 of 15</div>
+      <h1 class="flow-page-title">Allergy & Medication Interaction Alerts</h1>
+      <p class="flow-page-desc">Proactive safety alerts for drug-drug interactions, drug-allergy conflicts, and medication safety checks across the patient's complete medication profile.</p>
+      <div class="flow-page-features">
+        <span class="feature-pill">Allergies</span>
+        <span class="feature-pill">Medications</span>
+        <span class="feature-pill">Notifications</span>
+        <span class="feature-pill">Messaging</span>
+        <span class="feature-pill">Drug Interactions</span>
+        <span class="feature-pill">Safety Alerts</span>
+      </div>
+    </div>
+
+    <!-- Stages -->
+    <div class="stage open" data-stage="0">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #78290F">1</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Allergy Profile Update</div>
+          <span class="stage-module">Allergies</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">The patient adds a new allergy to sulfa drugs after an adverse reaction. The system captures the reaction type (rash, anaphylaxis, GI upset), severity, and onset timing.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Structured allergy data enables precise clinical decision support</li>
+          <li>Severity tracking differentiates true allergies from intolerances</li>
+          <li>Onset timing helps providers assess causality</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="1">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #15616D">2</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Cross-Reference with Medications</div>
+          <span class="stage-module">Medications</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">The system immediately cross-references the new sulfa allergy against the patient's active medications. A conflict is detected: the patient is taking sulfasalazine, which contains a sulfonamide component.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Automatic cross-referencing catches conflicts the patient might not recognize</li>
+          <li>Active medication scanning covers all current prescriptions</li>
+          <li>Ingredient-level checking catches indirect allergy conflicts</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="2">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #FF7D00">3</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Alert to Patient & Provider</div>
+          <span class="stage-module">Notifications</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">Both the patient and prescribing provider receive an alert. The patient sees a clear explanation: "Your new sulfa allergy may conflict with sulfasalazine." The provider sees clinical details.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Dual notification ensures both parties are aware of the conflict</li>
+          <li>Patient-friendly language makes the alert understandable</li>
+          <li>Provider alert includes clinical context for decision-making</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="3">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #001524">4</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Drug Interaction Dashboard</div>
+          <span class="stage-module">Medications</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">The patient views their complete interaction profile — all potential drug-drug interactions, drug-food interactions, and allergy cross-references in one dashboard. Risk levels are color-coded.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Comprehensive interaction view reveals the complete safety picture</li>
+          <li>Color-coded risk levels prioritize which interactions need attention</li>
+          <li>Food interaction warnings include practical dietary guidance</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="4">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #9a3a1a">5</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Provider Discussion & Resolution</div>
+          <span class="stage-module">Messaging</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">The patient messages their provider about the alert. The provider reviews alternatives and switches the medication. The interaction dashboard updates to reflect the resolved conflict.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>In-context messaging enables efficient resolution of alerts</li>
+          <li>Alternative medication suggestions speed provider decision-making</li>
+          <li>Real-time dashboard updates confirm resolution</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Business Value Summary -->
+    <div class="bv-summary">
+      <div class="bv-summary-title">Overall Business Impact</div>
+      <div class="bv-summary-grid">
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">⚠️</div>
+          <div class="bv-summary-metric">Real-time</div>
+          <div class="bv-summary-desc">Interaction detection</div>
+        </div>
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">🛡️</div>
+          <div class="bv-summary-metric">Multi-level</div>
+          <div class="bv-summary-desc">Safety checking</div>
+        </div>
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">💊</div>
+          <div class="bv-summary-metric">Complete</div>
+          <div class="bv-summary-desc">Medication profile</div>
+        </div>
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">📱</div>
+          <div class="bv-summary-metric">Instant</div>
+          <div class="bv-summary-desc">Patient & provider alerts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav between flows -->
+    <div class="flow-nav">
+      <a href="flow-immunization-records.html">&larr; Immunization Records & Reminders</a>
+      <a href="flow-wellness-reminder.html">Annual Wellness Reminder Flow &rarr;</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>GoHealth &mdash; Your Health, Connected &middot; by Aura Global Corporation</p>
+  </footer>
+
+  <script>
+    // Nav scroll effect
+    window.addEventListener('scroll', () => {
+      document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 20);
+    });
+    // Mobile nav toggle
+    const toggle = document.querySelector('.nav-toggle');
+    const links = document.querySelector('.nav-links');
+    if (toggle) toggle.addEventListener('click', () => links.classList.toggle('open'));
+  </script>
+</body>
+</html>

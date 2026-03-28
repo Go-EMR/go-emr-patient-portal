@@ -47,15 +47,45 @@ export class AuthService {
   }
 
   private checkStoredSession(): void {
+    // Try the new JWT-based session first (set after a real API login).
+    const token = localStorage.getItem('portal_token');
+    const patientId = localStorage.getItem('portal_patient_id');
+    if (token && patientId) {
+      // We have a live JWT — restore state from the stored user blob if present,
+      // otherwise we'll hydrate from the profile API on next navigation.
+      const stored = localStorage.getItem('portal_session');
+      if (stored) {
+        try {
+          const session = JSON.parse(stored);
+          if (session.expiresAt > Date.now()) {
+            this._user.set(session.user);
+            this._isAuthenticated.set(true);
+            this._mfaRequired.set(false); // Real API logins skip MFA for now
+            this._mfaVerified.set(true);
+            if (session.role) {
+              this._role.set(session.role);
+            }
+            return;
+          }
+        } catch { /* fall through to clearSession */ }
+      }
+      // Token exists but no valid session blob — treat as authenticated with
+      // a minimal user; the dashboard will load the rest via API.
+      this._isAuthenticated.set(true);
+      this._mfaVerified.set(true);
+      return;
+    }
+
+    // No valid JWT found — check for a previously saved API session blob.
     const stored = localStorage.getItem('portal_session');
     if (stored) {
       try {
         const session = JSON.parse(stored);
-        if (session.expiresAt > Date.now()) {
+        if (session.expiresAt > Date.now() && session.user) {
           this._user.set(session.user);
           this._isAuthenticated.set(true);
-          this._mfaRequired.set(session.user.mfaEnabled);
-          this._mfaVerified.set(session.mfaVerified);
+          this._mfaRequired.set(false);
+          this._mfaVerified.set(true);
           if (session.role) {
             this._role.set(session.role);
           }
@@ -81,19 +111,6 @@ export class AuthService {
     }
   }
 
-  /** Builds the standard demo PatientUser object */
-  private buildDemoUser(): PatientUser {
-    return {
-      id: 'USR-001', patientId: 'PAT-001', mrn: 'MRN-12345',
-      firstName: 'John', lastName: 'Smith',
-      email: 'patient@demo.com', phone: '(555) 123-4567',
-      dateOfBirth: new Date('1980-05-15'),
-      portalActivatedAt: new Date(), mfaEnabled: true, mfaVerified: false,
-      role: 'patient',
-      preferences: { language: 'en', timezone: 'America/New_York', paperlessStatements: true }
-    };
-  }
-
   async login(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     if (this.isLockedOut()) {
       const mins = Math.ceil(this.lockoutRemainingMs() / 60000);
@@ -102,30 +119,65 @@ export class AuthService {
 
     this._isLoading.set(true);
     try {
-      await new Promise(r => setTimeout(r, 800));
+      // --- Real API login ---
+      try {
+        const response = await fetch('/api/v1/portal/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
 
-      if (email === 'patient@demo.com' && password === 'demo123') {
-        const user = this.buildDemoUser();
+        if (response.ok) {
+          const data: {
+            accessToken: string;
+            refreshToken: string;
+            expiresIn: number;
+            patientId: string;
+            firstName: string;
+            lastName: string;
+            email: string;
+          } = await response.json();
 
-        this._user.set(user);
-        this._isAuthenticated.set(true);
-        this._mfaRequired.set(user.mfaEnabled);
-        this._mfaVerified.set(false);
-        this._failedAttempts.set(0);
-        this._lockoutUntil.set(null);
-        localStorage.removeItem('portal_lockout');
+          // Persist JWT tokens for subsequent API calls.
+          localStorage.setItem('portal_token', data.accessToken);
+          localStorage.setItem('portal_refresh', data.refreshToken);
+          localStorage.setItem('portal_patient_id', data.patientId);
 
-        this.saveSession(false);
+          const user: PatientUser = {
+            id: data.patientId,
+            patientId: data.patientId,
+            mrn: '',
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || email,
+            phone: '',
+            dateOfBirth: new Date(0),
+            portalActivatedAt: new Date(),
+            mfaEnabled: false,
+            mfaVerified: true,
+            role: 'patient',
+            preferences: { language: 'en', timezone: 'UTC', paperlessStatements: true }
+          };
 
-        if (user.mfaEnabled) {
-          this.router.navigate(['/mfa']);
-        } else {
+          this._user.set(user);
+          this._isAuthenticated.set(true);
+          this._mfaRequired.set(false);
+          this._mfaVerified.set(true);
+          this._failedAttempts.set(0);
+          this._lockoutUntil.set(null);
+          localStorage.removeItem('portal_lockout');
+
+          this.saveSession(true);
           this.router.navigate(['/dashboard']);
+          return { success: true };
         }
 
-        return { success: true };
+        // Non-2xx response — API login failed, fall through to error handling.
+      } catch {
+        // Network error or API unavailable.
       }
 
+      // TODO: wire to backend API — remove when real auth is fully deployed
       // Track failed attempt
       const attempts = this._failedAttempts() + 1;
       this._failedAttempts.set(attempts);
@@ -159,24 +211,15 @@ export class AuthService {
     }
   }
 
-  /** Feature 6.1: Verify OTP and complete phone-based login (mocked). */
+  /** Feature 6.1: Verify OTP and complete phone-based login. */
   async loginWithPhone(phone: string, otp: string): Promise<{ success: boolean; error?: string }> {
     this._isLoading.set(true);
     try {
-      await new Promise(r => setTimeout(r, 600));
-      // Mock: any 6-digit OTP passes
+      // TODO: wire to /api/v1/portal/auth/phone/verify
       if (otp.length !== 6 || !/^\d{6}$/.test(otp)) {
         return { success: false, error: 'Please enter a valid 6-digit code.' };
       }
-
-      const user = this.buildDemoUser();
-      this._user.set(user);
-      this._isAuthenticated.set(true);
-      this._mfaRequired.set(false);
-      this._mfaVerified.set(true);
-      this.saveSession(true);
-      this.router.navigate(['/dashboard']);
-      return { success: true };
+      return { success: false, error: 'Phone login requires backend API. Please use email/password.' };
     } finally {
       this._isLoading.set(false);
     }
@@ -190,16 +233,8 @@ export class AuthService {
   async loginWithHealthId(type: 'ihi' | 'cnp'): Promise<{ success: boolean; error?: string }> {
     this._isLoading.set(true);
     try {
-      // Simulate redirect round-trip delay (1.5 s)
-      await new Promise(r => setTimeout(r, 1500));
-      const user = this.buildDemoUser();
-      this._user.set(user);
-      this._isAuthenticated.set(true);
-      this._mfaRequired.set(false);
-      this._mfaVerified.set(true);
-      this.saveSession(true);
-      this.router.navigate(['/dashboard']);
-      return { success: true };
+      // TODO: wire to /api/v1/portal/auth/health-id with type parameter
+      return { success: false, error: `Health ID login (${type}) requires backend API integration.` };
     } finally {
       this._isLoading.set(false);
     }
@@ -209,15 +244,8 @@ export class AuthService {
   async socialLogin(provider: string): Promise<{ success: boolean; error?: string }> {
     this._isLoading.set(true);
     try {
-      await new Promise(r => setTimeout(r, 900));
-      const user = this.buildDemoUser();
-      this._user.set(user);
-      this._isAuthenticated.set(true);
-      this._mfaRequired.set(false);
-      this._mfaVerified.set(true);
-      this.saveSession(true);
-      this.router.navigate(['/dashboard']);
-      return { success: true };
+      // TODO: wire to /api/v1/portal/auth/social/{provider} OAuth redirect
+      return { success: false, error: `${provider} login requires backend OAuth integration.` };
     } finally {
       this._isLoading.set(false);
     }
@@ -277,6 +305,9 @@ export class AuthService {
 
   private clearSession(): void {
     localStorage.removeItem('portal_session');
+    localStorage.removeItem('portal_token');
+    localStorage.removeItem('portal_refresh');
+    localStorage.removeItem('portal_patient_id');
     this._user.set(null);
     this._isAuthenticated.set(false);
     this._mfaRequired.set(false);

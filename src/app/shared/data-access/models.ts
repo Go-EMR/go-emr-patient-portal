@@ -222,6 +222,7 @@ export interface EmergencyContact {
   relationship: string;
   phone: string;
   email?: string;
+  isPrimary?: boolean;
 }
 
 // Consent Item

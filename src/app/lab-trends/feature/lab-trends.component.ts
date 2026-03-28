@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, signal, ChangeDetectionStrategy, OnInit } from '@angular/core';
 
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -52,7 +52,7 @@ const SPARKLINE_H = 28;
         <aside class="test-sidebar">
           <div class="sidebar-heading">Lab Tests</div>
 
-          @for (lab of service.allTests; track lab.testName) {
+          @for (lab of service.allTests(); track lab.testName) {
             @let latestPoint = service.latestValuesByTest().get(lab.testName);
             <button
               class="test-item"
@@ -847,8 +847,12 @@ const SPARKLINE_H = 28;
     }
   `]
 })
-export class LabTrendsComponent {
+export class LabTrendsComponent implements OnInit {
   readonly service = inject(LabTrendsService);
+
+  ngOnInit(): void {
+    this.service.loadLabTrends();
+  }
 
   // Expose constants for template access
   readonly CHART_W = CHART_W;

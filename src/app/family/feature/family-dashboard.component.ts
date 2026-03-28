@@ -199,7 +199,7 @@ interface ViewModeOption {
                 Pets ({{ pets().length }})
               </h3>
               @for (pet of pets(); track pet.id) {
-                <div class="pet-card" role="listitem">
+                <a class="pet-card" role="listitem" [routerLink]="['/family/pets', pet.id]">
                   <p-avatar
                     [label]="pet.name[0]"
                     shape="circle"
@@ -213,8 +213,11 @@ interface ViewModeOption {
                   <div class="pet-info">
                     <span class="pet-name">{{ pet.name }}</span>
                     <span class="pet-species">{{ pet.species | titlecase }} &middot; {{ pet.breed }}</span>
+                    @if (pet.weight) {
+                      <span class="pet-weight">{{ pet.weight }} {{ pet.weightUnit }}</span>
+                    }
                   </div>
-                </div>
+                </a>
               }
             </div>
           }
@@ -850,6 +853,14 @@ interface ViewModeOption {
       padding: 0.375rem;
       border-radius: 6px;
       margin-bottom: 0.25rem;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .pet-card:hover {
+      background: var(--surface-hover, var(--surface-100));
     }
 
     .pet-info {
@@ -865,6 +876,12 @@ interface ViewModeOption {
     .pet-species {
       font-size: 0.7rem;
       color: var(--text-color-secondary);
+    }
+
+    .pet-weight {
+      font-size: 0.65rem;
+      color: var(--text-color-secondary);
+      font-weight: 500;
     }
 
     /* ── Center Content ─────────────────────────── */

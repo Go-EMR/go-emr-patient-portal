@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { AuthService } from '../../auth/data-access/auth.service';
 
 export interface Prescription {
   id: string;
@@ -83,218 +84,10 @@ export interface PBSScript {
   expiryDate: Date;
 }
 
-// ─── Mock date helper ────────────────────────────────────────────────────────
+// ─── Reference data: Pharmacies ──────────────────────────────────────────────
+// TODO: Implement backend endpoint for /api/v1/portal/pharmacies
 
-function daysAgo(n: number): Date {
-  const d = new Date(2026, 1, 21);
-  d.setDate(d.getDate() - n);
-  return d;
-}
-
-function daysFromNow(n: number): Date {
-  const d = new Date(2026, 1, 21);
-  d.setDate(d.getDate() + n);
-  return d;
-}
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const MOCK_PRESCRIPTIONS: Prescription[] = [
-  {
-    id: 'rx-001',
-    medicationName: 'Metformin HCl',
-    genericName: 'Metformin',
-    dosage: '500 mg',
-    frequency: 'Twice daily with meals',
-    route: 'Oral',
-    prescribedBy: 'Dr. Sarah Chen',
-    prescribedDate: new Date(2025, 3, 10),
-    startDate: new Date(2025, 3, 12),
-    status: 'active',
-    refillsRemaining: 2,
-    refillsTotal: 5,
-    lastFilledDate: daysAgo(28),
-    preferredPharmacyId: 'ph-001',
-    pharmacyName: 'CVS Pharmacy - Main St',
-    instructions: 'Take with meals to reduce stomach upset. Do not crush or chew.',
-    isControlled: false,
-    controlledSubstance: false,
-    canRequestRefill: true,
-    hasInteractionWarning: false,
-    sideEffects: {
-      common: ['Nausea', 'Diarrhea', 'Stomach pain', 'Loss of appetite'],
-      serious: ['Lactic acidosis (rare but serious — seek emergency care)', 'Severe allergic reaction'],
-      rare: ['Vitamin B12 deficiency with long-term use', 'Metallic taste in mouth']
-    }
-  },
-  {
-    id: 'rx-002',
-    medicationName: 'Lisinopril',
-    genericName: 'Lisinopril',
-    dosage: '10 mg',
-    frequency: 'Once daily',
-    route: 'Oral',
-    prescribedBy: 'Dr. Sarah Chen',
-    prescribedDate: new Date(2025, 1, 5),
-    startDate: new Date(2025, 1, 6),
-    status: 'active',
-    refillsRemaining: 4,
-    refillsTotal: 6,
-    lastFilledDate: daysAgo(14),
-    preferredPharmacyId: 'ph-001',
-    pharmacyName: 'CVS Pharmacy - Main St',
-    instructions: 'Take at the same time each day. May cause dizziness when standing — rise slowly.',
-    isControlled: false,
-    controlledSubstance: false,
-    canRequestRefill: true,
-    hasInteractionWarning: true,
-    interactionNote: 'Potential interaction with potassium supplements. Consult your pharmacist.',
-    sideEffects: {
-      common: ['Dry cough', 'Dizziness', 'Headache', 'Fatigue'],
-      serious: ['Swelling of face, lips, or throat (angioedema)', 'Chest pain', 'Difficulty breathing'],
-      rare: ['Liver problems', 'Low white blood cell count', 'Kidney function changes']
-    }
-  },
-  {
-    id: 'rx-003',
-    medicationName: 'Atorvastatin',
-    genericName: 'Atorvastatin calcium',
-    dosage: '20 mg',
-    frequency: 'Once daily at bedtime',
-    route: 'Oral',
-    prescribedBy: 'Dr. James Patel',
-    prescribedDate: new Date(2025, 0, 18),
-    startDate: new Date(2025, 0, 20),
-    status: 'active',
-    refillsRemaining: 1,
-    refillsTotal: 3,
-    lastFilledDate: daysAgo(60),
-    preferredPharmacyId: 'ph-002',
-    pharmacyName: 'Walgreens - Oak Ave',
-    instructions: 'Take in the evening. Avoid large amounts of grapefruit juice.',
-    isControlled: false,
-    controlledSubstance: false,
-    canRequestRefill: true,
-    hasInteractionWarning: true,
-    interactionNote: 'Avoid grapefruit — can increase statin levels in your blood significantly.',
-    sideEffects: {
-      common: ['Muscle aches or weakness', 'Joint pain', 'Diarrhea', 'Indigestion'],
-      serious: ['Rhabdomyolysis (severe muscle breakdown)', 'Liver enzyme elevation', 'Unexplained muscle pain with dark urine'],
-      rare: ['Memory problems or confusion', 'Type 2 diabetes risk increase', 'Peripheral neuropathy']
-    }
-  },
-  {
-    id: 'rx-004',
-    medicationName: 'Sertraline',
-    genericName: 'Sertraline HCl',
-    dosage: '50 mg',
-    frequency: 'Once daily in the morning',
-    route: 'Oral',
-    prescribedBy: 'Dr. Maria Gonzalez',
-    prescribedDate: new Date(2024, 9, 3),
-    startDate: new Date(2024, 9, 5),
-    status: 'active',
-    refillsRemaining: 3,
-    refillsTotal: 6,
-    lastFilledDate: daysAgo(20),
-    preferredPharmacyId: 'ph-001',
-    pharmacyName: 'CVS Pharmacy - Main St',
-    instructions: 'Take in the morning with or without food. May take 4-6 weeks for full effect.',
-    isControlled: false,
-    controlledSubstance: false,
-    canRequestRefill: true,
-    hasInteractionWarning: false,
-    sideEffects: {
-      common: ['Nausea', 'Insomnia', 'Dry mouth', 'Increased sweating', 'Decreased appetite'],
-      serious: ['Serotonin syndrome (with other serotonergic drugs)', 'Increased suicidal thoughts (especially in young adults)', 'Bleeding risk'],
-      rare: ['Hyponatremia (low sodium)', 'Angle-closure glaucoma', 'Prolonged QT interval']
-    }
-  },
-  {
-    id: 'rx-005',
-    medicationName: 'Albuterol Inhaler',
-    genericName: 'Albuterol sulfate',
-    dosage: '90 mcg/actuation',
-    frequency: 'As needed for breathing',
-    route: 'Inhalation',
-    prescribedBy: 'Dr. Sarah Chen',
-    prescribedDate: new Date(2025, 5, 22),
-    startDate: new Date(2025, 5, 22),
-    status: 'active',
-    refillsRemaining: 5,
-    refillsTotal: 5,
-    lastFilledDate: daysAgo(90),
-    preferredPharmacyId: 'ph-003',
-    pharmacyName: 'Rite Aid - Center Plaza',
-    instructions: '1-2 puffs every 4-6 hours as needed. Shake well before each use.',
-    isControlled: false,
-    controlledSubstance: false,
-    canRequestRefill: true,
-    hasInteractionWarning: false,
-    sideEffects: {
-      common: ['Tremor or shakiness', 'Rapid or pounding heartbeat', 'Headache', 'Nervousness'],
-      serious: ['Severe paradoxical bronchospasm (worsening breathing)', 'Serious heart rhythm changes', 'Severe allergic reaction'],
-      rare: ['Low potassium levels (hypokalemia)', 'High blood sugar', 'Chest pain with overuse']
-    }
-  },
-  {
-    id: 'rx-006',
-    medicationName: 'Omeprazole',
-    genericName: 'Omeprazole',
-    dosage: '20 mg',
-    frequency: 'Once daily before breakfast',
-    route: 'Oral',
-    prescribedBy: 'Dr. James Patel',
-    prescribedDate: new Date(2025, 7, 11),
-    startDate: new Date(2025, 7, 12),
-    status: 'active',
-    refillsRemaining: 0,
-    refillsTotal: 2,
-    lastFilledDate: daysAgo(35),
-    preferredPharmacyId: 'ph-002',
-    pharmacyName: 'Walgreens - Oak Ave',
-    instructions: 'Take 30-60 minutes before eating. Swallow capsule whole — do not crush.',
-    isControlled: false,
-    controlledSubstance: false,
-    canRequestRefill: false,
-    hasInteractionWarning: false,
-    sideEffects: {
-      common: ['Headache', 'Diarrhea', 'Nausea', 'Stomach pain', 'Gas'],
-      serious: ['Clostridium difficile infection with prolonged use', 'Severe skin reactions', 'Low magnesium (long-term use)'],
-      rare: ['Bone fracture risk with long-term high-dose use', 'Vitamin B12 deficiency', 'Lupus-like symptoms']
-    }
-  },
-  // ─── Feature 11.2: Controlled substance medication ───────────────────────
-  {
-    id: 'rx-007',
-    medicationName: 'Alprazolam',
-    genericName: 'Alprazolam',
-    dosage: '0.5 mg',
-    frequency: 'Twice daily as needed for anxiety',
-    route: 'Oral',
-    prescribedBy: 'Dr. Maria Gonzalez',
-    prescribedDate: new Date(2025, 10, 5),
-    startDate: new Date(2025, 10, 6),
-    status: 'active',
-    refillsRemaining: 1,
-    refillsTotal: 2,
-    lastFilledDate: daysAgo(45),
-    preferredPharmacyId: 'ph-001',
-    pharmacyName: 'CVS Pharmacy - Main St',
-    instructions: 'Take as directed. Do not exceed prescribed dose. May cause drowsiness — avoid driving.',
-    isControlled: true,
-    controlledSubstance: true,
-    canRequestRefill: true,
-    hasInteractionWarning: false,
-    sideEffects: {
-      common: ['Drowsiness', 'Dizziness', 'Fatigue', 'Memory problems', 'Slurred speech'],
-      serious: ['Respiratory depression (especially with opioids or alcohol)', 'Paradoxical reactions (agitation, hostility)', 'Dependency and withdrawal risk'],
-      rare: ['Severe allergic reaction', 'Jaundice', 'Mania or hypomania']
-    }
-  }
-];
-
-const MOCK_PHARMACIES: PharmacyInfo[] = [
+const REFERENCE_PHARMACIES: PharmacyInfo[] = [
   {
     id: 'ph-001',
     name: 'CVS Pharmacy',
@@ -327,38 +120,10 @@ const MOCK_PHARMACIES: PharmacyInfo[] = [
   }
 ];
 
-const MOCK_REFILL_REQUESTS: RefillRequest[] = [
-  {
-    id: 'rr-001',
-    medicationId: 'rx-001',
-    medicationName: 'Metformin HCl 500 mg',
-    dosage: '500 mg',
-    pharmacyId: 'ph-001',
-    pharmacy: 'CVS Pharmacy',
-    pharmacyAddress: '1422 Main Street, Springfield, IL 62701',
-    status: 'ready',
-    requestedAt: daysAgo(3),
-    estimatedReady: daysAgo(1),
-    notes: 'Ready for pickup at the pharmacy counter.'
-  },
-  {
-    id: 'rr-002',
-    medicationId: 'rx-004',
-    medicationName: 'Sertraline 50 mg',
-    dosage: '50 mg',
-    pharmacyId: 'ph-001',
-    pharmacy: 'CVS Pharmacy',
-    pharmacyAddress: '1422 Main Street, Springfield, IL 62701',
-    status: 'processing',
-    requestedAt: daysAgo(1),
-    estimatedReady: daysFromNow(1),
-    notes: 'Being processed by the pharmacy.'
-  }
-];
+// ─── Reference data: Drug interactions ───────────────────────────────────────
+// TODO: Implement backend endpoint for /api/v1/portal/patients/{id}/drug-interactions
 
-// ─── Feature 11.1: Mock drug interactions ────────────────────────────────────
-
-const MOCK_DRUG_INTERACTIONS: DrugInteraction[] = [
+const REFERENCE_DRUG_INTERACTIONS: DrugInteraction[] = [
   {
     id: 'di-001',
     drugA: 'Lisinopril',
@@ -382,9 +147,16 @@ const MOCK_DRUG_INTERACTIONS: DrugInteraction[] = [
   }
 ];
 
-// ─── Feature 11.3: Mock PBS Active Script data ───────────────────────────────
+// ─── Reference data: PBS scripts ─────────────────────────────────────────────
+// TODO: Implement backend endpoint for /api/v1/portal/patients/{id}/pbs-scripts
 
-const MOCK_PBS_SCRIPTS: PBSScript[] = [
+function daysFromNow(n: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d;
+}
+
+const REFERENCE_PBS_SCRIPTS: PBSScript[] = [
   {
     scriptNumber: 'PBS-2026-00184371',
     drugName: 'Metformin Hydrochloride 500 mg tablet',
@@ -419,78 +191,27 @@ const MOCK_PBS_SCRIPTS: PBSScript[] = [
   }
 ];
 
-// ─── Mock adherence data (30 days, ~87% adherence) ───────────────────────────
-
-function generateAdherenceData(): AdherenceEntry[] {
-  const today = new Date(2026, 1, 21);
-  const activeMeds = [
-    { medicationId: 'rx-001', medicationName: 'Metformin HCl' },
-    { medicationId: 'rx-002', medicationName: 'Lisinopril' },
-    { medicationId: 'rx-003', medicationName: 'Atorvastatin' },
-    { medicationId: 'rx-004', medicationName: 'Sertraline' },
-    { medicationId: 'rx-005', medicationName: 'Albuterol Inhaler' },
-    { medicationId: 'rx-006', medicationName: 'Omeprazole' },
-  ];
-
-  // Days in February 2026 that are missed or partial (to reach ~87% overall)
-  // Fully missed days (all meds not taken):
-  const missedDays = new Set([5, 12, 19]);
-  // Partial days (some meds skipped — indices of meds NOT taken):
-  const partialDays: Record<number, number[]> = {
-    3: [2, 4],        // day 3: Atorvastatin + Albuterol skipped
-    8: [1, 5],        // day 8: Lisinopril + Omeprazole skipped
-    15: [0, 3],       // day 15: Metformin + Sertraline skipped
-    17: [4],          // day 17: Albuterol skipped
-    20: [2, 3, 5],    // day 20: Atorvastatin, Sertraline, Omeprazole skipped
-  };
-
-  const entries: AdherenceEntry[] = [];
-
-  for (let dayNum = 1; dayNum <= 28; dayNum++) {
-    const date = new Date(2026, 1, dayNum);
-    const isFuture = date > today;
-
-    if (isFuture) {
-      entries.push({ date, medications: [] });
-      continue;
-    }
-
-    const skippedIndices = partialDays[dayNum] ?? [];
-    const allMissed = missedDays.has(dayNum);
-
-    entries.push({
-      date,
-      medications: activeMeds.map((med, idx) => ({
-        medicationId: med.medicationId,
-        medicationName: med.medicationName,
-        taken: allMissed ? false : !skippedIndices.includes(idx)
-      }))
-    });
-  }
-
-  return entries;
-}
-
-const MOCK_ADHERENCE: AdherenceEntry[] = generateAdherenceData();
-
 // ─── Service ─────────────────────────────────────────────────────────────────
 
 @Injectable({ providedIn: 'root' })
 export class PrescriptionsService {
-  private readonly _prescriptions = signal<Prescription[]>(MOCK_PRESCRIPTIONS);
-  private readonly _pharmacies = signal<PharmacyInfo[]>(MOCK_PHARMACIES);
-  private readonly _refillRequests = signal<RefillRequest[]>(MOCK_REFILL_REQUESTS);
+  private readonly authService = inject(AuthService);
+
+  private readonly _prescriptions = signal<Prescription[]>([]);
+  private readonly _pharmacies = signal<PharmacyInfo[]>(REFERENCE_PHARMACIES);
+  private readonly _refillRequests = signal<RefillRequest[]>([]);
   private readonly _selectedMedicationId = signal<string | null>(null);
   private readonly _selectedPharmacyId = signal<string | null>(null);
   private readonly _refillStep = signal<RefillStep>('select-med');
   private readonly _dialogOpen = signal<boolean>(false);
-  private readonly _adherenceLog = signal<AdherenceEntry[]>(MOCK_ADHERENCE);
+  private readonly _adherenceLog = signal<AdherenceEntry[]>([]);
+  private readonly _isLoading = signal<boolean>(false);
 
-  // ─── Feature 11.1: Drug interactions ─────────────────────────────────────
-  private readonly _drugInteractions = signal<DrugInteraction[]>(MOCK_DRUG_INTERACTIONS);
+  // ─── Feature 11.1: Drug interactions (reference data — no backend endpoint yet) ──
+  private readonly _drugInteractions = signal<DrugInteraction[]>(REFERENCE_DRUG_INTERACTIONS);
 
-  // ─── Feature 11.3: PBS scripts ───────────────────────────────────────────
-  private readonly _pbsScripts = signal<PBSScript[]>(MOCK_PBS_SCRIPTS);
+  // ─── Feature 11.3: PBS scripts (reference data — no backend endpoint yet) ────────
+  private readonly _pbsScripts = signal<PBSScript[]>(REFERENCE_PBS_SCRIPTS);
 
   readonly prescriptions = this._prescriptions.asReadonly();
   readonly pharmacies = this._pharmacies.asReadonly();
@@ -502,6 +223,7 @@ export class PrescriptionsService {
   readonly adherenceLog = this._adherenceLog.asReadonly();
   readonly drugInteractions = this._drugInteractions.asReadonly();
   readonly pbsScripts = this._pbsScripts.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
 
   readonly activeMedications = computed(() =>
     this._prescriptions().filter(rx => rx.status === 'active')
@@ -539,7 +261,7 @@ export class PrescriptionsService {
 
   /** Monthly adherence percentage (past days only). */
   readonly monthlyAdherencePercent = computed(() => {
-    const today = new Date(2026, 1, 21);
+    const today = new Date();
     const pastEntries = this._adherenceLog().filter(e => e.date <= today && e.medications.length > 0);
     if (pastEntries.length === 0) return 0;
     const totalDoses = pastEntries.reduce((sum, e) => sum + e.medications.length, 0);
@@ -549,6 +271,87 @@ export class PrescriptionsService {
     );
     return totalDoses === 0 ? 0 : Math.round((takenDoses / totalDoses) * 100);
   });
+
+  /**
+   * Loads prescriptions/medications from the backend API.
+   * Endpoint: GET /api/v1/portal/patients/{id}/medications
+   */
+  async loadPrescriptions(): Promise<void> {
+    const patientId = localStorage.getItem('portal_patient_id') || this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token');
+
+    if (!patientId || !token) {
+      return;
+    }
+
+    this._isLoading.set(true);
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/medications?page=1&page_size=100`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (resp.ok) {
+        const data: {
+          medications: Array<{
+            id: string;
+            medication_name: string;
+            generic_name?: string;
+            dosage: string;
+            frequency: string;
+            route: string;
+            prescribed_date: string;
+            prescribed_by: string;
+            start_date: string;
+            end_date?: string;
+            status: string;
+            refills_remaining: number;
+            refills_total: number;
+            last_filled_date?: string;
+            preferred_pharmacy_id?: string;
+            pharmacy_name?: string;
+            instructions?: string;
+            is_controlled: boolean;
+            controlled_substance: boolean;
+            can_request_refill: boolean;
+            has_interaction_warning: boolean;
+            interaction_note?: string;
+            side_effects?: { common: string[]; serious: string[]; rare: string[] };
+          }>;
+        } = await resp.json();
+        const mapped: Prescription[] = (data.medications ?? []).map(m => ({
+          id: m.id,
+          medicationName: m.medication_name,
+          genericName: m.generic_name,
+          dosage: m.dosage,
+          frequency: m.frequency,
+          route: m.route,
+          prescribedBy: m.prescribed_by,
+          prescribedDate: new Date(m.prescribed_date),
+          startDate: new Date(m.start_date),
+          endDate: m.end_date ? new Date(m.end_date) : undefined,
+          status: (m.status as Prescription['status']) || 'active',
+          refillsRemaining: m.refills_remaining ?? 0,
+          refillsTotal: m.refills_total ?? 0,
+          lastFilledDate: m.last_filled_date ? new Date(m.last_filled_date) : undefined,
+          preferredPharmacyId: m.preferred_pharmacy_id,
+          pharmacyName: m.pharmacy_name,
+          instructions: m.instructions ?? '',
+          isControlled: m.is_controlled ?? false,
+          controlledSubstance: m.controlled_substance ?? false,
+          canRequestRefill: m.can_request_refill ?? false,
+          hasInteractionWarning: m.has_interaction_warning ?? false,
+          interactionNote: m.interaction_note,
+          sideEffects: m.side_effects
+        }));
+        this._prescriptions.set(mapped);
+      }
+      // On non-OK response: leave prescriptions as empty array
+    } catch {
+      // On network error: leave prescriptions as empty array
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
 
   openRefillDialog(medicationId: string): void {
     const med = this._prescriptions().find(rx => rx.id === medicationId);
@@ -598,6 +401,10 @@ export class PrescriptionsService {
     const pharmacy = this.selectedPharmacy();
     if (!med || !pharmacy) return;
 
+    const now = new Date();
+    const estimatedReady = new Date(now);
+    estimatedReady.setDate(now.getDate() + 2);
+
     const newRequest: RefillRequest = {
       id: `rr-${Date.now()}`,
       medicationId: med.id,
@@ -607,8 +414,8 @@ export class PrescriptionsService {
       pharmacy: pharmacy.name,
       pharmacyAddress: `${pharmacy.address}, ${pharmacy.city}`,
       status: 'requested',
-      requestedAt: new Date(2026, 1, 21),
-      estimatedReady: daysFromNow(2),
+      requestedAt: now,
+      estimatedReady,
       notes: 'Refill request submitted. You will be notified when ready.'
     };
 

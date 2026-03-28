@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -211,11 +211,15 @@ import { Notification } from '../../shared/data-access';
     .delete-title { font-weight: 600; color: var(--text-color); }
   `]
 })
-export class NotificationsComponent {
+export class NotificationsComponent implements OnInit {
   readonly service = inject(NotificationsDataService);
 
   showDeleteDialog = false;
   readonly pendingDeleteNotification = signal<Notification | null>(null);
+
+  ngOnInit(): void {
+    this.service.loadNotifications();
+  }
 
   onNotificationClick(notification: Notification): void {
     if (!notification.isRead) {

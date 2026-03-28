@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { AuthService } from '../../auth/data-access/auth.service';
 
 export interface HealthScoreCategory {
   name: string;
@@ -34,91 +35,18 @@ export interface ActivityDataPoint {
   sleepHours: number;
 }
 
-// Helper: date N months back from 2026-02-21
-function mo(monthsAgo: number): Date {
-  const d = new Date(2026, 1, 21);
-  d.setMonth(d.getMonth() - monthsAgo);
-  return d;
-}
-
-const WEIGHT_DATA: WeightDataPoint[] = [
-  { date: mo(11), weight: 190.0, bmi: 27.3 },
-  { date: mo(10), weight: 189.2, bmi: 27.2 },
-  { date: mo(9),  weight: 188.5, bmi: 27.1 },
-  { date: mo(8),  weight: 188.0, bmi: 27.0 },
-  { date: mo(7),  weight: 187.4, bmi: 26.9 },
-  { date: mo(6),  weight: 187.0, bmi: 26.9 },
-  { date: mo(5),  weight: 186.5, bmi: 26.8 },
-  { date: mo(4),  weight: 186.1, bmi: 26.7 },
-  { date: mo(3),  weight: 185.8, bmi: 26.7 },
-  { date: mo(2),  weight: 185.5, bmi: 26.6 },
-  { date: mo(1),  weight: 185.2, bmi: 26.6 },
-  { date: mo(0),  weight: 185.0, bmi: 26.5 },
-];
-
-const BP_DATA: BpDataPoint[] = [
-  { date: mo(11), systolic: 135, diastolic: 88 },
-  { date: mo(10), systolic: 134, diastolic: 87 },
-  { date: mo(9),  systolic: 133, diastolic: 87 },
-  { date: mo(8),  systolic: 132, diastolic: 86 },
-  { date: mo(7),  systolic: 132, diastolic: 85 },
-  { date: mo(6),  systolic: 131, diastolic: 85 },
-  { date: mo(5),  systolic: 130, diastolic: 84 },
-  { date: mo(4),  systolic: 130, diastolic: 84 },
-  { date: mo(3),  systolic: 129, diastolic: 83 },
-  { date: mo(2),  systolic: 129, diastolic: 83 },
-  { date: mo(1),  systolic: 128, diastolic: 82 },
-  { date: mo(0),  systolic: 128, diastolic: 82 },
-];
-
-const GLUCOSE_DATA: GlucoseDataPoint[] = [
-  { date: mo(11), fasting: 97,  postMeal: 138, hba1c: 6.4 },
-  { date: mo(10), fasting: 96,  postMeal: 135 },
-  { date: mo(9),  fasting: 95,  postMeal: 132 },
-  { date: mo(8),  fasting: 96,  postMeal: 130 },
-  { date: mo(7),  fasting: 94,  postMeal: 128 },
-  { date: mo(6),  fasting: 95,  postMeal: 130, hba1c: 6.3 },
-  { date: mo(5),  fasting: 93,  postMeal: 127 },
-  { date: mo(4),  fasting: 94,  postMeal: 126 },
-  { date: mo(3),  fasting: 94,  postMeal: 125 },
-  { date: mo(2),  fasting: 93,  postMeal: 124, hba1c: 6.2 },
-  { date: mo(1),  fasting: 92,  postMeal: 123 },
-  { date: mo(0),  fasting: 93,  postMeal: 122 },
-];
-
-const ACTIVITY_DATA: ActivityDataPoint[] = [
-  { date: mo(11), steps: 6200,  activeMinutes: 32, caloriesBurned: 1820, sleepHours: 6.8 },
-  { date: mo(10), steps: 6800,  activeMinutes: 35, caloriesBurned: 1870, sleepHours: 6.9 },
-  { date: mo(9),  steps: 7100,  activeMinutes: 38, caloriesBurned: 1910, sleepHours: 7.0 },
-  { date: mo(8),  steps: 7400,  activeMinutes: 40, caloriesBurned: 1940, sleepHours: 7.1 },
-  { date: mo(7),  steps: 7600,  activeMinutes: 42, caloriesBurned: 1960, sleepHours: 7.2 },
-  { date: mo(6),  steps: 7800,  activeMinutes: 44, caloriesBurned: 1980, sleepHours: 7.3 },
-  { date: mo(5),  steps: 8000,  activeMinutes: 45, caloriesBurned: 2000, sleepHours: 7.3 },
-  { date: mo(4),  steps: 7900,  activeMinutes: 44, caloriesBurned: 1990, sleepHours: 7.4 },
-  { date: mo(3),  steps: 8200,  activeMinutes: 47, caloriesBurned: 2020, sleepHours: 7.4 },
-  { date: mo(2),  steps: 8400,  activeMinutes: 48, caloriesBurned: 2040, sleepHours: 7.5 },
-  { date: mo(1),  steps: 8600,  activeMinutes: 50, caloriesBurned: 2060, sleepHours: 7.5 },
-  { date: mo(0),  steps: 8800,  activeMinutes: 52, caloriesBurned: 2080, sleepHours: 7.6 },
-];
-
 @Injectable({ providedIn: 'root' })
 export class HealthAnalyticsService {
-  // Overall health score
-  readonly healthScore = signal(78);
+  private readonly authService = inject(AuthService);
 
-  readonly healthScoreCategories = signal<HealthScoreCategory[]>([
-    { name: 'Cardiovascular', score: 72, icon: 'pi-heart',      color: '#ef4444' },
-    { name: 'Metabolic',      score: 68, icon: 'pi-chart-bar',  color: '#f97316' },
-    { name: 'Nutrition',      score: 85, icon: 'pi-apple',      color: '#22c55e' },
-    { name: 'Activity',       score: 82, icon: 'pi-bolt',       color: '#3b82f6' },
-    { name: 'Preventive Care',score: 90, icon: 'pi-shield',     color: '#8b5cf6' },
-    { name: 'Mental Health',  score: 75, icon: 'pi-sun',        color: '#ec4899' },
-  ]);
+  readonly healthScore = signal(0);
 
-  readonly weightData = signal<WeightDataPoint[]>(WEIGHT_DATA);
-  readonly bpData     = signal<BpDataPoint[]>(BP_DATA);
-  readonly glucoseData = signal<GlucoseDataPoint[]>(GLUCOSE_DATA);
-  readonly activityData = signal<ActivityDataPoint[]>(ACTIVITY_DATA);
+  readonly healthScoreCategories = signal<HealthScoreCategory[]>([]);
+
+  readonly weightData = signal<WeightDataPoint[]>([]);
+  readonly bpData     = signal<BpDataPoint[]>([]);
+  readonly glucoseData = signal<GlucoseDataPoint[]>([]);
+  readonly activityData = signal<ActivityDataPoint[]>([]);
 
   // Computed latest values for quick display
   readonly latestWeight = computed(() => {
@@ -171,16 +99,74 @@ export class HealthAnalyticsService {
     return +(data.reduce((s, d) => s + d.sleepHours, 0) / data.length).toFixed(1);
   });
 
-  // PHQ-9 / GAD-7 history (mock)
-  readonly phq9History = signal([
-    { date: new Date(2025, 8, 15), score: 12, severity: 'Moderate' },
-    { date: new Date(2025, 11, 10), score: 8,  severity: 'Mild' },
-    { date: new Date(2026, 1, 21),  score: 5,  severity: 'Minimal' },
-  ]);
+  readonly phq9History = signal<Array<{ date: Date; score: number; severity: string }>>([]);
+  readonly gad7History = signal<Array<{ date: Date; score: number; severity: string }>>([]);
 
-  readonly gad7History = signal([
-    { date: new Date(2025, 8, 15), score: 10, severity: 'Moderate' },
-    { date: new Date(2025, 11, 10), score: 7,  severity: 'Mild' },
-    { date: new Date(2026, 1, 21),  score: 4,  severity: 'Minimal' },
-  ]);
+  /** Load vitals from the backend and map to analytics data structures. */
+  async loadHealthAnalytics(): Promise<void> {
+    const patientId = this.authService.user()?.patientId
+      ?? localStorage.getItem('portal_patient_id');
+    if (!patientId) return;
+
+    const token = localStorage.getItem('portal_token') || '';
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/vitals?page=1&page_size=200`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (resp.status === 404) return;
+      if (!resp.ok) return;
+
+      const data: {
+        vitals?: Array<{
+          id: string;
+          type: string;
+          value: string;
+          unit: string;
+          recorded_at: string;
+        }>;
+      } = await resp.json();
+
+      const rows = data.vitals ?? [];
+
+      const weight: WeightDataPoint[] = [];
+      const bp: BpDataPoint[] = [];
+      const glucose: GlucoseDataPoint[] = [];
+
+      for (const row of rows) {
+        const type = row.type.toLowerCase();
+        const date = new Date(row.recorded_at);
+        const val = parseFloat(row.value);
+        if (isNaN(val)) continue;
+
+        if (type === 'weight') {
+          // Compute BMI if height is not separately tracked; use 170 cm default
+          const heightM = 1.70;
+          const weightKg = row.unit === 'lbs' ? val * 0.453592 : val;
+          weight.push({ date, weight: val, bmi: parseFloat((weightKg / (heightM * heightM)).toFixed(1)) });
+        } else if (type === 'blood_pressure' || type === 'bloodpressure') {
+          const parts = row.value.split('/');
+          if (parts.length === 2) {
+            bp.push({ date, systolic: parseFloat(parts[0]), diastolic: parseFloat(parts[1]) });
+          }
+        } else if (type === 'glucose' || type === 'blood_glucose') {
+          glucose.push({ date, fasting: val });
+        } else if (type === 'hba1c') {
+          // Attach HbA1c to the nearest glucose entry by date, or add standalone
+          const nearest = glucose.find(g => Math.abs(g.date.getTime() - date.getTime()) < 7 * 86400_000);
+          if (nearest) {
+            nearest.hba1c = val;
+          } else {
+            glucose.push({ date, fasting: 0, hba1c: val });
+          }
+        }
+      }
+
+      // Sort all series by date ascending
+      const byDate = (a: { date: Date }, b: { date: Date }) => a.date.getTime() - b.date.getTime();
+      if (weight.length > 0)  this.weightData.set(weight.sort(byDate));
+      if (bp.length > 0)      this.bpData.set(bp.sort(byDate));
+      if (glucose.length > 0) this.glucoseData.set(glucose.sort(byDate));
+    } catch { /* leave empty */ }
+  }
 }

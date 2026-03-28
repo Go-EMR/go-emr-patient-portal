@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { AuthService } from '../../auth/data-access/auth.service';
 
 export type InsuranceType = 'medical' | 'dental' | 'vision';
 
@@ -44,131 +45,26 @@ export interface BenefitUsage {
   unit: string;
 }
 
-const MOCK_CARDS: InsuranceCard[] = [
-  {
-    id: 'medical-001',
-    type: 'medical',
-    carrier: 'Blue Cross Blue Shield',
-    planName: 'BlueCare PPO Select',
-    memberId: 'XBC123456789',
-    groupNumber: 'GRP-88412',
-    effectiveDate: '2026-01-01',
-    expirationDate: '2026-12-31',
-    copay: {
-      primaryCare: 20,
-      specialist: 45,
-      urgentCare: 75,
-      emergency: 250
-    },
-    deductible: {
-      individual: 1500,
-      family: 3000,
-      met: 620
-    },
-    outOfPocketMax: {
-      individual: 5000,
-      family: 10000,
-      met: 1240
-    },
-    subscriberName: 'Alex Johnson',
-    dependents: ['Morgan Johnson', 'Riley Johnson'],
-    rxBin: '610014',
-    rxPcn: 'BCBSMA',
-    rxGroup: 'RX7841',
-    isFlipped: false,
-    phone: '1-800-262-2583',
-    providerPhone: '1-800-810-2583'
-  },
-  {
-    id: 'dental-001',
-    type: 'dental',
-    carrier: 'Delta Dental',
-    planName: 'DeltaCare Premier',
-    memberId: 'DD987654321',
-    groupNumber: 'GRP-22190',
-    effectiveDate: '2026-01-01',
-    expirationDate: '2026-12-31',
-    copay: {
-      primaryCare: 0,
-      specialist: 20,
-      urgentCare: 20,
-      emergency: 50
-    },
-    deductible: {
-      individual: 50,
-      family: 150,
-      met: 50
-    },
-    outOfPocketMax: {
-      individual: 1500,
-      family: 4500,
-      met: 380
-    },
-    subscriberName: 'Alex Johnson',
-    dependents: ['Morgan Johnson', 'Riley Johnson'],
-    rxBin: '',
-    rxPcn: '',
-    rxGroup: '',
-    isFlipped: false,
-    phone: '1-800-932-0783',
-    providerPhone: '1-888-335-8227'
-  },
-  {
-    id: 'vision-001',
-    type: 'vision',
-    carrier: 'VSP Vision Care',
-    planName: 'VSP Choice Plan',
-    memberId: 'VSP456789012',
-    groupNumber: 'GRP-55034',
-    effectiveDate: '2026-01-01',
-    expirationDate: '2026-12-31',
-    copay: {
-      primaryCare: 10,
-      specialist: 10,
-      urgentCare: 10,
-      emergency: 10
-    },
-    deductible: {
-      individual: 0,
-      family: 0,
-      met: 0
-    },
-    outOfPocketMax: {
-      individual: 500,
-      family: 1000,
-      met: 130
-    },
-    subscriberName: 'Alex Johnson',
-    dependents: ['Morgan Johnson', 'Riley Johnson'],
-    rxBin: '',
-    rxPcn: '',
-    rxGroup: '',
-    isFlipped: false,
-    phone: '1-800-877-7195',
-    providerPhone: '1-800-877-7195'
-  }
-];
-
-const MOCK_BENEFIT_USAGE: BenefitUsage[] = [
-  { category: 'Office Visits', used: 4, total: 20, unit: 'visits' },
-  { category: 'Lab Work', used: 2, total: 10, unit: 'claims' },
-  { category: 'Prescriptions', used: 18, total: 60, unit: 'fills' },
-  { category: 'Physical Therapy', used: 6, total: 30, unit: 'sessions' },
-  { category: 'Mental Health', used: 3, total: 26, unit: 'sessions' }
-];
+// TODO: Implement backend endpoint for GET /api/v1/portal/patients/{id}/insurance
+// The billing endpoint (GET /api/v1/portal/patients/{id}/billing) may carry
+// insurance policy data in future; wire to it when available.
 
 @Injectable({ providedIn: 'root' })
 export class InsuranceService {
-  private readonly _cards = signal<InsuranceCard[]>(MOCK_CARDS);
-  private readonly _selectedCardId = signal<string>(MOCK_CARDS[0].id);
-  private readonly _benefitUsage = signal<BenefitUsage[]>(MOCK_BENEFIT_USAGE);
+  private readonly authService = inject(AuthService);
+
+  private readonly _cards = signal<InsuranceCard[]>([]);
+  private readonly _selectedCardId = signal<string>('');
+  private readonly _benefitUsage = signal<BenefitUsage[]>([]);
+  private readonly _isLoading = signal<boolean>(false);
 
   readonly cards = this._cards.asReadonly();
   readonly selectedCardId = this._selectedCardId.asReadonly();
   readonly benefitUsage = this._benefitUsage.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
 
   readonly selectedCard = computed(() =>
-    this._cards().find(c => c.id === this._selectedCardId()) ?? this._cards()[0]
+    this._cards().find(c => c.id === this._selectedCardId()) ?? this._cards()[0] ?? null
   );
 
   readonly activeCards = computed(() =>
@@ -177,6 +73,126 @@ export class InsuranceService {
       return exp >= new Date();
     })
   );
+
+  /**
+   * Loads insurance cards from the backend API.
+   * Attempts GET /api/v1/portal/patients/{id}/insurance first.
+   * TODO: Implement backend endpoint for /api/v1/portal/patients/{id}/insurance
+   */
+  async loadInsurance(): Promise<void> {
+    const patientId = localStorage.getItem('portal_patient_id') || this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token');
+
+    if (!patientId || !token) {
+      return;
+    }
+
+    this._isLoading.set(true);
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/insurance`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (resp.ok) {
+        const data: {
+          cards: Array<{
+            id: string;
+            type: string;
+            carrier: string;
+            plan_name: string;
+            member_id: string;
+            group_number: string;
+            effective_date: string;
+            expiration_date: string;
+            copay?: {
+              primary_care: number;
+              specialist: number;
+              urgent_care: number;
+              emergency: number;
+            };
+            deductible?: {
+              individual: number;
+              family: number;
+              met: number;
+            };
+            out_of_pocket_max?: {
+              individual: number;
+              family: number;
+              met: number;
+            };
+            subscriber_name: string;
+            dependents?: string[];
+            rx_bin?: string;
+            rx_pcn?: string;
+            rx_group?: string;
+            phone?: string;
+            provider_phone?: string;
+          }>;
+          benefit_usage?: Array<{
+            category: string;
+            used: number;
+            total: number;
+            unit: string;
+          }>;
+        } = await resp.json();
+
+        const mapped: InsuranceCard[] = (data.cards ?? []).map(c => ({
+          id: c.id,
+          type: (c.type as InsuranceType) || 'medical',
+          carrier: c.carrier,
+          planName: c.plan_name,
+          memberId: c.member_id,
+          groupNumber: c.group_number,
+          effectiveDate: c.effective_date,
+          expirationDate: c.expiration_date,
+          copay: {
+            primaryCare: c.copay?.primary_care ?? 0,
+            specialist: c.copay?.specialist ?? 0,
+            urgentCare: c.copay?.urgent_care ?? 0,
+            emergency: c.copay?.emergency ?? 0
+          },
+          deductible: {
+            individual: c.deductible?.individual ?? 0,
+            family: c.deductible?.family ?? 0,
+            met: c.deductible?.met ?? 0
+          },
+          outOfPocketMax: {
+            individual: c.out_of_pocket_max?.individual ?? 0,
+            family: c.out_of_pocket_max?.family ?? 0,
+            met: c.out_of_pocket_max?.met ?? 0
+          },
+          subscriberName: c.subscriber_name,
+          dependents: c.dependents ?? [],
+          rxBin: c.rx_bin ?? '',
+          rxPcn: c.rx_pcn ?? '',
+          rxGroup: c.rx_group ?? '',
+          isFlipped: false,
+          phone: c.phone ?? '',
+          providerPhone: c.provider_phone ?? ''
+        }));
+
+        this._cards.set(mapped);
+        if (mapped.length > 0) {
+          this._selectedCardId.set(mapped[0].id);
+        }
+
+        if (data.benefit_usage) {
+          const usageMapped: BenefitUsage[] = data.benefit_usage.map(u => ({
+            category: u.category,
+            used: u.used,
+            total: u.total,
+            unit: u.unit
+          }));
+          this._benefitUsage.set(usageMapped);
+        }
+      }
+      // On non-OK response: leave cards as empty array
+    } catch {
+      // On network error: leave cards as empty array
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
 
   flipCard(id: string): void {
     this._cards.update(cards =>

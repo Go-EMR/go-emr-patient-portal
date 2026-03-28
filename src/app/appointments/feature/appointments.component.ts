@@ -1,4 +1,4 @@
-import { Component, signal, computed, OnDestroy } from '@angular/core';
+import { Component, signal, computed, OnDestroy, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -13,6 +13,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { TextareaModule } from 'primeng/textarea';
 import { Appointment } from '../../shared/data-access';
 import { exportToICal } from '../../shared/utils/ical-export';
+import { AuthService } from '../../auth/data-access/auth.service';
+import { AppointmentsDataService } from '../data-access/appointments-data.service';
 
 type FilterType = 'all' | 'today' | 'this_week';
 
@@ -973,7 +975,10 @@ interface PastAppointment {
     .required-mark { color: var(--red-500); }
   `]
 })
-export class AppointmentsComponent {
+export class AppointmentsComponent implements OnInit {
+  private readonly authService = inject(AuthService);
+  private readonly appointmentsData = inject(AppointmentsDataService);
+
   // ─── Booking dialog state ───────────────────────────────────────────────────
   showBookingDialog = false;
   selectedDate: Date | null = null;
@@ -1077,69 +1082,8 @@ export class AppointmentsComponent {
     '3:00 PM', '3:30 PM'
   ];
 
-  // ─── Appointments data (Feature 9.1: APT-001 links to APT-002) ──────────────
-  appointments = signal<ExtendedAppointment[]>([
-    {
-      id: 'APT-001',
-      providerId: 'P1',
-      providerName: 'Dr. Sarah Johnson',
-      providerSpecialty: 'Internal Medicine',
-      locationId: 'L1',
-      locationName: 'Main Clinic',
-      locationAddress: '123 Medical Dr',
-      date: new Date(Date.now() + 13 * 86400000),
-      startTime: '10:00 AM',
-      endTime: '10:30 AM',
-      appointmentType: 'Annual Physical',
-      status: 'confirmed',
-      confirmationRequired: false,
-      canCancel: true,
-      canReschedule: true,
-      telehealth: false,
-      formsRequired: [],
-      linkedAppointmentIds: ['APT-002'],
-      linkedProviders: ['Dr. Michael Chen (Cardiology)']
-    },
-    {
-      id: 'APT-002',
-      providerId: 'P2',
-      providerName: 'Dr. Michael Chen',
-      providerSpecialty: 'Cardiology',
-      locationId: 'L2',
-      locationName: 'Heart Center',
-      locationAddress: '456 Cardio Blvd',
-      date: new Date(Date.now() + 1 * 86400000),
-      startTime: '2:00 PM',
-      endTime: '2:30 PM',
-      appointmentType: 'Cardiology Referral Follow-up',
-      status: 'confirmed',
-      confirmationRequired: false,
-      canCancel: true,
-      canReschedule: true,
-      telehealth: true,
-      telehealthUrl: 'https://telehealth.example.com',
-      formsRequired: []
-    },
-    {
-      id: 'APT-003',
-      providerId: 'P1',
-      providerName: 'Dr. Sarah Johnson',
-      providerSpecialty: 'Internal Medicine',
-      locationId: 'L1',
-      locationName: 'Main Clinic',
-      locationAddress: '123 Medical Dr',
-      date: new Date(),
-      startTime: '11:00 AM',
-      endTime: '11:30 AM',
-      appointmentType: 'Lab Work',
-      status: 'scheduled',
-      confirmationRequired: true,
-      canCancel: true,
-      canReschedule: true,
-      telehealth: false,
-      formsRequired: []
-    }
-  ]);
+  // ─── Appointments data — loaded from portal API in ngOnInit ──────────────
+  appointments = signal<ExtendedAppointment[]>([]);
 
   // ─── Feature 9.6: Mock past appointments ────────────────────────────────────
   readonly pastAppointments: PastAppointment[] = [
@@ -1224,6 +1168,15 @@ export class AppointmentsComponent {
       category: 'wellness'
     }
   ];
+
+  ngOnInit(): void {
+    this.appointmentsData.loadAppointments().then(() => {
+      const loaded = this.appointmentsData.appointments();
+      if (loaded.length > 0) {
+        this.appointments.set(loaded as ExtendedAppointment[]);
+      }
+    });
+  }
 
   // ─── Computed ───────────────────────────────────────────────────────────────
   filteredAppointments = computed(() => {

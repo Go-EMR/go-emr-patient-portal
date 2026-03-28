@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pre-Visit Questionnaire & Check-In — GoHealth Flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .flow-page { padding: 80px 2rem 3rem; max-width: 900px; margin: 0 auto; }
+    .flow-page-header { margin-bottom: 2.5rem; }
+    .flow-page-num { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--maroon); margin-bottom: 0.4rem; }
+    .flow-page-title { font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800; color: var(--black); margin-bottom: 0.75rem; line-height: 1.2; }
+    .flow-page-desc { font-size: 1.05rem; color: var(--text-light); line-height: 1.7; margin-bottom: 1.5rem; }
+    .flow-page-features { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 2rem; }
+    .flow-page-features .feature-pill { font-size: 0.75rem; font-weight: 600; padding: 5px 14px; border-radius: 999px; border: 1px solid var(--stone); color: var(--text-light); background: var(--white); }
+
+    /* Stage cards */
+    .stage { background: var(--white); border: 1px solid var(--stone-light); border-radius: var(--radius); margin-bottom: 1.5rem; overflow: hidden; transition: var(--transition); }
+    .stage:hover { box-shadow: var(--shadow-md); border-color: var(--orange); }
+    .stage-header { display: flex; align-items: center; gap: 1rem; padding: 1.25rem 1.5rem; cursor: pointer; }
+    .stage-num { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; color: white; flex-shrink: 0; }
+    .stage-header-text { flex: 1; }
+    .stage-title { font-size: 1.05rem; font-weight: 700; color: var(--black); }
+    .stage-module { display: inline-block; font-size: 0.65rem; font-weight: 600; color: var(--maroon); background: rgba(120,41,15,0.1); padding: 2px 8px; border-radius: 4px; margin-top: 0.2rem; }
+    .stage-chevron { font-size: 1.2rem; color: var(--stone-dark); transition: transform 0.3s ease; }
+    .stage.open .stage-chevron { transform: rotate(180deg); }
+    .stage-body { padding: 0 1.5rem 1.5rem; display: none; }
+    .stage.open .stage-body { display: block; }
+    .stage-text { font-size: 0.9rem; color: var(--text-light); line-height: 1.7; margin-bottom: 1rem; padding-left: 56px; }
+    .stage-benefits-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--maroon); margin-bottom: 0.6rem; padding-left: 56px; }
+    .stage-benefits { list-style: none; padding-left: 56px; }
+    .stage-benefits li { position: relative; padding: 0.5rem 0 0.5rem 1.5rem; font-size: 0.85rem; color: var(--text); line-height: 1.5; border-bottom: 1px solid rgba(21,97,109,0.1); }
+    .stage-benefits li:last-child { border-bottom: none; }
+    .stage-benefits li::before { content: '\2713'; position: absolute; left: 0; color: var(--orange); font-weight: 700; }
+
+    /* Connector between stages */
+    .stage-connector { display: flex; justify-content: center; padding: 0.25rem 0; }
+    .stage-connector-line { width: 2px; height: 20px; background: var(--stone-light); }
+
+    /* Business value summary */
+    .bv-summary { margin-top: 2.5rem; }
+    .bv-summary-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--charcoal); margin-bottom: 1rem; }
+    .bv-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+    .bv-summary-item { background: var(--charcoal); border-radius: var(--radius-sm); padding: 1.25rem; text-align: center; }
+    .bv-summary-icon { font-size: 1.5rem; margin-bottom: 0.3rem; }
+    .bv-summary-metric { font-size: 1.4rem; font-weight: 800; color: var(--orange); }
+    .bv-summary-desc { font-size: 0.78rem; color: var(--stone); margin-top: 0.15rem; }
+
+    /* Back link */
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-light); text-decoration: none; font-size: 0.85rem; font-weight: 500; padding: 8px 0; transition: var(--transition); margin-bottom: 1rem; }
+    .back-link:hover { color: var(--orange); }
+
+    /* Nav/Footer tweaks for flow pages */
+    .flow-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--stone-light); }
+    .flow-nav a { text-decoration: none; color: var(--text-light); font-size: 0.85rem; font-weight: 500; transition: var(--transition); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--stone-light); }
+    .flow-nav a:hover { color: var(--orange); border-color: var(--orange); }
+
+    @media (max-width: 600px) {
+      .stage-text, .stage-benefits-label, .stage-benefits { padding-left: 0; }
+      .bv-summary-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <div class="nav-brand-icon">G</div>
+        <span>GoHealth</span>
+      </a>
+      <div class="nav-links">
+        <a href="index.html#mindmap">Mind Map</a>
+        <a href="index.html#flows">All Flows</a>
+        <a href="index.html#benefits">Benefits</a>
+        <a href="index.html#features">Features</a>
+      </div>
+      <button class="nav-toggle" aria-label="Toggle menu">&#9776;</button>
+    </div>
+  </nav>
+
+  <div class="flow-page">
+    <a href="index.html#flows" class="back-link">&larr; Back to all flows</a>
+
+    <div class="flow-page-header">
+      <div class="flow-page-num">Flow 04 of 15</div>
+      <h1 class="flow-page-title">Pre-Visit Questionnaire & Check-In</h1>
+      <p class="flow-page-desc">Completing intake forms and health questionnaires digitally before arriving — streamlining the check-in process and giving providers advance context.</p>
+      <div class="flow-page-features">
+        <span class="feature-pill">Notifications</span>
+        <span class="feature-pill">Forms</span>
+        <span class="feature-pill">Medications</span>
+        <span class="feature-pill">Insurance</span>
+        <span class="feature-pill">Check-In</span>
+        <span class="feature-pill">Allergies</span>
+      </div>
+    </div>
+
+    <!-- Stages -->
+    <div class="stage open" data-stage="0">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #78290F">1</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Receive Pre-Visit Notification</div>
+          <span class="stage-module">Notifications</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">Three days before the appointment, the patient receives a notification with a link to complete pre-visit forms. The system sends reminders at 3 days, 1 day, and 2 hours before.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Tiered reminder cadence maximizes form completion rates</li>
+          <li>Direct deep links take patients straight to the forms</li>
+          <li>Mobile-optimized notifications work on any device</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="1">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #15616D">2</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Complete Health Questionnaire</div>
+          <span class="stage-module">Forms</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">The patient fills out a specialty-specific questionnaire — for a dermatology visit, questions about skin conditions, medications, allergies, and family history of skin cancer. Smart branching adapts questions based on answers.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Specialty-specific forms capture clinically relevant information</li>
+          <li>Smart branching eliminates irrelevant questions</li>
+          <li>Auto-populated fields from existing records save patient time</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="2">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #FF7D00">3</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Update Medications & Allergies</div>
+          <span class="stage-module">Medications</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">The patient reviews their current medication list and updates it — adding a new allergy to penicillin and confirming current dosages. The system checks for drug interactions automatically.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Drug interaction checking catches potential dangers before the visit</li>
+          <li>Visual medication list makes review quick and easy</li>
+          <li>Allergy updates propagate to all providers in the network</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="3">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #001524">4</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Upload Insurance Card</div>
+          <span class="stage-module">Insurance</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">The patient photographs both sides of their updated insurance card. OCR verifies the information matches their profile and flags any discrepancies for review.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Pre-visit card upload eliminates front desk scanning delays</li>
+          <li>OCR validation catches card photo quality issues early</li>
+          <li>Updated insurance info prevents claim denials</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stage-connector"><div class="stage-connector-line"></div></div>
+    <div class="stage" data-stage="4">
+      <div class="stage-header" onclick="this.parentElement.classList.toggle('open')">
+        <div class="stage-num" style="background: #9a3a1a">5</div>
+        <div class="stage-header-text">
+          <div class="stage-title">Digital Check-In</div>
+          <span class="stage-module">Check-In</span>
+        </div>
+        <span class="stage-chevron">&#9662;</span>
+      </div>
+      <div class="stage-body">
+        <p class="stage-text">On the day of the appointment, the patient checks in digitally from the parking lot. The system confirms arrival, estimates wait time, and sends a notification when the provider is ready.</p>
+        <div class="stage-benefits-label">How This Helps</div>
+        <ul class="stage-benefits">
+          <li>Contactless check-in reduces waiting room crowding</li>
+          <li>Real-time wait time estimates reduce patient anxiety</li>
+          <li>Provider notification when patient arrives optimizes clinic flow</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Business Value Summary -->
+    <div class="bv-summary">
+      <div class="bv-summary-title">Overall Business Impact</div>
+      <div class="bv-summary-grid">
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">📋</div>
+          <div class="bv-summary-metric">80%</div>
+          <div class="bv-summary-desc">Forms completed before arrival</div>
+        </div>
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">⏱️</div>
+          <div class="bv-summary-metric">12 min</div>
+          <div class="bv-summary-desc">Saved per patient visit</div>
+        </div>
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">💊</div>
+          <div class="bv-summary-metric">Auto</div>
+          <div class="bv-summary-desc">Drug interaction alerts</div>
+        </div>
+        <div class="bv-summary-item">
+          <div class="bv-summary-icon">📱</div>
+          <div class="bv-summary-metric">Digital</div>
+          <div class="bv-summary-desc">Contactless check-in</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav between flows -->
+    <div class="flow-nav">
+      <a href="flow-provider-search.html">&larr; Provider Search & Appointment Booking</a>
+      <a href="flow-telehealth.html">Telehealth Visit &rarr;</a>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>GoHealth &mdash; Your Health, Connected &middot; by Aura Global Corporation</p>
+  </footer>
+
+  <script>
+    // Nav scroll effect
+    window.addEventListener('scroll', () => {
+      document.querySelector('.nav').classList.toggle('scrolled', window.scrollY > 20);
+    });
+    // Mobile nav toggle
+    const toggle = document.querySelector('.nav-toggle');
+    const links = document.querySelector('.nav-links');
+    if (toggle) toggle.addEventListener('click', () => links.classList.toggle('open'));
+  </script>
+</body>
+</html>

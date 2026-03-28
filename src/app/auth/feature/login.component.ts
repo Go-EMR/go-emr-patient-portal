@@ -7,6 +7,7 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { AuthService } from '../data-access';
+import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +15,28 @@ import { AuthService } from '../data-access';
   imports: [FormsModule, CardModule, InputTextModule, PasswordModule, ButtonModule, CheckboxModule],
   template: `
     <div class="login-container">
+      <!-- Theme switcher -->
+      <div class="theme-switcher">
+        <span class="theme-label"><i class="pi pi-palette" aria-hidden="true"></i> Theme</span>
+        <div class="theme-buttons" role="group" aria-label="Select color theme">
+          <button class="theme-btn" [class.active]="themeService.activeTheme() === 'classic'" (click)="themeService.setTheme('classic')"
+                  aria-label="Classic theme" [attr.aria-pressed]="themeService.activeTheme() === 'classic'">
+            <i class="pi pi-desktop" aria-hidden="true"></i>
+            <span class="theme-btn-label">Classic</span>
+          </button>
+          <button class="theme-btn" [class.active]="themeService.activeTheme() === 'beach'" (click)="themeService.setTheme('beach')"
+                  aria-label="Beach theme" [attr.aria-pressed]="themeService.activeTheme() === 'beach'">
+            <i class="pi pi-sun" aria-hidden="true"></i>
+            <span class="theme-btn-label">Beach</span>
+          </button>
+          <button class="theme-btn" [class.active]="themeService.activeTheme() === 'dark'" (click)="themeService.setTheme('dark')"
+                  aria-label="Dark theme" [attr.aria-pressed]="themeService.activeTheme() === 'dark'">
+            <i class="pi pi-moon" aria-hidden="true"></i>
+            <span class="theme-btn-label">Dark</span>
+          </button>
+        </div>
+      </div>
+
       <p-card styleClass="login-card">
         <ng-template pTemplate="header">
           <div class="login-header">
@@ -136,13 +159,33 @@ import { AuthService } from '../data-access';
                 aria-describedby="login-subheading"></button>
 
               <div class="demo-credentials" aria-label="Demo account credentials">
-                <p><strong>Demo:</strong> patient&#64;demo.com / demo123</p>
-                <button
-                  pButton
-                  label="Use Demo Account"
-                  class="p-button-text p-button-sm"
-                  (click)="useDemoCredentials()"
-                  aria-label="Fill in demo account credentials automatically"></button>
+                <p><strong>Quick Demo Access</strong> (password: admin123)</p>
+                <div class="demo-buttons">
+                  <button
+                    class="demo-btn"
+                    (click)="fillCredentials('vivek.b@patient.in')"
+                    aria-label="Vivek Bhardwaj - IzaDental patient">
+                    <i class="pi pi-user"></i> Vivek (Dental)
+                  </button>
+                  <button
+                    class="demo-btn"
+                    (click)="fillCredentials('vikas.s@patient.in')"
+                    aria-label="Vikas Sharma - Psychology patient">
+                    <i class="pi pi-heart"></i> Vikas (Psych)
+                  </button>
+                  <button
+                    class="demo-btn"
+                    (click)="fillCredentials('aditi@patient.in')"
+                    aria-label="Aditi - Ortho patient">
+                    <i class="pi pi-shield"></i> Aditi (Ortho)
+                  </button>
+                  <button
+                    class="demo-btn"
+                    (click)="fillCredentials('rachana.a@patient.in')"
+                    aria-label="Rachana Arora - Heart patient">
+                    <i class="pi pi-heart-fill"></i> Rachana (Heart)
+                  </button>
+                </div>
               </div>
 
               <!-- Feature 6.2: Social login -->
@@ -377,6 +420,77 @@ import { AuthService } from '../data-access';
       justify-content: center;
       background: linear-gradient(135deg, var(--teal-600) 0%, var(--teal-800) 100%);
       padding: 1rem;
+      position: relative;
+    }
+
+    /* Theme switcher — same as shell topbar */
+    .theme-switcher {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-label {
+      font-size: 0.8rem;
+      color: var(--text-color-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .theme-buttons {
+      display: flex;
+      gap: 0.25rem;
+      background: var(--surface-100);
+      border-radius: 20px;
+      padding: 2px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .theme-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border: none;
+      border-radius: 18px;
+      background: transparent;
+      color: var(--text-color-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .theme-btn.active {
+      background: var(--surface-card);
+      color: var(--primary-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      font-weight: 600;
+    }
+
+    .theme-btn:hover:not(.active) {
+      color: var(--text-color);
+    }
+
+    .theme-btn-label {
+      display: inline;
+    }
+
+    @media (max-width: 640px) {
+      .theme-btn-label {
+        display: none;
+      }
+      .theme-btn {
+        padding: 0.375rem 0.625rem;
+      }
+      .theme-label {
+        display: none;
+      }
     }
     :host ::ng-deep .login-card { width: 100%; max-width: 440px; }
     .login-header { text-align: center; padding: 2rem 2rem 1rem; }
@@ -398,7 +512,28 @@ import { AuthService } from '../data-access';
     .lockout-message strong { display: block; margin-bottom: 0.25rem; }
     .lockout-message p { margin: 0; font-size: 0.875rem; }
     .demo-credentials { margin-top: 1.5rem; text-align: center; padding: 1rem; background: var(--surface-50); border-radius: var(--border-radius); }
-    .demo-credentials p { margin: 0 0 0.5rem; font-size: 0.875rem; }
+    .demo-credentials p { margin: 0 0 0.75rem; font-size: 0.875rem; }
+    .demo-buttons { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+    .demo-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--surface-border, #d1d5db);
+      border-radius: 0.5rem;
+      background: var(--surface-card, #fff);
+      color: var(--text-color, #374151);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .demo-btn:hover {
+      background: var(--primary-color, #14b8a6);
+      color: white;
+      border-color: var(--primary-color, #14b8a6);
+    }
     .trust-badges { display: flex; justify-content: center; gap: 1.5rem; padding: 1rem; border-top: 1px solid var(--surface-border); }
     .trust-badges span { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-color-secondary); }
     .w-full { width: 100%; }
@@ -614,8 +749,9 @@ import { AuthService } from '../data-access';
       gap: 0.5rem;
       font-size: 0.9rem;
     }
+    :host ::ng-deep .otp-text-input,
     .otp-text-input {
-      text-align: center;
+      text-align: center !important;
       letter-spacing: 0.25em;
       font-size: 1.25rem;
       font-weight: 600;
@@ -630,6 +766,7 @@ import { AuthService } from '../data-access';
 })
 export class LoginComponent implements AfterViewInit {
   readonly authService = inject(AuthService);
+  readonly themeService = inject(ThemeService);
 
   // Email login
   email = '';
@@ -702,6 +839,11 @@ export class LoginComponent implements AfterViewInit {
   useDemoCredentials(): void {
     this.email = 'patient@demo.com';
     this.password = 'demo123';
+  }
+
+  fillCredentials(email: string): void {
+    this.email = email;
+    this.password = 'admin123';
   }
 
   showForgotPassword(): void {

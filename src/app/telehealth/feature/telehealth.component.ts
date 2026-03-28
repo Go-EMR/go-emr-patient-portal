@@ -7,6 +7,7 @@ import { CardModule } from 'primeng/card';
 import { TooltipModule } from 'primeng/tooltip';
 import { SelectModule } from 'primeng/select';
 import { TelehealthService } from '../data-access';
+import { AuthService } from '../../auth/data-access/auth.service';
 
 @Component({
   selector: 'app-telehealth',
@@ -446,7 +447,7 @@ import { TelehealthService } from '../data-access';
               </div>
               @if (prescriptionsOpen()) {
                 <div class="consult-content">
-                  @for (rx of mockPrescriptions; track rx.id) {
+                  @for (rx of mockPrescriptions(); track rx.id) {
                     <div class="prescription-item">
                       <div class="rx-info">
                         <div class="rx-name"><i class="pi pi-pills"></i> {{ rx.name }}</div>
@@ -1933,6 +1934,7 @@ export class TelehealthComponent implements OnInit, OnDestroy {
   readonly telehealth = inject(TelehealthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly authService = inject(AuthService);
 
   chatInput = '';
   today = new Date();
@@ -1978,24 +1980,14 @@ export class TelehealthComponent implements OnInit, OnDestroy {
   prescriptionsOpen = signal(false);
   followUpOpen = signal(false);
 
-  readonly mockPrescriptions = [
-    {
-      id: 'RX-001',
-      name: 'Lisinopril 10mg',
-      dosage: '10mg',
-      frequency: 'Once daily',
-      quantity: '30 tablets',
-      instructions: 'Take in the morning with or without food. Monitor BP weekly.'
-    },
-    {
-      id: 'RX-002',
-      name: 'Hydrochlorothiazide 25mg',
-      dosage: '25mg',
-      frequency: 'Once daily',
-      quantity: '30 tablets',
-      instructions: 'Take with food. Increase fluid intake. Avoid excessive sun exposure.'
-    }
-  ];
+  readonly mockPrescriptions = signal<Array<{
+    id: string;
+    name: string;
+    dosage: string;
+    frequency: string;
+    quantity: string;
+    instructions: string;
+  }>>([]);
 
   followUpSteps = signal([
     { id: 'bp', label: 'Monitor blood pressure twice daily and log readings', done: false, due: 'Starting today' },
@@ -2009,6 +2001,43 @@ export class TelehealthComponent implements OnInit, OnDestroy {
     const appointmentId = this.route.snapshot.paramMap.get('appointmentId') || 'APT-002';
     this.telehealth.initSession(appointmentId);
     this.telehealth.checkDevicePermissions();
+    this.loadPrescriptions();
+  }
+
+  private async loadPrescriptions(): Promise<void> {
+    const patientId = this.authService.user()?.patientId
+      ?? localStorage.getItem('portal_patient_id');
+    if (!patientId) return;
+
+    const token = localStorage.getItem('portal_token') || '';
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/medications?page=1&page_size=50`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (!resp.ok) return;
+      const data: {
+        medications?: Array<{
+          id: string;
+          medication_name: string;
+          dosage: string;
+          frequency: string;
+          refills_remaining?: number;
+          instructions?: string;
+        }>;
+      } = await resp.json();
+      const mapped = (data.medications ?? []).map(m => ({
+        id: m.id,
+        name: m.medication_name,
+        dosage: m.dosage || '',
+        frequency: m.frequency || '',
+        quantity: m.refills_remaining !== undefined
+          ? `${m.refills_remaining} refill(s) remaining`
+          : '',
+        instructions: m.instructions || '',
+      }));
+      this.mockPrescriptions.set(mapped);
+    } catch { /* leave empty */ }
   }
 
   ngOnDestroy(): void {

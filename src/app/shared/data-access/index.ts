@@ -1,6 +1,9 @@
 // Shared Data Access - Public API
 export * from './models';
 export * from './emr-sync.service';
+export * from './govet.config';
+export * from './govet.models';
+export * from './govet-api.adapter';
 export * from './theme.service';
 export * from './screening-recommendations';
 export * from './medical-terms';

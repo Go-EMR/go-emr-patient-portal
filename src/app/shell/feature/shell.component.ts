@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
 
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { RippleModule } from 'primeng/ripple';
@@ -233,6 +233,11 @@ const MAX_PINS = 6;
       <main class="main-content" id="main-content">
         <!-- Top Bar -->
         <div class="theme-toggle-bar">
+          <button class="topbar-search" (click)="openSearch()" aria-label="Open search (Ctrl+K)">
+            <i class="pi pi-search" aria-hidden="true"></i>
+            <span class="topbar-search-text">Search...</span>
+            <kbd class="topbar-search-kbd" aria-hidden="true">Ctrl K</kbd>
+          </button>
           <div class="topbar-spacer"></div>
           <span class="theme-label"><i class="pi pi-palette" aria-hidden="true"></i> Theme</span>
           <div class="theme-buttons" role="group" aria-label="Select color theme">
@@ -252,6 +257,10 @@ const MAX_PINS = 6;
               <span class="theme-btn-label">Dark</span>
             </button>
           </div>
+          <button class="topbar-icon-btn" pTooltip="Take a Tour" tooltipPosition="bottom"
+                  (click)="startTour()" aria-label="Start guided tour">
+            <i class="pi pi-question-circle" aria-hidden="true"></i>
+          </button>
           <a routerLink="/notifications" class="notification-bell" pTooltip="Notifications" tooltipPosition="bottom"
              aria-label="Notifications, 4 unread">
             <i class="pi pi-bell" aria-hidden="true"></i>
@@ -310,6 +319,9 @@ const MAX_PINS = 6;
       display: flex;
       flex-direction: column;
       transition: width 0.2s ease;
+      position: sticky;
+      top: 0;
+      height: 100vh;
     }
 
     .portal-layout.sidebar-collapsed .sidebar {
@@ -459,8 +471,9 @@ const MAX_PINS = 6;
     .user-details {
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow: visible;
       flex: 1;
+      min-width: 0;
     }
 
     .user-name {
@@ -553,10 +566,95 @@ const MAX_PINS = 6;
       .theme-btn {
         padding: 0.375rem 0.625rem;
       }
+
+      .topbar-search {
+        min-width: auto;
+      }
+
+      .topbar-search-text {
+        display: none;
+      }
+    }
+
+    .topbar-search {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      background: var(--surface-ground);
+      color: var(--text-color-secondary);
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-width: 220px;
+    }
+
+    .topbar-search:hover {
+      border-color: var(--primary-200);
+      background: var(--surface-hover);
+      color: var(--text-color);
+    }
+
+    .topbar-search:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+
+    .topbar-search i {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .topbar-search-text {
+      flex: 1;
+      text-align: left;
+    }
+
+    .topbar-search-kbd {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: var(--surface-200);
+      color: var(--text-color-secondary);
+      font-size: 0.65rem;
+      font-weight: 600;
+      font-family: inherit;
+      letter-spacing: 0.03em;
+      border: 1px solid var(--surface-border);
     }
 
     .topbar-spacer {
       flex: 1;
+    }
+
+    .topbar-icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: var(--text-color-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1.15rem;
+    }
+
+    .topbar-icon-btn:hover {
+      background: var(--surface-hover);
+      color: var(--primary-color);
+    }
+
+    .topbar-icon-btn:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
     }
 
     .notification-bell {
@@ -954,6 +1052,7 @@ const MAX_PINS = 6;
 })
 export class ShellComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
+  private router = inject(Router);
   readonly themeService = inject(ThemeService);
   readonly idleService = inject(IdleTimeoutService);
   private countryService = inject(CountryFeaturesService);
@@ -1000,6 +1099,13 @@ export class ShellComponent implements OnInit, OnDestroy {
       items: [
         { label: 'Health Records', icon: 'pi pi-folder', route: '/records', tier: 'core', keywords: ['records', 'history', 'chart'] },
         { label: 'Prescriptions', icon: 'pi pi-box', route: '/prescriptions', tier: 'core', keywords: ['medications', 'drugs', 'rx', 'pharmacy'] },
+      ]
+    },
+    {
+      label: 'Family',
+      collapsed: false,
+      items: [
+        { label: 'Family', icon: 'pi pi-heart', route: '/family', tier: 'core', keywords: ['family', 'pets', 'companions', 'dependents'] },
       ]
     },
     {
@@ -1070,7 +1176,6 @@ export class ShellComponent implements OnInit, OnDestroy {
       label: 'Family',
       collapsed: false,
       items: [
-        { label: 'Family Dashboard', icon: 'pi pi-users', route: '/family', tier: 'specialist', keywords: ['family', 'dependents', 'relatives'] },
         { label: 'Family Chart', icon: 'pi pi-sitemap', route: '/family/chart', tier: 'specialist', keywords: ['pedigree', 'tree', 'chart'] },
         { label: 'Permissions', icon: 'pi pi-lock', route: '/family/permissions', tier: 'specialist', keywords: ['access', 'sharing', 'delegate'] },
         { label: 'Family History', icon: 'pi pi-history', route: '/health/family-history', tier: 'specialist', keywords: ['hereditary', 'history', 'conditions'] },
@@ -1216,6 +1321,17 @@ export class ShellComponent implements OnInit, OnDestroy {
   // Feature 1: Toggle extended nav section
   toggleExtended(): void {
     this.showExtended.update(v => !v);
+  }
+
+  // Open the global command palette by dispatching Ctrl+K
+  openSearch(): void {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true }));
+  }
+
+  // Restart the guided onboarding tour
+  startTour(): void {
+    localStorage.removeItem('onboarding_completed');
+    void this.router.navigate(['/onboarding']);
   }
 
   logout(): void {

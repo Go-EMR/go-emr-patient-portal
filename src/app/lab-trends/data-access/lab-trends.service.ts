@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { AuthService } from '../../auth/data-access/auth.service';
 
 export type LabFlag = 'normal' | 'low' | 'high' | 'critical-low' | 'critical-high';
 export type TimeRange = '6mo' | '1yr' | '2yr';
@@ -19,193 +20,22 @@ export interface LabTrendData {
   description: string;
 }
 
-function d(yearsAgo: number, monthsAgo: number): Date {
-  const date = new Date(2026, 1, 21); // 2026-02-21
-  date.setFullYear(date.getFullYear() - yearsAgo);
-  date.setMonth(date.getMonth() - monthsAgo);
-  return date;
-}
-
-function flag(value: number, min: number, max: number, critLow?: number, critHigh?: number): LabFlag {
-  if (critLow !== undefined && value < critLow) return 'critical-low';
-  if (critHigh !== undefined && value > critHigh) return 'critical-high';
-  if (value < min) return 'low';
-  if (value > max) return 'high';
-  return 'normal';
-}
-
-const ALL_LAB_TRENDS: LabTrendData[] = [
-  {
-    testName: 'Glucose',
-    unit: 'mg/dL',
-    referenceMin: 70,
-    referenceMax: 99,
-    category: 'Metabolic',
-    description: 'Fasting blood glucose measures blood sugar levels and is used to screen for diabetes.',
-    dataPoints: [
-      { date: d(2, 0), value: 92, flag: 'normal' },
-      { date: d(1, 9), value: 98, flag: 'normal' },
-      { date: d(1, 6), value: 105, flag: 'high' },
-      { date: d(1, 3), value: 112, flag: 'high' },
-      { date: d(1, 0), value: 108, flag: 'high' },
-      { date: d(0, 9), value: 101, flag: 'high' },
-      { date: d(0, 6), value: 97, flag: 'normal' },
-      { date: d(0, 3), value: 94, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'HbA1c',
-    unit: '%',
-    referenceMin: 4.0,
-    referenceMax: 5.6,
-    category: 'Metabolic',
-    description: 'Hemoglobin A1c reflects average blood sugar levels over the past 2-3 months.',
-    dataPoints: [
-      { date: d(2, 0), value: 5.4, flag: 'normal' },
-      { date: d(1, 9), value: 5.6, flag: 'normal' },
-      { date: d(1, 6), value: 5.9, flag: 'high' },
-      { date: d(1, 3), value: 6.2, flag: 'high' },
-      { date: d(1, 0), value: 6.0, flag: 'high' },
-      { date: d(0, 9), value: 5.8, flag: 'high' },
-      { date: d(0, 6), value: 5.5, flag: 'normal' },
-      { date: d(0, 3), value: 5.3, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'Total Cholesterol',
-    unit: 'mg/dL',
-    referenceMin: 0,
-    referenceMax: 200,
-    category: 'Lipids',
-    description: 'Total cholesterol is a measure of all cholesterol in your blood, including LDL and HDL.',
-    dataPoints: [
-      { date: d(2, 0), value: 195, flag: 'normal' },
-      { date: d(1, 9), value: 208, flag: 'high' },
-      { date: d(1, 6), value: 225, flag: 'high' },
-      { date: d(1, 3), value: 218, flag: 'high' },
-      { date: d(1, 0), value: 210, flag: 'high' },
-      { date: d(0, 9), value: 202, flag: 'high' },
-      { date: d(0, 3), value: 192, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'LDL Cholesterol',
-    unit: 'mg/dL',
-    referenceMin: 0,
-    referenceMax: 100,
-    category: 'Lipids',
-    description: 'LDL (low-density lipoprotein) is often called "bad" cholesterol. High levels increase heart disease risk.',
-    dataPoints: [
-      { date: d(2, 0), value: 95, flag: 'normal' },
-      { date: d(1, 9), value: 108, flag: 'high' },
-      { date: d(1, 6), value: 128, flag: 'high' },
-      { date: d(1, 3), value: 122, flag: 'high' },
-      { date: d(1, 0), value: 115, flag: 'high' },
-      { date: d(0, 9), value: 104, flag: 'high' },
-      { date: d(0, 3), value: 91, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'HDL Cholesterol',
-    unit: 'mg/dL',
-    referenceMin: 40,
-    referenceMax: 999,
-    category: 'Lipids',
-    description: 'HDL (high-density lipoprotein) is "good" cholesterol. Higher levels are associated with lower heart disease risk.',
-    dataPoints: [
-      { date: d(2, 0), value: 52, flag: 'normal' },
-      { date: d(1, 9), value: 48, flag: 'normal' },
-      { date: d(1, 6), value: 44, flag: 'normal' },
-      { date: d(1, 3), value: 42, flag: 'normal' },
-      { date: d(1, 0), value: 46, flag: 'normal' },
-      { date: d(0, 9), value: 50, flag: 'normal' },
-      { date: d(0, 3), value: 55, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'Triglycerides',
-    unit: 'mg/dL',
-    referenceMin: 0,
-    referenceMax: 150,
-    category: 'Lipids',
-    description: 'Triglycerides are a type of fat in the blood. High levels may increase risk of heart disease.',
-    dataPoints: [
-      { date: d(2, 0), value: 138, flag: 'normal' },
-      { date: d(1, 9), value: 155, flag: 'high' },
-      { date: d(1, 6), value: 178, flag: 'high' },
-      { date: d(1, 3), value: 201, flag: 'high' },
-      { date: d(1, 0), value: 185, flag: 'high' },
-      { date: d(0, 9), value: 162, flag: 'high' },
-      { date: d(0, 3), value: 144, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'TSH',
-    unit: 'mIU/L',
-    referenceMin: 0.4,
-    referenceMax: 4.0,
-    category: 'Thyroid',
-    description: 'Thyroid-stimulating hormone (TSH) measures how well your thyroid gland is working.',
-    dataPoints: [
-      { date: d(2, 0), value: 2.1, flag: 'normal' },
-      { date: d(1, 6), value: 2.8, flag: 'normal' },
-      { date: d(1, 3), value: 4.5, flag: 'high' },
-      { date: d(1, 0), value: 5.2, flag: 'high' },
-      { date: d(0, 9), value: 3.9, flag: 'normal' },
-      { date: d(0, 6), value: 2.6, flag: 'normal' },
-      { date: d(0, 3), value: 2.2, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'Hemoglobin',
-    unit: 'g/dL',
-    referenceMin: 13.5,
-    referenceMax: 17.5,
-    category: 'CBC',
-    description: 'Hemoglobin is the protein in red blood cells that carries oxygen throughout the body.',
-    dataPoints: [
-      { date: d(2, 0), value: 14.8, flag: 'normal' },
-      { date: d(1, 9), value: 14.2, flag: 'normal' },
-      { date: d(1, 6), value: 13.8, flag: 'normal' },
-      { date: d(1, 3), value: 13.1, flag: 'low' },
-      { date: d(1, 0), value: 13.4, flag: 'low' },
-      { date: d(0, 9), value: 13.9, flag: 'normal' },
-      { date: d(0, 6), value: 14.5, flag: 'normal' },
-      { date: d(0, 3), value: 14.9, flag: 'normal' },
-    ]
-  },
-  {
-    testName: 'White Blood Cell Count',
-    unit: 'K/uL',
-    referenceMin: 4.5,
-    referenceMax: 11.0,
-    category: 'CBC',
-    description: 'White blood cells (WBC) are part of the immune system. Abnormal counts can indicate infection or other conditions.',
-    dataPoints: [
-      { date: d(2, 0), value: 7.2, flag: 'normal' },
-      { date: d(1, 9), value: 8.1, flag: 'normal' },
-      { date: d(1, 6), value: 11.8, flag: 'high' },
-      { date: d(1, 3), value: 9.4, flag: 'normal' },
-      { date: d(1, 0), value: 7.8, flag: 'normal' },
-      { date: d(0, 9), value: 6.9, flag: 'normal' },
-      { date: d(0, 3), value: 7.3, flag: 'normal' },
-    ]
-  }
-];
-
 @Injectable({ providedIn: 'root' })
 export class LabTrendsService {
-  private readonly _selectedTestName = signal<string>('Glucose');
+  private readonly authService = inject(AuthService);
+
+  private readonly _selectedTestName = signal<string>('');
   private readonly _timeRange = signal<TimeRange>('1yr');
+  private readonly _allTests = signal<LabTrendData[]>([]);
 
   readonly selectedTestName = this._selectedTestName.asReadonly();
   readonly timeRange = this._timeRange.asReadonly();
-  readonly allTests = ALL_LAB_TRENDS;
+  readonly allTests = this._allTests.asReadonly();
 
   readonly filteredTrends = computed<LabTrendData[]>(() => {
     const range = this._timeRange();
     const cutoff = this._getCutoffDate(range);
-    return ALL_LAB_TRENDS.map(lab => ({
+    return this._allTests().map(lab => ({
       ...lab,
       dataPoints: lab.dataPoints
         .filter(dp => dp.date >= cutoff)
@@ -220,7 +50,7 @@ export class LabTrendsService {
 
   readonly latestValuesByTest = computed<Map<string, LabDataPoint>>(() => {
     const map = new Map<string, LabDataPoint>();
-    for (const lab of ALL_LAB_TRENDS) {
+    for (const lab of this._allTests()) {
       const sorted = [...lab.dataPoints].sort((a, b) => b.date.getTime() - a.date.getTime());
       if (sorted.length > 0) {
         map.set(lab.testName, sorted[0]);
@@ -259,8 +89,104 @@ export class LabTrendsService {
     this._timeRange.set(range);
   }
 
+  /** Load lab trends from the backend for the current patient. */
+  async loadLabTrends(): Promise<void> {
+    const patientId = this.authService.user()?.patientId
+      ?? localStorage.getItem('portal_patient_id');
+    if (!patientId) return;
+
+    const token = localStorage.getItem('portal_token') || '';
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/labs?page=1&page_size=200`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (resp.status === 404) return;
+      if (!resp.ok) return;
+
+      const data: {
+        labs?: Array<{
+          id: string;
+          test_name: string;
+          order_date: string;
+          result_date?: string;
+          status: string;
+          results?: Array<{
+            name: string;
+            value: string;
+            unit: string;
+            reference_min?: number;
+            reference_max?: number;
+            flag?: string;
+          }>;
+        }>;
+      } = await resp.json();
+
+      const grouped = new Map<string, LabTrendData>();
+
+      for (const lab of data.labs ?? []) {
+        if (!lab.results || lab.results.length === 0) continue;
+        const resultDate = lab.result_date ? new Date(lab.result_date) : new Date(lab.order_date);
+
+        for (const result of lab.results) {
+          const testName = result.name || lab.test_name;
+          const numericValue = parseFloat(result.value);
+          if (isNaN(numericValue)) continue;
+
+          if (!grouped.has(testName)) {
+            grouped.set(testName, {
+              testName,
+              unit: result.unit || '',
+              referenceMin: result.reference_min ?? 0,
+              referenceMax: result.reference_max ?? 0,
+              dataPoints: [],
+              category: lab.test_name,
+              description: testName,
+            });
+          }
+
+          const flag = this.mapApiFlag(result.flag ?? '', numericValue,
+            result.reference_min, result.reference_max);
+
+          grouped.get(testName)!.dataPoints.push({
+            date: resultDate,
+            value: numericValue,
+            flag,
+          });
+        }
+      }
+
+      const tests = Array.from(grouped.values());
+      this._allTests.set(tests);
+      if (tests.length > 0 && !this._selectedTestName()) {
+        this._selectedTestName.set(tests[0].testName);
+      }
+    } catch { /* leave empty */ }
+  }
+
+  private mapApiFlag(
+    apiFlag: string,
+    value: number,
+    refMin?: number,
+    refMax?: number
+  ): LabFlag {
+    const f = apiFlag.toLowerCase();
+    if (f === 'critical-high' || f === 'critical high' || f === 'ch') return 'critical-high';
+    if (f === 'critical-low'  || f === 'critical low'  || f === 'cl') return 'critical-low';
+    if (f === 'high' || f === 'h' || f === 'abnormal-high') return 'high';
+    if (f === 'low'  || f === 'l' || f === 'abnormal-low')  return 'low';
+    if (f === 'normal' || f === 'n') return 'normal';
+    // Derive from reference range when flag is absent
+    if (refMin !== undefined && refMax !== undefined) {
+      if (value < refMin) return 'low';
+      if (value > refMax) return 'high';
+      return 'normal';
+    }
+    return 'normal';
+  }
+
   private _getCutoffDate(range: TimeRange): Date {
-    const now = new Date(2026, 1, 21);
+    const now = new Date();
     switch (range) {
       case '6mo': {
         const d6 = new Date(now);

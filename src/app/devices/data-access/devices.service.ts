@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { AuthService } from '../../auth/data-access/auth.service';
 
 export type DeviceType = 'smartwatch' | 'fitness-tracker' | 'blood-pressure' | 'glucose-monitor' | 'scale';
 export type SelectedPeriod = 'daily' | 'weekly' | 'monthly';
@@ -36,195 +37,33 @@ export interface HealthGoal {
   color: string;
 }
 
-// today = 2026-02-21
-function daysAgo(n: number): Date {
-  const d = new Date(2026, 1, 21);
-  d.setDate(d.getDate() - n);
-  return d;
-}
-
-const MOCK_DEVICES: DeviceInfo[] = [
-  {
-    id: 'device-1',
-    name: 'Apple Watch Series 9',
-    type: 'smartwatch',
-    brand: 'Apple',
-    model: 'Series 9 (45mm)',
-    connected: true,
-    lastSyncAt: new Date(2026, 1, 21, 8, 32),
-    batteryLevel: 78
-  },
-  {
-    id: 'device-2',
-    name: 'Fitbit Charge 6',
-    type: 'fitness-tracker',
-    brand: 'Fitbit',
-    model: 'Charge 6',
-    connected: true,
-    lastSyncAt: new Date(2026, 1, 21, 7, 15),
-    batteryLevel: 55
-  },
-  {
-    id: 'device-3',
-    name: 'Withings BPM Connect',
-    type: 'blood-pressure',
-    brand: 'Withings',
-    model: 'BPM Connect Pro',
-    connected: false,
-    lastSyncAt: new Date(2026, 1, 19, 20, 5),
-    batteryLevel: 92
-  },
-  {
-    id: 'device-4',
-    name: 'Dexcom G7',
-    type: 'glucose-monitor',
-    brand: 'Dexcom',
-    model: 'G7 CGM',
-    connected: true,
-    lastSyncAt: new Date(2026, 1, 21, 9, 0),
-    batteryLevel: 100
-  }
-];
-
-const MOCK_ACTIVITY: ActivityData[] = [
-  {
-    date: daysAgo(6),
-    steps: 7234,
-    calories: 1820,
-    activeMinutes: 38,
-    heartRateAvg: 72,
-    heartRateMin: 54,
-    heartRateMax: 142,
-    sleepHours: 6.5,
-    sleepQuality: 'fair'
-  },
-  {
-    date: daysAgo(5),
-    steps: 9812,
-    calories: 2105,
-    activeMinutes: 52,
-    heartRateAvg: 74,
-    heartRateMin: 56,
-    heartRateMax: 158,
-    sleepHours: 7.2,
-    sleepQuality: 'good'
-  },
-  {
-    date: daysAgo(4),
-    steps: 5430,
-    calories: 1680,
-    activeMinutes: 22,
-    heartRateAvg: 70,
-    heartRateMin: 52,
-    heartRateMax: 128,
-    sleepHours: 5.8,
-    sleepQuality: 'poor'
-  },
-  {
-    date: daysAgo(3),
-    steps: 11204,
-    calories: 2380,
-    activeMinutes: 67,
-    heartRateAvg: 76,
-    heartRateMin: 58,
-    heartRateMax: 172,
-    sleepHours: 7.8,
-    sleepQuality: 'excellent'
-  },
-  {
-    date: daysAgo(2),
-    steps: 8756,
-    calories: 2010,
-    activeMinutes: 45,
-    heartRateAvg: 73,
-    heartRateMin: 55,
-    heartRateMax: 155,
-    sleepHours: 7.0,
-    sleepQuality: 'good'
-  },
-  {
-    date: daysAgo(1),
-    steps: 10341,
-    calories: 2245,
-    activeMinutes: 58,
-    heartRateAvg: 75,
-    heartRateMin: 57,
-    heartRateMax: 165,
-    sleepHours: 6.9,
-    sleepQuality: 'good'
-  },
-  {
-    date: daysAgo(0),
-    steps: 6128,
-    calories: 1540,
-    activeMinutes: 31,
-    heartRateAvg: 71,
-    heartRateMin: 53,
-    heartRateMax: 138,
-    sleepHours: 7.5,
-    sleepQuality: 'good'
-  }
-];
-
-const MOCK_GOALS: HealthGoal[] = [
-  {
-    id: 'goal-steps',
-    name: 'Daily Steps',
-    icon: 'pi pi-directions',
-    target: 10000,
-    current: 6128,
-    unit: 'steps',
-    color: '#0ea5e9'
-  },
-  {
-    id: 'goal-calories',
-    name: 'Calories Burned',
-    icon: 'pi pi-bolt',
-    target: 2200,
-    current: 1540,
-    unit: 'kcal',
-    color: '#f97316'
-  },
-  {
-    id: 'goal-active',
-    name: 'Active Minutes',
-    icon: 'pi pi-heart',
-    target: 60,
-    current: 31,
-    unit: 'min',
-    color: '#10b981'
-  },
-  {
-    id: 'goal-sleep',
-    name: 'Sleep Duration',
-    icon: 'pi pi-moon',
-    target: 8,
-    current: 7.5,
-    unit: 'hrs',
-    color: '#8b5cf6'
-  }
-];
+// TODO: Implement backend endpoint for GET /api/v1/portal/patients/{id}/devices
+// TODO: Implement backend endpoint for GET /api/v1/portal/patients/{id}/activity
 
 @Injectable({ providedIn: 'root' })
 export class DevicesService {
-  private readonly _devices = signal<DeviceInfo[]>(MOCK_DEVICES);
-  private readonly _activityData = signal<ActivityData[]>(MOCK_ACTIVITY);
-  private readonly _healthGoals = signal<HealthGoal[]>(MOCK_GOALS);
+  private readonly authService = inject(AuthService);
+
+  private readonly _devices = signal<DeviceInfo[]>([]);
+  private readonly _activityData = signal<ActivityData[]>([]);
+  private readonly _healthGoals = signal<HealthGoal[]>([]);
   private readonly _selectedPeriod = signal<SelectedPeriod>('weekly');
   private readonly _syncingDeviceId = signal<string | null>(null);
+  private readonly _isLoading = signal<boolean>(false);
 
   readonly devices = this._devices.asReadonly();
   readonly activityData = this._activityData.asReadonly();
   readonly healthGoals = this._healthGoals.asReadonly();
   readonly selectedPeriod = this._selectedPeriod.asReadonly();
   readonly syncingDeviceId = this._syncingDeviceId.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
 
   readonly connectedDevices = computed(() =>
     this._devices().filter(d => d.connected)
   );
 
   readonly todayActivity = computed<ActivityData | null>(() => {
-    const today = new Date(2026, 1, 21);
+    const today = new Date();
     today.setHours(0, 0, 0, 0);
     return this._activityData().find(a => {
       const d = new Date(a.date);
@@ -249,11 +88,111 @@ export class DevicesService {
     };
   });
 
+  /**
+   * Loads connected devices and activity data from the backend API.
+   * TODO: Implement backend endpoint GET /api/v1/portal/patients/{id}/devices
+   */
+  async loadDevices(): Promise<void> {
+    const patientId = localStorage.getItem('portal_patient_id') || this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token');
+
+    if (!patientId || !token) {
+      return;
+    }
+
+    this._isLoading.set(true);
+    try {
+      const resp = await fetch(
+        `/api/v1/portal/patients/${patientId}/devices`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (resp.ok) {
+        const data: {
+          devices: Array<{
+            id: string;
+            name: string;
+            type: string;
+            brand: string;
+            model: string;
+            connected: boolean;
+            last_sync_at: string;
+            battery_level: number;
+          }>;
+          activity?: Array<{
+            date: string;
+            steps: number;
+            calories: number;
+            active_minutes: number;
+            heart_rate_avg: number;
+            heart_rate_min: number;
+            heart_rate_max: number;
+            sleep_hours: number;
+            sleep_quality: string;
+          }>;
+          goals?: Array<{
+            id: string;
+            name: string;
+            icon: string;
+            target: number;
+            current: number;
+            unit: string;
+            color: string;
+          }>;
+        } = await resp.json();
+
+        const devicesMapped: DeviceInfo[] = (data.devices ?? []).map(d => ({
+          id: d.id,
+          name: d.name,
+          type: (d.type as DeviceType) || 'smartwatch',
+          brand: d.brand,
+          model: d.model,
+          connected: d.connected ?? false,
+          lastSyncAt: new Date(d.last_sync_at),
+          batteryLevel: d.battery_level ?? 0
+        }));
+        this._devices.set(devicesMapped);
+
+        if (data.activity) {
+          const activityMapped: ActivityData[] = data.activity.map(a => ({
+            date: new Date(a.date),
+            steps: a.steps ?? 0,
+            calories: a.calories ?? 0,
+            activeMinutes: a.active_minutes ?? 0,
+            heartRateAvg: a.heart_rate_avg ?? 0,
+            heartRateMin: a.heart_rate_min ?? 0,
+            heartRateMax: a.heart_rate_max ?? 0,
+            sleepHours: a.sleep_hours ?? 0,
+            sleepQuality: (a.sleep_quality as ActivityData['sleepQuality']) || 'fair'
+          }));
+          this._activityData.set(activityMapped);
+        }
+
+        if (data.goals) {
+          const goalsMapped: HealthGoal[] = data.goals.map(g => ({
+            id: g.id,
+            name: g.name,
+            icon: g.icon,
+            target: g.target,
+            current: g.current,
+            unit: g.unit,
+            color: g.color
+          }));
+          this._healthGoals.set(goalsMapped);
+        }
+      }
+      // On non-OK response: leave devices/activity as empty arrays
+    } catch {
+      // On network error: leave devices/activity as empty arrays
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
   toggleConnection(deviceId: string): void {
     this._devices.update(devices =>
       devices.map(d =>
         d.id === deviceId
-          ? { ...d, connected: !d.connected, lastSyncAt: d.connected ? d.lastSyncAt : new Date(2026, 1, 21, 9, 0) }
+          ? { ...d, connected: !d.connected, lastSyncAt: d.connected ? d.lastSyncAt : new Date() }
           : d
       )
     );
@@ -261,13 +200,12 @@ export class DevicesService {
 
   syncDevice(deviceId: string): void {
     this._syncingDeviceId.set(deviceId);
-    // Simulate async sync with a timeout-free approach using a simple flag reset
     const start = Date.now();
     const check = (): void => {
       if (Date.now() - start >= 1500) {
         this._devices.update(devices =>
           devices.map(d =>
-            d.id === deviceId ? { ...d, lastSyncAt: new Date(2026, 1, 21, 9, 5) } : d
+            d.id === deviceId ? { ...d, lastSyncAt: new Date() } : d
           )
         );
         this._syncingDeviceId.set(null);
