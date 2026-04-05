@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { AuthService } from '../../auth/data-access/auth.service';
 
-export type HealthEventType = 'appointment' | 'lab' | 'medication' | 'immunization' | 'vital' | 'procedure';
+export type HealthEventType = 'appointment' | 'encounter' | 'lab' | 'medication' | 'immunization' | 'vital' | 'procedure';
 
 export interface HealthEvent {
   id: string;
@@ -21,6 +21,7 @@ export interface EventTypeFilter {
 
 export const EVENT_TYPE_META: Record<HealthEventType, { color: string; bgColor: string; icon: string; label: string }> = {
   appointment: { color: 'var(--blue-700)',   bgColor: 'var(--blue-100)',   icon: 'pi pi-calendar',       label: 'Appointment'   },
+  encounter:   { color: 'var(--cyan-700)',   bgColor: 'var(--cyan-100)',   icon: 'pi pi-file-edit',      label: 'Encounter'     },
   lab:         { color: 'var(--purple-700)', bgColor: 'var(--purple-100)', icon: 'pi pi-chart-bar',      label: 'Lab Result'    },
   medication:  { color: 'var(--teal-700)',   bgColor: 'var(--teal-100)',   icon: 'pi pi-tablet',         label: 'Medication'    },
   immunization:{ color: 'var(--green-700)',  bgColor: 'var(--green-100)',  icon: 'pi pi-shield',         label: 'Immunization'  },
@@ -31,6 +32,7 @@ export const EVENT_TYPE_META: Record<HealthEventType, { color: string; bgColor: 
 export const FILTER_OPTIONS: EventTypeFilter[] = [
   { type: 'all',          label: 'All Events',    icon: 'pi pi-list'      },
   { type: 'appointment',  label: 'Appointments',  icon: 'pi pi-calendar'  },
+  { type: 'encounter',    label: 'Encounters',    icon: 'pi pi-file-edit' },
   { type: 'lab',          label: 'Labs',          icon: 'pi pi-chart-bar' },
   { type: 'medication',   label: 'Medications',   icon: 'pi pi-tablet'    },
   { type: 'immunization', label: 'Immunizations', icon: 'pi pi-shield'    },

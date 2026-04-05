@@ -133,6 +133,7 @@ export class AuthService {
             refreshToken: string;
             expiresIn: number;
             patientId: string;
+            mrn: string;
             firstName: string;
             lastName: string;
             email: string;
@@ -146,7 +147,7 @@ export class AuthService {
           const user: PatientUser = {
             id: data.patientId,
             patientId: data.patientId,
-            mrn: '',
+            mrn: data.mrn || '',
             firstName: data.firstName || '',
             lastName: data.lastName || '',
             email: data.email || email,

@@ -5,6 +5,8 @@ import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { RippleModule } from 'primeng/ripple';
 import { TooltipModule } from 'primeng/tooltip';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 import { AuthService } from '../../auth/data-access';
 import { ThemeService } from '../../shared/data-access';
 import { IdleTimeoutService } from '../../shared/utils';
@@ -36,8 +38,9 @@ const MAX_PINS = 6;
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterModule, ButtonModule, AvatarModule, RippleModule, TooltipModule, SkipLinkComponent],
+  imports: [RouterModule, ButtonModule, AvatarModule, RippleModule, TooltipModule, ToastModule, SkipLinkComponent],
   template: `
+    <p-toast position="top-right" />
     <app-skip-link></app-skip-link>
     <div class="portal-layout" [class.sidebar-collapsed]="sidebarCollapsed()">
       <!-- Sidebar -->
@@ -1053,9 +1056,12 @@ const MAX_PINS = 6;
 export class ShellComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private toastService = inject(MessageService);
   readonly themeService = inject(ThemeService);
   readonly idleService = inject(IdleTimeoutService);
   private countryService = inject(CountryFeaturesService);
+  private messagePollTimer: ReturnType<typeof setInterval> | null = null;
+  private lastThreadSnapshot: { id: string; unreadCount: number }[] = [];
 
   sidebarCollapsed = signal(false);
 
@@ -1119,7 +1125,7 @@ export class ShellComponent implements OnInit, OnDestroy {
       label: 'Communication',
       collapsed: false,
       items: [
-        { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', badge: 3, tier: 'core', keywords: ['inbox', 'chat', 'doctor', 'secure'] },
+        { label: 'Messages', icon: 'pi pi-envelope', route: '/messages', tier: 'core', keywords: ['inbox', 'chat', 'doctor', 'secure'] },
         { label: 'Settings', icon: 'pi pi-cog', route: '/settings', tier: 'core', keywords: ['preferences', 'account', 'profile', 'notifications'] },
       ]
     },
@@ -1181,11 +1187,7 @@ export class ShellComponent implements OnInit, OnDestroy {
         { label: 'Family History', icon: 'pi pi-history', route: '/health/family-history', tier: 'specialist', keywords: ['hereditary', 'history', 'conditions'] },
         { label: 'Genetic Tests', icon: 'pi pi-sliders-h', route: '/health/genetic-tests', tier: 'specialist', keywords: ['dna', 'genomics', 'testing'] },
         { label: 'Genetic Risk', icon: 'pi pi-exclamation-triangle', route: '/health/genetic-risk', tier: 'specialist', keywords: ['risk', 'hereditary', 'genomics'] },
-        { label: 'Jurisdiction', icon: 'pi pi-globe', route: '/settings/jurisdiction', tier: 'specialist', keywords: ['region', 'location', 'laws'] },
-        { label: 'Drug Schedules', icon: 'pi pi-list', route: '/medications/schedule-reference', tier: 'specialist', keywords: ['controlled', 'schedules', 'drugs'] },
-        { label: 'Telehealth Check', icon: 'pi pi-video', route: '/telehealth/jurisdiction-check', tier: 'specialist', keywords: ['eligibility', 'telehealth', 'rules'] },
-        { label: 'Consent Rules', icon: 'pi pi-shield', route: '/admin/consent-rules', tier: 'specialist', keywords: ['consent', 'minor', 'admin'] },
-        { label: 'Proxy Accounts', icon: 'pi pi-user-edit', route: '/admin/proxy-accounts', tier: 'specialist', keywords: ['proxy', 'caregiver', 'admin'] },
+        // Staff-only features (GoEMR): Jurisdiction, Drug Schedules, Telehealth Check, Consent Rules, Proxy Accounts
       ]
     },
     {
@@ -1307,11 +1309,57 @@ export class ShellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Feature 6.4: Start idle tracking; pass logout callback
     this.idleService.startTracking(() => this.authService.logout());
+
+    // Poll for new messages every 30s for toast notifications
+    this.messagePollTimer = setInterval(() => this.pollForNewMessages(), 30000);
   }
 
   ngOnDestroy(): void {
     // Feature 6.4: Clean up on shell destruction
     this.idleService.stopTracking();
+    if (this.messagePollTimer) {
+      clearInterval(this.messagePollTimer);
+    }
+  }
+
+  private pollForNewMessages(): void {
+    const patientId = this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token') || '';
+    if (!patientId || !token) return;
+
+    fetch(`/api/v1/portal/patients/${patientId}/messages?page=1&page_size=50`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.ok ? r.json() : null).then(data => {
+      if (!data?.threads) return;
+      const newSnapshot = data.threads.map((t: any) => ({
+        id: t.id,
+        unreadCount: t.unread_count ?? 0,
+        providerName: t.provider_name || 'Care Team',
+        subject: t.subject || 'Message',
+      }));
+
+      if (this.lastThreadSnapshot.length > 0) {
+        for (const thread of newSnapshot) {
+          const prev = this.lastThreadSnapshot.find((t: any) => t.id === thread.id);
+          if (!prev && thread.unreadCount > 0) {
+            this.toastService.add({
+              severity: 'info',
+              summary: 'New Message',
+              detail: `${thread.providerName} sent you a message`,
+              life: 5000,
+            });
+          } else if (prev && thread.unreadCount > (prev as any).unreadCount) {
+            this.toastService.add({
+              severity: 'info',
+              summary: 'New Message',
+              detail: `New message from ${thread.providerName}: ${thread.subject}`,
+              life: 5000,
+            });
+          }
+        }
+      }
+      this.lastThreadSnapshot = newSnapshot;
+    }).catch(() => {});
   }
 
   toggleSidebar(): void {

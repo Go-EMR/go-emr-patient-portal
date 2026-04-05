@@ -1,4 +1,5 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, inject, OnInit } from '@angular/core';
+import { AuthService } from '../../auth/data-access/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -92,10 +93,10 @@ interface QuickReplyTemplate {
         <!-- Thread list sidebar -->
         <aside class="threads-list">
           <div class="search-box">
-            <span class="p-input-icon-left w-full">
-              <i class="pi pi-search"></i>
-              <input type="text" pInputText placeholder="Search messages" [(ngModel)]="searchQuery" class="w-full" />
-            </span>
+            <div class="search-field">
+              <i class="pi pi-search search-icon"></i>
+              <input type="text" pInputText placeholder="Search messages" [(ngModel)]="searchQuery" class="w-full search-input" />
+            </div>
           </div>
 
           <!-- Episode grouping toggle -->
@@ -295,7 +296,7 @@ interface QuickReplyTemplate {
                 placeholder="Type your reply..."
                 class="w-full"
               ></textarea>
-              <button pButton label="Send" icon="pi pi-send" [disabled]="!replyText.trim()"></button>
+              <button pButton label="Send" icon="pi pi-send" [disabled]="!replyText.trim()" [loading]="sending()" (click)="sendReply()"></button>
             </div>
 
           } @else {
@@ -319,7 +320,7 @@ interface QuickReplyTemplate {
           <div class="field">
             <label>To</label>
             <p-select
-              [options]="recipients"
+              [options]="recipients()"
               [(ngModel)]="selectedRecipient"
               placeholder="Select recipient"
               [style]="{width:'100%'}"
@@ -392,7 +393,7 @@ interface QuickReplyTemplate {
 
         <ng-template pTemplate="footer">
           <button pButton label="Cancel" class="p-button-text" (click)="closeCompose()"></button>
-          <button pButton label="Send" icon="pi pi-send" (click)="closeCompose()"></button>
+          <button pButton label="Send" icon="pi pi-send" [loading]="sending()" [disabled]="!newMessage.trim() || !selectedRecipient" (click)="sendNewMessage()"></button>
         </ng-template>
       </p-dialog>
     </div>
@@ -443,6 +444,14 @@ interface QuickReplyTemplate {
       padding: 1rem;
       border-bottom: 1px solid var(--surface-border);
     }
+    .search-field {
+      position: relative; width: 100%;
+    }
+    .search-icon {
+      position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%);
+      color: var(--text-color-secondary); z-index: 1; pointer-events: none;
+    }
+    .search-input { padding-left: 2.25rem !important; }
 
     .threads {
       flex: 1;
@@ -968,7 +977,54 @@ interface QuickReplyTemplate {
     .w-full { width: 100%; }
   `]
 })
-export class MessagesComponent {
+export class MessagesComponent implements OnInit {
+  private readonly authService = inject(AuthService);
+
+  ngOnInit(): void {
+    // Load recipients (providers) from the patient's appointments
+    const patientId = this.authService.user()?.patientId || localStorage.getItem('portal_patient_id') || '';
+    const token = localStorage.getItem('portal_token') || '';
+    if (patientId && token) {
+      fetch(`/api/v1/portal/patients/${patientId}/appointments?page_size=50`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.ok ? r.json() : null).then(data => {
+        if (!data?.appointments) return;
+        const providers = new Map<string, string>();
+        for (const apt of data.appointments) {
+          if (apt.provider_id && apt.provider_name) {
+            providers.set(apt.provider_id, apt.provider_name);
+          }
+        }
+        // Add generic options
+        const opts = Array.from(providers.entries()).map(([id, name]) => ({ label: name, value: id }));
+        opts.push({ label: 'Nursing Team', value: 'nursing-team' });
+        opts.push({ label: 'Billing Department', value: 'billing-dept' });
+        this.recipients.set(opts);
+      }).catch(() => {});
+
+      // Load existing message threads
+      fetch(`/api/v1/portal/patients/${patientId}/messages?page=1&page_size=50`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.ok ? r.json() : null).then(data => {
+        if (!data?.threads || data.threads.length === 0) return;
+        const mapped = data.threads.map((t: any) => ({
+          id: t.id,
+          subject: t.subject || 'Message',
+          category: 'general' as const,
+          participants: [
+            { id: patientId, name: this.authService.user()?.firstName + ' ' + this.authService.user()?.lastName, type: 'patient' as const },
+            { id: t.provider_id || '', name: t.provider_name || 'Care Team', type: 'provider' as const },
+          ],
+          lastMessageAt: new Date(t.updated_at || t.created_at),
+          lastMessagePreview: t.last_message || t.subject || '',
+          unreadCount: t.unread_count ?? 0,
+          status: t.status || 'open',
+          createdAt: new Date(t.created_at),
+        }));
+        this.threads.set(mapped);
+      }).catch(() => {});
+    }
+  }
 
   // -------------------------------------------------------------------------
   // Feature: Episode grouping view toggle
@@ -1024,47 +1080,20 @@ export class MessagesComponent {
     { label: 'Other',               value: 'Other' }
   ];
 
-  recipients = [
-    { label: 'Dr. Sarah Johnson',  value: 'P1' },
-    { label: 'Nursing Team',       value: 'P2' },
-    { label: 'Billing Department', value: 'P3' }
-  ];
+  // TODO: load from /api/v1/portal/patients/{id}/care-team
+  recipients = signal<{label: string; value: string}[]>([]);
 
   // -------------------------------------------------------------------------
   // Feature 11.4: Routing rules
   // -------------------------------------------------------------------------
 
   private readonly routingRules: RoutingRule[] = [
-    {
-      category: 'Medical Question',
-      destination: 'Dr. Sarah Johnson (Primary Care Physician)',
-      icon: 'pi-user-edit'
-    },
-    {
-      category: 'Prescription Refill',
-      destination: 'Pharmacy Team (Nurse Lisa Patel)',
-      icon: 'pi-box'
-    },
-    {
-      category: 'Billing Question',
-      destination: 'Billing Department (Admin)',
-      icon: 'pi-wallet'
-    },
-    {
-      category: 'Test Results',
-      destination: 'Lab Results Team (Dr. Michael Chen)',
-      icon: 'pi-chart-bar'
-    },
-    {
-      category: 'Appointment',
-      destination: 'Scheduling Desk',
-      icon: 'pi-calendar'
-    },
-    {
-      category: 'Other',
-      destination: 'General Inbox (Care Team)',
-      icon: 'pi-inbox'
-    }
+    { category: 'Medical Question',    destination: 'Your Primary Care Provider', icon: 'pi-user-edit' },
+    { category: 'Prescription Refill', destination: 'Pharmacy Team',              icon: 'pi-box' },
+    { category: 'Billing Question',    destination: 'Billing Department',         icon: 'pi-wallet' },
+    { category: 'Test Results',        destination: 'Lab Results Team',           icon: 'pi-chart-bar' },
+    { category: 'Appointment',         destination: 'Scheduling Desk',            icon: 'pi-calendar' },
+    { category: 'Other',               destination: 'General Inbox (Care Team)',  icon: 'pi-inbox' },
   ];
 
   /**
@@ -1146,83 +1175,8 @@ export class MessagesComponent {
 
   selectedThread = signal<MessageThread | null>(null);
 
-  threads = signal<(MessageThread & { episode?: string })[]>([
-    {
-      id: 'T1',
-      subject: 'Question about medication',
-      category: 'prescription',
-      episode: 'Annual Physical 2026',
-      participants: [
-        { id: 'PAT', name: 'John Smith',       type: 'patient' },
-        { id: 'D1',  name: 'Dr. Sarah Johnson', type: 'provider' }
-      ],
-      lastMessageAt: new Date(Date.now() - 86400000),
-      lastMessagePreview: 'Some mild side effects are normal during the first week...',
-      unreadCount: 1,
-      status: 'open',
-      createdAt: new Date(Date.now() - 2 * 86400000)
-    },
-    {
-      id: 'T2',
-      subject: 'Lab results ready',
-      category: 'lab_results',
-      episode: 'Annual Physical 2026',
-      participants: [
-        { id: 'PAT', name: 'John Smith',       type: 'patient' },
-        { id: 'D1',  name: 'Dr. Sarah Johnson', type: 'provider' }
-      ],
-      lastMessageAt: new Date(Date.now() - 5 * 86400000),
-      lastMessagePreview: 'Your lab results are ready to view in your portal...',
-      unreadCount: 0,
-      status: 'open',
-      createdAt: new Date(Date.now() - 6 * 86400000)
-    },
-    {
-      id: 'T3',
-      subject: 'Follow-up after echocardiogram',
-      category: 'general',
-      episode: 'Cardiology Follow-up',
-      participants: [
-        { id: 'PAT', name: 'John Smith',       type: 'patient' },
-        { id: 'D2',  name: 'Dr. Michael Chen',  type: 'provider' }
-      ],
-      lastMessageAt: new Date(Date.now() - 3 * 86400000),
-      lastMessagePreview: 'Your echocardiogram results look within normal range...',
-      unreadCount: 2,
-      status: 'open',
-      createdAt: new Date(Date.now() - 10 * 86400000)
-    },
-    {
-      id: 'T4',
-      subject: 'Cholesterol panel review',
-      category: 'lab_results',
-      episode: 'Cardiology Follow-up',
-      participants: [
-        { id: 'PAT', name: 'John Smith',       type: 'patient' },
-        { id: 'D2',  name: 'Dr. Michael Chen',  type: 'provider' }
-      ],
-      lastMessageAt: new Date(Date.now() - 8 * 86400000),
-      lastMessagePreview: 'Please review the attached cholesterol panel and diet guidance...',
-      unreadCount: 0,
-      status: 'closed',
-      createdAt: new Date(Date.now() - 12 * 86400000)
-    },
-    {
-      id: 'T5',
-      subject: 'HbA1c interpretation',
-      category: 'lab_results',
-      episode: 'Lab Results Review — Feb 2026',
-      participants: [
-        { id: 'PAT', name: 'John Smith',       type: 'patient' },
-        { id: 'D1',  name: 'Dr. Sarah Johnson', type: 'provider' }
-      ],
-      lastMessageAt: new Date(Date.now() - 11 * 86400000),
-      lastMessagePreview: 'Your HbA1c is 5.7% — borderline, let us discuss lifestyle changes...',
-      unreadCount: 0,
-      status: 'open',
-      createdAt: new Date(Date.now() - 14 * 86400000)
-    }
-  ]);
+  // TODO: load from /api/v1/portal/patients/{id}/messages/threads
+  threads = signal<(MessageThread & { episode?: string })[]>([]);
 
   /** Threads filtered by search query (used in flat list view). */
   readonly filteredThreads = computed(() => {
@@ -1252,43 +1206,8 @@ export class MessagesComponent {
   });
 
   // -------------------------------------------------------------------------
-  // Feature 1: Per-thread messages mock data
-  // -------------------------------------------------------------------------
-
-  private allMessages = signal<Message[]>([
-    // T1 - medication question conversation
-    {
-      id: 'M1',
-      threadId: 'T1',
-      senderId: 'PAT',
-      senderName: 'John Smith',
-      senderType: 'patient',
-      content: "I've been experiencing some mild headaches since starting Lisinopril last week. Is this normal?",
-      sentAt: new Date(Date.now() - 2 * 86400000),
-      status: 'responded'
-    },
-    {
-      id: 'M2',
-      threadId: 'T1',
-      senderId: 'D1',
-      senderName: 'Dr. Sarah Johnson',
-      senderType: 'provider',
-      content: 'Some mild side effects are normal during the first week of Lisinopril. Headaches can occur as your body adjusts. Stay well-hydrated and monitor your symptoms. If the headaches persist beyond two weeks or become severe, please schedule an in-person visit.',
-      sentAt: new Date(Date.now() - 86400000),
-      status: 'read'
-    },
-    // T2 - lab results notification
-    {
-      id: 'M3',
-      threadId: 'T2',
-      senderId: 'D1',
-      senderName: 'Dr. Sarah Johnson',
-      senderType: 'provider',
-      content: 'Your lab results are ready to view in your portal. Overall your results look good. Your cholesterol is slightly elevated — I would like to discuss dietary changes at your next visit.',
-      sentAt: new Date(Date.now() - 5 * 86400000),
-      status: 'read'
-    }
-  ]);
+  // TODO: load from /api/v1/portal/patients/{id}/messages
+  private allMessages = signal<Message[]>([]);
 
   /**
    * Derived signal: messages for the currently selected thread, ordered
@@ -1308,5 +1227,133 @@ export class MessagesComponent {
 
   selectThread(thread: MessageThread): void {
     this.selectedThread.set(thread);
+    const token = localStorage.getItem('portal_token') || '';
+    if (!token) return;
+
+    // Load messages for this thread from the API
+    fetch(`/api/v1/portal/messages/${thread.id}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.ok ? r.json() : null).then(data => {
+      if (!data?.messages) return;
+      const msgs: Message[] = data.messages.map((m: any) => ({
+        id: m.id,
+        threadId: thread.id,
+        senderId: m.sender_id || '',
+        senderName: m.sender_name || (m.sender_type === 'patient' ? 'You' : 'Provider'),
+        senderType: (m.sender_type || 'patient') as Message['senderType'],
+        content: m.body || m.content || '',
+        sentAt: new Date(m.created_at),
+        status: m.read_at ? 'read' as const : 'delivered' as const,
+      }));
+      this.allMessages.update(existing => [
+        ...existing.filter(m => m.threadId !== thread.id),
+        ...msgs,
+      ]);
+    }).catch(() => {});
+
+    // Mark thread as read on the backend and update local unread count
+    if (thread.unreadCount > 0) {
+      fetch(`/api/v1/portal/messages/${thread.id}/read`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+      }).catch(() => {});
+
+      this.threads.update(list =>
+        list.map(t => t.id === thread.id ? { ...t, unreadCount: 0 } : t)
+      );
+    }
+  }
+
+  // ── Send messages via portal API ─────────────────────────────────────────
+
+  sending = signal(false);
+
+  async sendNewMessage(): Promise<void> {
+    const patientId = this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token') || '';
+    if (!patientId || !token || !this.newMessage.trim()) return;
+
+    this.sending.set(true);
+    try {
+      const resp = await fetch('/api/v1/portal/messages', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: patientId,
+          provider_id: this.selectedRecipient || '',
+          subject: this.selectedCategory() || 'General',
+          body: this.newMessage.trim(),
+        }),
+      });
+      if (resp.ok) {
+        const thread = await resp.json();
+        // Add the new thread to the list
+        this.threads.update(t => [{
+          id: thread.id,
+          subject: thread.subject,
+          category: (this.selectedCategory() || 'general') as MessageThread['category'],
+          participants: [
+            { id: patientId, name: this.authService.user()?.firstName + ' ' + this.authService.user()?.lastName, type: 'patient' as const },
+            { id: this.selectedRecipient || '', name: this.recipients().find(r => r.value === this.selectedRecipient)?.label || 'Provider', type: 'provider' as const },
+          ],
+          lastMessageAt: new Date(),
+          lastMessagePreview: this.newMessage.trim().substring(0, 100),
+          unreadCount: 0,
+          status: 'open' as const,
+          createdAt: new Date(),
+        }, ...t]);
+        // Add message to allMessages
+        if (thread.messages?.[0]) {
+          this.allMessages.update(msgs => [...msgs, {
+            id: thread.messages[0].id,
+            threadId: thread.id,
+            senderId: patientId,
+            senderName: (this.authService.user()?.firstName || '') + ' ' + (this.authService.user()?.lastName || ''),
+            senderType: 'patient' as const,
+            content: this.newMessage.trim(),
+            sentAt: new Date(),
+            status: 'sent' as const,
+          }]);
+        }
+        this.closeCompose();
+      }
+    } catch { /* ignore */ }
+    this.sending.set(false);
+  }
+
+  async sendReply(): Promise<void> {
+    const thread = this.selectedThread();
+    const patientId = this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token') || '';
+    if (!thread || !patientId || !token || !this.replyText.trim()) return;
+
+    this.sending.set(true);
+    try {
+      const resp = await fetch(`/api/v1/portal/messages/${thread.id}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ body: this.replyText.trim() }),
+      });
+      if (resp.ok) {
+        const msg = await resp.json();
+        // Add to local messages
+        this.allMessages.update(msgs => [...msgs, {
+          id: msg.id || crypto.randomUUID(),
+          threadId: thread.id,
+          senderId: patientId,
+          senderName: (this.authService.user()?.firstName || '') + ' ' + (this.authService.user()?.lastName || ''),
+          senderType: 'patient' as const,
+          content: this.replyText.trim(),
+          sentAt: new Date(),
+          status: 'sent' as const,
+        }]);
+        // Update thread preview
+        this.threads.update(threads => threads.map(t =>
+          t.id === thread.id ? { ...t, lastMessagePreview: this.replyText.trim().substring(0, 100), lastMessageAt: new Date() } : t
+        ));
+        this.replyText = '';
+      }
+    } catch { /* ignore */ }
+    this.sending.set(false);
   }
 }

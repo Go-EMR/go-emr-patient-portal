@@ -1,4 +1,4 @@
-import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -644,9 +644,13 @@ import {
     }
   `]
 })
-export class HealthTimelineComponent {
+export class HealthTimelineComponent implements OnInit {
   readonly timeline = inject(HealthTimelineService);
   readonly filterOptions = FILTER_OPTIONS;
+
+  ngOnInit(): void {
+    this.timeline.loadTimeline();
+  }
 
   readonly groupedEvents = computed(() => {
     const events = this.timeline.filteredEvents();

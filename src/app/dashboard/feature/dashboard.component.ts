@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, ChangeDetectionStrategy, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
@@ -374,7 +374,7 @@ interface ContextualAction {
     }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent {
   readonly dataService = inject(DashboardDataService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
@@ -485,12 +485,16 @@ export class DashboardComponent implements OnInit {
   });
 
   get greeting(): string {
-    const hour = new Date().getHours();
+    const hour = this.todayDate.getHours();
     return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   }
 
-  ngOnInit(): void {
-    this.dataService.loadDashboardData();
+  constructor() {
+    // Defer data loading until after the first render + change-detection cycle
+    // completes, preventing NG02100 (expression changed after check).
+    // Promise.resolve() is NOT sufficient because microtasks run between
+    // Angular's synchronizeOnce() passes.
+    afterNextRender(() => this.dataService.loadDashboardData());
   }
 
   navigate(route: string): void {

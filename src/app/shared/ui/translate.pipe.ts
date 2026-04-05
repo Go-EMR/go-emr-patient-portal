@@ -20,12 +20,18 @@ import { TranslationService } from '../data-access/translation.service';
 @Pipe({
   name: 'translate',
   standalone: true,
-  pure: false,
+  pure: true,
 })
 export class TranslatePipe implements PipeTransform {
   private translationService = inject(TranslationService);
 
-  transform(key: string): string {
+  /**
+   * Pure pipe: pass the current language as second arg so Angular re-evaluates
+   * when the language changes.  Usage:
+   *   {{ 'key' | translate : currentLanguage() }}
+   * or simply {{ 'key' | translate }} (won't auto-update on language switch).
+   */
+  transform(key: string, _lang?: string): string {
     return this.translationService.translate(key);
   }
 }

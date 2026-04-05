@@ -40,7 +40,12 @@ export class DashboardDataService {
 
   readonly activeAlerts = computed(() => this._healthAlerts().filter(a => !a.dismissed));
 
-  readonly nextAppointment = computed(() => this._appointments().find(a => a.status === 'scheduled' || a.status === 'confirmed') ?? null);
+  readonly nextAppointment = computed(() => {
+    const now = new Date();
+    return this._appointments().find(a =>
+      (a.status === 'scheduled' || a.status === 'confirmed') && new Date(a.date) >= now
+    ) ?? null;
+  });
   readonly activeMedications = computed(() => this._medications().filter(m => m.status === 'active'));
   readonly newLabResults = computed(() => this._labResults().filter(l => l.isNew));
   readonly unreadMessageCount = computed(() => this._messages().reduce((sum, t) => sum + t.unreadCount, 0));
@@ -68,7 +73,7 @@ export class DashboardDataService {
   readonly healthSummary = computed<HealthSummary>(() => {
     const next = this.nextAppointment();
     return {
-      upcomingAppointments: this._appointments().filter(a => a.status === 'scheduled' || a.status === 'confirmed').length,
+      upcomingAppointments: this._appointments().filter(a => (a.status === 'scheduled' || a.status === 'confirmed') && new Date(a.date) >= new Date()).length,
       upcomingAppointment: next ? { date: next.date, providerName: next.providerName, type: next.appointmentType } : undefined,
       activeMedications: this.activeMedications().length,
       allergies: [],
@@ -181,42 +186,34 @@ export class DashboardDataService {
         const data: {
           medications: Array<{
             id: string;
-            medication_name: string;
-            generic_name?: string;
+            name: string;
             dosage: string;
             frequency: string;
-            route: string;
-            prescribed_date: string;
-            prescribed_by: string;
-            start_date: string;
+            prescriber: string;
+            pharmacy: string;
             status: string;
-            refills_remaining: number;
-            refills_total: number;
-            last_filled_date?: string;
-            pharmacy?: string;
-            instructions?: string;
-            is_controlled: boolean;
-            can_request_refill: boolean;
+            refills_left: number;
+            created_at: string;
           }>;
         } = await medsResp.json();
         const mapped: Medication[] = (data.medications ?? []).map(m => ({
           id: m.id,
-          medicationName: m.medication_name,
-          genericName: m.generic_name,
-          dosage: m.dosage,
-          frequency: m.frequency,
-          route: m.route,
-          prescribedDate: new Date(m.prescribed_date),
-          prescribedBy: m.prescribed_by,
-          startDate: new Date(m.start_date),
+          medicationName: m.name || 'Medication',
+          genericName: '',
+          dosage: m.dosage || '',
+          frequency: m.frequency || '',
+          route: '',
+          prescribedDate: new Date(m.created_at),
+          prescribedBy: m.prescriber || '',
+          startDate: new Date(m.created_at),
           status: (m.status as Medication['status']) || 'active',
-          refillsRemaining: m.refills_remaining ?? 0,
-          refillsTotal: m.refills_total ?? 0,
-          lastFilledDate: m.last_filled_date ? new Date(m.last_filled_date) : undefined,
-          pharmacy: m.pharmacy,
-          instructions: m.instructions ?? '',
-          isControlled: m.is_controlled ?? false,
-          canRequestRefill: m.can_request_refill ?? false
+          refillsRemaining: m.refills_left ?? 0,
+          refillsTotal: m.refills_left ?? 0,
+          lastFilledDate: undefined,
+          pharmacy: m.pharmacy || '',
+          instructions: '',
+          isControlled: false,
+          canRequestRefill: (m.refills_left ?? 0) > 0
         }));
         this._medications.set(mapped);
       }
@@ -268,26 +265,25 @@ export class DashboardDataService {
           threads: Array<{
             id: string;
             subject: string;
-            category: string;
-            participants: Array<{ id: string; name: string; type: string }>;
-            last_message_at: string;
-            last_message_preview: string;
+            provider_id: string;
+            provider_name: string;
+            patient_name: string;
             unread_count: number;
             status: string;
             created_at: string;
+            updated_at: string;
           }>;
         } = await msgResp.json();
         const mapped: MessageThread[] = (data.threads ?? []).map(t => ({
           id: t.id,
-          subject: t.subject,
-          category: (t.category as MessageThread['category']) || 'general',
-          participants: (t.participants ?? []).map(p => ({
-            id: p.id,
-            name: p.name,
-            type: (p.type as 'patient' | 'provider' | 'staff') || 'staff'
-          })),
-          lastMessageAt: new Date(t.last_message_at),
-          lastMessagePreview: t.last_message_preview ?? '',
+          subject: t.subject || 'Message',
+          category: 'general' as MessageThread['category'],
+          participants: [
+            { id: '', name: t.patient_name || '', type: 'patient' as const },
+            { id: t.provider_id || '', name: t.provider_name || '', type: 'provider' as const },
+          ],
+          lastMessageAt: new Date(t.updated_at || t.created_at),
+          lastMessagePreview: t.subject || '',
           unreadCount: t.unread_count ?? 0,
           status: (t.status as MessageThread['status']) || 'open',
           createdAt: new Date(t.created_at)

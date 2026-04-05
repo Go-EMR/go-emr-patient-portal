@@ -2,6 +2,7 @@ import { ApplicationConfig, DEFAULT_CURRENCY_CODE, provideZoneChangeDetection } 
 import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
+import { MessageService } from 'primeng/api';
 import Aura from '@primeuix/themes/aura';
 import { routes } from './app.routes';
 
@@ -10,6 +11,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding(), withViewTransitions()),
     provideHttpClient(),
+    MessageService,
     { provide: DEFAULT_CURRENCY_CODE, useValue: 'INR' },
     providePrimeNG({
       theme: {

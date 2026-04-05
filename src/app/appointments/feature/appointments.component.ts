@@ -141,10 +141,15 @@ interface PastAppointment {
                 </div>
 
                 <div class="actions">
-                  @if (appt.telehealth) {
-                    <button pButton label="Join" icon="pi pi-video" class="p-button-success"></button>
+                  @if (appt.status === 'checked-in') {
+                    <p-tag value="Checked In" severity="success" icon="pi pi-check-circle"></p-tag>
                   } @else {
-                    <button pButton label="Check In" icon="pi pi-check" class="p-button-success"></button>
+                    @if (appt.telehealth) {
+                      <button pButton label="Join" icon="pi pi-video" class="p-button-success"></button>
+                    } @else {
+                      <button pButton label="Check In" icon="pi pi-check" class="p-button-success"
+                              (click)="checkIn(appt)"></button>
+                    }
                   }
                   <!-- Feature 9.7: Cancel & Reschedule buttons -->
                   @if (appt.canCancel) {
@@ -179,7 +184,7 @@ interface PastAppointment {
         <!-- Feature 9.6: Past appointments with repeat referral -->
         <p-tabpanel [value]="1">
           <div class="appointments-list">
-            @for (past of pastAppointments; track past.id) {
+            @for (past of allPastAppointments(); track past.id) {
               <div class="appointment-card past-card">
                 <div class="date-badge past-badge">
                   <span class="month">{{ past.date | date:'MMM' }}</span>
@@ -341,7 +346,7 @@ interface PastAppointment {
             }
 
             <div class="selection-grid">
-              @for (spec of specialties; track spec) {
+              @for (spec of specialties(); track spec) {
                 <div
                   [class]="selectedSpecialty() === spec ? 'selection-card selected' : 'selection-card'"
                   (click)="selectedSpecialty.set(spec)">
@@ -381,7 +386,7 @@ interface PastAppointment {
           <div class="wizard-step">
             <p class="step-hint">Choose a clinic location for your visit.</p>
             <div class="location-list">
-              @for (loc of locations; track loc.id) {
+              @for (loc of locations(); track loc.id) {
                 <div
                   [class]="selectedLocation() === loc.id ? 'location-card selected' : 'location-card'"
                   (click)="selectedLocation.set(loc.id)">
@@ -1051,29 +1056,10 @@ export class AppointmentsComponent implements OnInit {
     { label: 'French', value: 'French' }
   ];
 
-  readonly specialties = [
-    'Internal Medicine',
-    'Cardiology',
-    'Dermatology',
-    'Orthopedics',
-    'Ophthalmology',
-    'General Practice'
-  ];
+  specialties = signal<string[]>([]);
+  doctors = signal<Doctor[]>([]);
 
-  readonly doctors: Doctor[] = [
-    { id: 'P1', name: 'Dr. Sarah Johnson',   specialty: 'Internal Medicine' },
-    { id: 'P2', name: 'Dr. Michael Chen',    specialty: 'Cardiology'        },
-    { id: 'P3', name: 'Dr. Emily Rodriguez', specialty: 'Dermatology'       },
-    { id: 'P4', name: 'Dr. James Williams',  specialty: 'Orthopedics'       },
-    { id: 'P5', name: 'Dr. Lisa Patel',      specialty: 'Ophthalmology'     },
-    { id: 'P6', name: 'Dr. Robert Kim',      specialty: 'General Practice'  }
-  ];
-
-  readonly locations: Location[] = [
-    { id: 'L1', name: 'Main Clinic',     address: '123 Medical Dr, Suite 100' },
-    { id: 'L2', name: 'Heart Center',    address: '456 Cardio Blvd'           },
-    { id: 'L3', name: 'West Side Office', address: '789 Health Ave'           }
-  ];
+  locations = signal<Location[]>([]);
 
   readonly timeSlots = [
     '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM',
@@ -1085,41 +1071,25 @@ export class AppointmentsComponent implements OnInit {
   // ─── Appointments data — loaded from portal API in ngOnInit ──────────────
   appointments = signal<ExtendedAppointment[]>([]);
 
-  // ─── Feature 9.6: Mock past appointments ────────────────────────────────────
-  readonly pastAppointments: PastAppointment[] = [
-    {
-      id: 'PAST-001',
-      providerName: 'Dr. Emily Rodriguez',
-      specialty: 'Dermatology',
-      appointmentType: 'Skin Check',
-      date: new Date(Date.now() - 45 * 86400000),
-      locationName: 'West Side Office'
-    },
-    {
-      id: 'PAST-002',
-      providerName: 'Dr. James Williams',
-      specialty: 'Orthopedics',
-      appointmentType: 'Knee Evaluation',
-      date: new Date(Date.now() - 90 * 86400000),
-      locationName: 'Main Clinic'
-    },
-    {
-      id: 'PAST-003',
-      providerName: 'Dr. Robert Kim',
-      specialty: 'General Practice',
-      appointmentType: 'Flu Visit',
-      date: new Date(Date.now() - 120 * 86400000),
-      locationName: 'Main Clinic'
-    },
-    {
-      id: 'PAST-004',
-      providerName: 'Dr. Lisa Patel',
-      specialty: 'Ophthalmology',
-      appointmentType: 'Vision Exam',
-      date: new Date(Date.now() - 180 * 86400000),
-      locationName: 'West Side Office'
-    }
-  ];
+  // ─── Past appointments: real (from API) + mock ──────────────────────────────
+  realPastAppointments = computed<PastAppointment[]>(() => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return this.appointments()
+      .filter(a => new Date(a.date) < todayStart)
+      .map(a => ({
+        id: a.id,
+        providerName: a.providerName || 'Provider',
+        specialty: a.providerSpecialty || a.appointmentType || 'General',
+        appointmentType: a.appointmentType || 'Appointment',
+        date: new Date(a.date),
+        locationName: a.locationName || '',
+      }));
+  });
+
+  allPastAppointments = computed<PastAppointment[]>(() => {
+    return this.realPastAppointments().sort((a, b) => b.date.getTime() - a.date.getTime());
+  });
 
   // ─── Feature 9.2: Mock health classes ───────────────────────────────────────
   readonly healthClasses: HealthClass[] = [
@@ -1176,6 +1146,39 @@ export class AppointmentsComponent implements OnInit {
         this.appointments.set(loaded as ExtendedAppointment[]);
       }
     });
+
+    // Load real providers from the patient's tenant
+    const patientId = this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token') || '';
+    if (patientId && token) {
+      fetch(`/api/v1/portal/patients/${patientId}/providers`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.ok ? r.json() : null).then(data => {
+        if (!data?.providers) return;
+        const docs: Doctor[] = data.providers.map((p: any) => ({
+          id: p.id,
+          name: `Dr. ${p.first_name} ${p.last_name}`.trim(),
+          specialty: p.specialty || 'General',
+        }));
+        this.doctors.set(docs);
+        // Derive unique specialties from actual providers
+        const specs = [...new Set(docs.map((d: Doctor) => d.specialty))];
+        this.specialties.set(specs);
+      }).catch(() => {});
+
+      // Load facilities
+      fetch(`/api/v1/portal/patients/${patientId}/facilities`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).then(r => r.ok ? r.json() : null).then(data => {
+        if (!data?.facilities) return;
+        const locs: Location[] = data.facilities.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          address: [f.address, f.city, f.state].filter(Boolean).join(', '),
+        }));
+        this.locations.set(locs);
+      }).catch(() => {});
+    }
   }
 
   // ─── Computed ───────────────────────────────────────────────────────────────
@@ -1187,19 +1190,22 @@ export class AppointmentsComponent implements OnInit {
     const todayEnd = new Date(todayStart.getTime() + 86400000);
     const weekEnd = new Date(todayStart.getTime() + 7 * 86400000);
 
+    // Only show future/today appointments in the upcoming section
+    const upcoming = all.filter(a => new Date(a.date) >= todayStart);
+
     switch (filter) {
       case 'today':
-        return all.filter(a => {
+        return upcoming.filter(a => {
           const d = new Date(a.date);
           return d >= todayStart && d < todayEnd;
         });
       case 'this_week':
-        return all.filter(a => {
+        return upcoming.filter(a => {
           const d = new Date(a.date);
           return d >= todayStart && d < weekEnd;
         });
       default:
-        return all;
+        return upcoming;
     }
   });
 
@@ -1209,18 +1215,19 @@ export class AppointmentsComponent implements OnInit {
 
   selectedDoctorName = computed(() => {
     const id = this.selectedDoctor();
-    return this.doctors.find(d => d.id === id)?.name ?? null;
+    return this.doctors().find(d => d.id === id)?.name ?? null;
   });
 
   selectedLocationName = computed(() => {
     const id = this.selectedLocation();
-    return this.locations.find(l => l.id === id)?.name ?? null;
+    return this.locations().find((l: Location) => l.id === id)?.name ?? null;
   });
 
   filteredDoctors = computed(() => {
     const spec = this.selectedSpecialty();
-    if (!spec) return this.doctors;
-    return this.doctors.filter(d => d.specialty === spec);
+    const docs = this.doctors();
+    if (!spec) return docs;
+    return docs.filter(d => d.specialty === spec);
   });
 
   bookingDialogTitle = computed(() => {
@@ -1293,8 +1300,49 @@ export class AppointmentsComponent implements OnInit {
     }
   }
 
-  confirmBooking(): void {
+  async confirmBooking(): Promise<void> {
     if (!this.canBook()) return;
+
+    const patientId = this.authService.user()?.patientId;
+    const token = localStorage.getItem('portal_token') || '';
+    if (!patientId || !token) return;
+
+    // Build start time from selected date + slot
+    const slot = this.selectedSlot();
+    const date = this.selectedDate;
+    if (!date || !slot) return;
+
+    // Build ISO start_time from selected date + slot (e.g. "10:00 AM")
+    const parts = slot.split(' ');
+    const [hourStr, minStr] = parts[0].split(':');
+    let hour = parseInt(hourStr, 10);
+    const min = parseInt(minStr, 10) || 0;
+    const meridiem = parts[1] || '';
+    if (meridiem === 'PM' && hour !== 12) hour += 12;
+    if (meridiem === 'AM' && hour === 12) hour = 0;
+    const startDate = new Date(date);
+    startDate.setHours(hour, min, 0, 0);
+
+    try {
+      const resp = await fetch('/api/v1/portal/appointments', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patient_id: patientId,
+          provider_id: this.selectedDoctor() || '',
+          facility_id: this.selectedLocation() || '',
+          start_time: startDate.toISOString(),
+          reason: this.selectedSpecialty() || 'Appointment',
+          notes: `${slot} at ${this.selectedLocationName() || 'Clinic'}`,
+        }),
+      });
+      if (resp.ok) {
+        // Reload appointments to show the new one
+        await this.appointmentsData.loadAppointments();
+        this.appointments.set(this.appointmentsData.appointments() as ExtendedAppointment[]);
+      }
+    } catch { /* ignore */ }
+
     this.showBookingDialog = false;
     this.resetBooking();
   }
@@ -1414,9 +1462,28 @@ export class AppointmentsComponent implements OnInit {
     this.cancelNotes = '';
   }
 
+  async checkIn(appt: ExtendedAppointment): Promise<void> {
+    const token = localStorage.getItem('portal_token') || '';
+    const user = this.authService.user();
+    const patientName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
+
+    try {
+      const resp = await fetch(`/api/v1/portal/appointments/${appt.id}/check-in`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patient_name: patientName }),
+      });
+      if (resp.ok) {
+        this.appointments.update(list =>
+          list.map(a => a.id === appt.id ? { ...a, status: 'checked-in' as const } : a)
+        );
+      }
+    } catch { /* ignore */ }
+  }
+
   openRescheduleForAppt(appt: ExtendedAppointment): void {
     // Pre-fill the booking wizard with the appointment's specialty and provider
-    const doctor = this.doctors.find(d => d.id === appt.providerId);
+    const doctor = this.doctors().find((d: Doctor) => d.id === appt.providerId);
     if (doctor) {
       this.selectedSpecialty.set(doctor.specialty);
       this.selectedDoctor.set(doctor.id);
