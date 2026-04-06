@@ -48,7 +48,7 @@ export class AppointmentsDataService {
   async loadAppointments(): Promise<void> {
     this._isLoading.set(true);
 
-    const patientId = this.authService.user()?.patientId;
+    const patientId = this.authService.user()?.patientId || localStorage.getItem('portal_patient_id') || '';
     if (!patientId) {
       this._appointments.set([]);
       this._isLoading.set(false);
