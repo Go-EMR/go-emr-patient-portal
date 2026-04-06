@@ -42,9 +42,11 @@ export class DashboardDataService {
 
   readonly nextAppointment = computed(() => {
     const now = new Date();
-    return this._appointments().find(a =>
-      (a.status === 'scheduled' || a.status === 'confirmed') && new Date(a.date) >= now
-    ) ?? null;
+    // Find the EARLIEST upcoming appointment (not cancelled/completed/no-show).
+    const upcoming = this._appointments()
+      .filter(a => new Date(a.date) >= now && a.status !== 'completed' && a.status !== 'cancelled' && a.status !== 'no-show')
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return upcoming[0] ?? null;
   });
   readonly activeMedications = computed(() => this._medications().filter(m => m.status === 'active'));
   readonly newLabResults = computed(() => this._labResults().filter(l => l.isNew));
@@ -73,7 +75,7 @@ export class DashboardDataService {
   readonly healthSummary = computed<HealthSummary>(() => {
     const next = this.nextAppointment();
     return {
-      upcomingAppointments: this._appointments().filter(a => (a.status === 'scheduled' || a.status === 'confirmed') && new Date(a.date) >= new Date()).length,
+      upcomingAppointments: this._appointments().filter(a => new Date(a.date) >= new Date() && a.status !== 'completed' && a.status !== 'cancelled' && a.status !== 'no-show').length,
       upcomingAppointment: next ? { date: next.date, providerName: next.providerName, type: next.appointmentType } : undefined,
       activeMedications: this.activeMedications().length,
       allergies: [],
