@@ -1,5 +1,6 @@
 // Shared Data Access - Public API
 export * from './models';
+export * from './realtime.service';
 export * from './emr-sync.service';
 export * from './govet.config';
 export * from './govet.models';

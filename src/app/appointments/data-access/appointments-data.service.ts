@@ -136,6 +136,64 @@ export class AppointmentsDataService {
     }
   }
 
+  async bookAppointment(req: {
+    patientId: string;
+    providerId: string;
+    startTime: string;  // ISO 8601
+    reason?: string;
+    notes?: string;
+    facilityId?: string;
+  }): Promise<boolean> {
+    const token = localStorage.getItem('portal_token') || '';
+    const resp = await fetch('/api/v1/portal/appointments', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        patient_id: req.patientId,
+        provider_id: req.providerId,
+        start_time: req.startTime,
+        reason: req.reason || '',
+        notes: req.notes || '',
+        facility_id: req.facilityId || '',
+      }),
+    });
+    if (resp.ok) {
+      await this.loadAppointments();
+      return true;
+    }
+    return false;
+  }
+
+  async loadProviders(): Promise<any[]> {
+    const patientId = this.authService.user()?.patientId || localStorage.getItem('portal_patient_id') || '';
+    const token = localStorage.getItem('portal_token') || '';
+    const resp = await fetch(
+      `/api/v1/portal/patients/${patientId}/providers`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    if (resp.ok) {
+      const data = await resp.json();
+      return data.providers ?? data ?? [];
+    }
+    return [];
+  }
+
+  async loadSlots(providerId: string, date: string): Promise<any[]> {
+    const token = localStorage.getItem('portal_token') || '';
+    const resp = await fetch(
+      `/api/v1/portal/appointments/slots?provider_id=${providerId}&date=${date}`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    );
+    if (resp.ok) {
+      const data = await resp.json();
+      return data.slots ?? data ?? [];
+    }
+    return [];
+  }
+
   private mapPatientId(portalPatientId: string): string {
     const mapping: Record<string, string> = {
       'PAT-010': 'pat-010',
