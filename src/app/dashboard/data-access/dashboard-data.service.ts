@@ -27,6 +27,7 @@ export class DashboardDataService {
   private readonly _messages = signal<MessageThread[]>([]);
   private readonly _forms = signal<PatientForm[]>([]);
   private readonly _healthAlerts = signal<HealthAlert[]>([]);
+  private readonly _outstandingBalance = signal(0);
   private readonly _isLoading = signal(false);
 
   readonly appointments = this._appointments.asReadonly();
@@ -82,7 +83,7 @@ export class DashboardDataService {
       recentLabResults: this.newLabResults().length,
       unreadMessages: this.unreadMessageCount(),
       pendingForms: this.pendingForms().length,
-      outstandingBalance: 125.00
+      outstandingBalance: this._outstandingBalance()
     };
   });
 
@@ -326,6 +327,26 @@ export class DashboardDataService {
         this._forms.set(mapped);
       }
     } catch { /* leave as empty array */ }
+
+    // --- Outstanding Balance (sum of unpaid statement balances) ---
+    try {
+      const billResp = await fetch(
+        `/api/v1/portal/patients/${patientId}/billing/statements?page=1&page_size=100`,
+        { headers }
+      );
+      if (billResp.ok) {
+        const data: { statements?: Array<{ balance: number; status: string }> } = await billResp.json();
+        // Backend returns amounts in paise; convert to rupees for display.
+        const paise = (data.statements ?? [])
+          .filter(s => s.status !== 'paid' && s.status !== 'void')
+          .reduce((sum, s) => sum + (s.balance ?? 0), 0);
+        this._outstandingBalance.set(paise / 100);
+      } else {
+        this._outstandingBalance.set(0);
+      }
+    } catch {
+      this._outstandingBalance.set(0);
+    }
 
     // Health alerts are derived locally from the loaded data rather than a
     // separate API call; no backend endpoint exists yet.
