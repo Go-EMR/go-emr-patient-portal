@@ -26,6 +26,7 @@ export const routes: Routes = [
       { path: 'data-management', loadComponent: () => import('./settings/feature/data-management.component').then(m => m.DataManagementComponent) },
       { path: 'privacy-policy', loadComponent: () => import('./settings/feature/privacy-policy.component').then(m => m.PrivacyPolicyComponent) },
       { path: 'settings', loadComponent: () => import('./settings/feature/settings.component').then(m => m.SettingsComponent) },
+      { path: 'settings/passkeys', loadComponent: () => import('./settings/feature/passkeys.component').then(m => m.PasskeysComponent) },
       { path: 'telehealth/:appointmentId', loadComponent: () => import('./telehealth/feature/telehealth.component').then(m => m.TelehealthComponent) },
       { path: 'telehealth', loadComponent: () => import('./telehealth/feature/telehealth.component').then(m => m.TelehealthComponent) },
       { path: 'symptom-checker', loadComponent: () => import('./symptom-checker/feature/symptom-checker.component').then(m => m.SymptomCheckerComponent) },
