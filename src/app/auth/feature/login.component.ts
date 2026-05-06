@@ -7,6 +7,7 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { AuthService } from '../data-access';
+import { PasskeyService } from '../data-access/passkey.service';
 import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service';
 
 @Component({
@@ -157,6 +158,19 @@ import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service'
                 (click)="login()"
                 aria-label="Sign in with email and password"
                 aria-describedby="login-subheading"></button>
+
+              @if (passkeySupported) {
+                <button
+                  pButton
+                  label="Sign in with passkey"
+                  icon="pi pi-key"
+                  class="w-full p-button-outlined p-button-secondary"
+                  style="margin-top: .5rem;"
+                  [loading]="isPasskeyLoading()"
+                  [disabled]="authService.isLockedOut() || authService.isLoading() || isPasskeyLoading()"
+                  (click)="signInWithPasskey()"
+                  aria-label="Sign in with passkey"></button>
+              }
 
               <div class="demo-credentials" aria-label="Demo account credentials">
                 <p><strong>Quick Demo Access</strong> (password: admin123)</p>
@@ -767,6 +781,7 @@ import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service'
 export class LoginComponent implements AfterViewInit {
   readonly authService = inject(AuthService);
   readonly themeService = inject(ThemeService);
+  private readonly passkeyService = inject(PasskeyService);
 
   // Email login
   email = '';
@@ -775,6 +790,36 @@ export class LoginComponent implements AfterViewInit {
   errorMessage = signal<string | null>(null);
   forgotPasswordMessage = signal<string | null>(null);
   socialMessage = signal<string | null>(null);
+
+  /** Drives the visibility of the "Sign in with passkey" button. */
+  readonly passkeySupported = this.passkeyService.isSupported();
+  readonly isPasskeyLoading = signal(false);
+
+  /** Discoverable passkey login. Browser shows every passkey saved
+   *  for this RP; user picks; we hand the resulting tokens to
+   *  AuthService.applyPasskeyLogin which fetches /auth/me to
+   *  hydrate patientId+mrn and flips the auth state. */
+  signInWithPasskey(): void {
+    if (this.isPasskeyLoading() || this.authService.isLoading()) return;
+    this.isPasskeyLoading.set(true);
+    this.passkeyService.loginWithPasskey().subscribe({
+      next: async (response) => {
+        const result = await this.authService.applyPasskeyLogin({
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+        });
+        this.isPasskeyLoading.set(false);
+        if (!result.success) {
+          this.errorMessage.set(result.error ?? 'Passkey login failed.');
+        }
+      },
+      error: (err: any) => {
+        this.isPasskeyLoading.set(false);
+        if (err?.cancelled) return; // user dismissed the OS prompt
+        this.errorMessage.set(err?.message ?? err?.error?.error?.message ?? 'No matching passkey found.');
+      },
+    });
+  }
 
   // Regional Health ID login signals
   regionalMessage = signal<string | null>(null);

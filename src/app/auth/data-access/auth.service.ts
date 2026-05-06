@@ -196,6 +196,68 @@ export class AuthService {
     }
   }
 
+  /**
+   * applyPasskeyLogin — public entry-point for the WebAuthn passkey
+   * flow. PasskeyService verifies the assertion via the portal-api,
+   * gets back identity tokens (no patientId yet), then calls this
+   * with the {accessToken, refreshToken} pair. We persist the tokens
+   * the same way the password flow does, fetch /auth/me to hydrate
+   * patientId/mrn/etc., and flip the auth state so route guards pick
+   * up the session immediately.
+   */
+  async applyPasskeyLogin(tokens: { accessToken: string; refreshToken: string }): Promise<{ success: boolean; error?: string }> {
+    this._isLoading.set(true);
+    try {
+      localStorage.setItem('portal_token', tokens.accessToken);
+      localStorage.setItem('portal_refresh', tokens.refreshToken);
+
+      // Hydrate the portal-shaped user envelope.
+      const meRes = await fetch('/api/v1/portal/auth/me', {
+        headers: { Authorization: `Bearer ${tokens.accessToken}` },
+      });
+      if (!meRes.ok) {
+        return { success: false, error: 'Could not load profile after passkey login.' };
+      }
+      const me = await meRes.json() as {
+        patientId: string; mrn: string;
+        firstName: string; lastName: string; email: string;
+      };
+      if (me.patientId) {
+        localStorage.setItem('portal_patient_id', me.patientId);
+      }
+
+      const user: PatientUser = {
+        id: me.patientId || '',
+        patientId: me.patientId || '',
+        mrn: me.mrn || '',
+        firstName: me.firstName || '',
+        lastName: me.lastName || '',
+        email: me.email || '',
+        phone: '',
+        dateOfBirth: new Date(0),
+        portalActivatedAt: new Date(),
+        mfaEnabled: false,
+        mfaVerified: true,
+        role: 'patient',
+        preferences: { language: 'en', timezone: 'UTC', paperlessStatements: true },
+      };
+
+      this._user.set(user);
+      this._isAuthenticated.set(true);
+      this._mfaRequired.set(false);
+      this._mfaVerified.set(true);
+      this._failedAttempts.set(0);
+      this._lockoutUntil.set(null);
+      localStorage.removeItem('portal_lockout');
+
+      this.saveSession(true);
+      this.router.navigate(['/dashboard']);
+      return { success: true };
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
   /** Feature 6.1: Phone OTP login - sends an OTP to the given phone number (mocked). */
   async sendPhoneOtp(phone: string): Promise<{ success: boolean; error?: string }> {
     this._isLoading.set(true);
