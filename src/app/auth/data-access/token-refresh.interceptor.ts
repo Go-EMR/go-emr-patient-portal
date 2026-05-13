@@ -1,28 +1,44 @@
-import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { HttpInterceptorFn, HttpRequest, HttpErrorResponse } from '@angular/common/http';
 import { catchError, switchMap, throwError, from, BehaviorSubject, filter, take } from 'rxjs';
 
 let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
 /**
- * HTTP interceptor that automatically refreshes expired access tokens.
+ * HTTP interceptor that:
+ *   - Clones every request with `withCredentials: true` so the BFF's
+ *     HttpOnly aura_bff_session cookie rides along automatically.
+ *   - On the legacy JWT path: automatically refreshes expired access tokens.
  *
- * Flow:
+ * Flow (legacy JWT path):
  * 1. Request fails with 401 → check if we have a refresh token
  * 2. Call POST /api/v1/portal/auth/refresh with the refresh token
  * 3. On success → store new tokens, retry the original request
- * 4. On failure → redirect to login
+ * 4. On failure → bubble the error; the router/guard routes to /login
  *
  * Handles concurrent requests: while refreshing, queues other 401 requests
  * and retries them all once the new token arrives.
+ *
+ * BFF path: /auth/me, /auth/logout, /auth/refresh are excluded from the
+ * 401-refresh cascade. A 401 on /auth/me means there is no BFF session
+ * (not "token expired"), so retrying after refresh would just loop.
  */
 export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router);
+  // Always send cookies — the BFF path needs aura_bff_session to ride along.
+  // The legacy direct-frontend path is unaffected: the portal-api ignores the
+  // cookie when a Bearer header is present.
+  req = req.clone({ withCredentials: true });
 
-  // Don't intercept auth endpoints (login, refresh) to avoid loops.
-  if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
+  // Endpoints where a 401 must NOT trigger the refresh cascade. On the BFF
+  // path these are owned by the BFF; a 401 means there is no session at all.
+  const noRefreshOn401 = [
+    '/auth/login',
+    '/auth/refresh',
+    '/auth/me',
+    '/auth/logout',
+  ];
+
+  if (noRefreshOn401.some(p => req.url.includes(p))) {
     return next(req);
   }
 
@@ -34,8 +50,10 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
 
       const refreshToken = localStorage.getItem('portal_refresh');
       if (!refreshToken) {
-        // No refresh token — force re-login.
-        clearSessionAndRedirect(router);
+        // No refresh token (BFF cookie path or expired legacy session).
+        // Don't call clearSessionAndRedirect — that would POST /logout which
+        // would also 401 and loop. Just bubble; the router will send the
+        // user to /login, which the BFF intercepts → OIDC redirect.
         return throwError(() => error);
       }
 
@@ -59,7 +77,10 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
         }),
         catchError(refreshErr => {
           isRefreshing = false;
-          clearSessionAndRedirect(router);
+          // Refresh failed — bubble the error; do NOT call
+          // clearSessionAndRedirect() as that navigates to /login and
+          // calling logout() in clearSession would POST /logout, which
+          // would also 401 (no valid token) and create a loop on the BFF.
           return throwError(() => refreshErr);
         })
       );
@@ -98,13 +119,3 @@ function addToken(req: HttpRequest<unknown>, token: string): HttpRequest<unknown
   });
 }
 
-/**
- * Clears stored session and redirects to login.
- */
-function clearSessionAndRedirect(router: Router): void {
-  localStorage.removeItem('portal_token');
-  localStorage.removeItem('portal_refresh');
-  localStorage.removeItem('portal_patient_id');
-  localStorage.removeItem('portal_session');
-  router.navigate(['/auth/login']);
-}

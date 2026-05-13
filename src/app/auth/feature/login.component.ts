@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, signal, computed, effect, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
@@ -52,7 +53,25 @@ import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service'
 
         <div class="login-form" role="main" aria-labelledby="login-heading">
 
-          <!-- Feature 6.3.1: Login mode tabs -->
+          <!-- Aura Suite SSO (BFF flow). Shown when served by patient-portal-bff
+               (port 4611). On the BFF the legacy /api/v1/portal/auth/login route
+               is removed — password login would 404. On the direct frontend
+               (port 4201) we keep showing the password form as a rollback path. -->
+          @if (showSsoOption) {
+            <div class="sso-only">
+              <button type="button" class="sso-button" (click)="signInWithSSO()">
+                <i class="pi pi-shield" aria-hidden="true"></i>
+                <span>Continue with Aura SSO</span>
+              </button>
+              <p class="sso-hint">
+                You'll be redirected to your organisation's identity provider
+                to sign in securely.
+              </p>
+            </div>
+          }
+
+          <!-- Feature 6.3.1: Login mode tabs — hidden when BFF SSO is active -->
+          @if (!showSsoOption) {
           <div class="mode-tabs" role="tablist" aria-label="Login method">
             <button
               role="tab"
@@ -415,6 +434,7 @@ import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service'
               }
             </div>
           }
+          }
         </div>
 
         <ng-template pTemplate="footer">
@@ -776,12 +796,81 @@ import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service'
       font-size: 0.775rem;
       color: var(--text-color-secondary);
     }
+
+    /* BFF SSO button — shown when served via patient-portal-bff */
+    .sso-only {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.5rem 0 1rem;
+    }
+    .sso-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1rem;
+      background: var(--teal-700, #0f766e);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 150ms ease;
+      font-family: inherit;
+    }
+    .sso-button:hover { background: var(--teal-600, #0d9488); }
+    .sso-button i { font-size: 1.1rem; }
+    .sso-hint {
+      font-size: 0.85rem;
+      line-height: 1.4;
+      text-align: center;
+      margin: 0;
+      color: var(--text-color-secondary);
+    }
   `]
 })
 export class LoginComponent implements AfterViewInit {
   readonly authService = inject(AuthService);
   readonly themeService = inject(ThemeService);
   private readonly passkeyService = inject(PasskeyService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  /**
+   * Auto-navigate away from the login page once BFF cookie auth succeeds.
+   * AuthService.tryBootstrapBffSession() resolves asynchronously after the
+   * component is constructed; when isAuthenticated flips to true we redirect
+   * to wherever the route guard wanted to send the user.
+   */
+  private readonly _redirectWhenAuthed = effect(() => {
+    if (this.authService.isAuthenticated()) {
+      const returnUrl =
+        this.route.snapshot.queryParamMap.get('returnUrl') ??
+        this.route.snapshot.queryParamMap.get('return_to') ??
+        '/dashboard';
+      this.router.navigateByUrl(returnUrl);
+    }
+  });
+
+  /**
+   * True when the portal is served via the patient-portal-bff (port 4611).
+   * On the BFF the legacy password-login route is removed; show the SSO
+   * button only. On the direct frontend (port 4201) keep the legacy form.
+   */
+  readonly showSsoOption = typeof window !== 'undefined' &&
+    !!window.location.port &&
+    window.location.port === '4611';
+
+  /** Kicks off the BFF OIDC flow. The BFF intercepts /login server-side
+   *  and 302s to ZITADEL; after sign-in ZITADEL redirects back to the BFF
+   *  callback, the BFF sets aura_bff_session cookie and 302s to /. */
+  signInWithSSO(): void {
+    const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+    window.location.href = '/login?return_to=' + returnTo;
+  }
 
   // Email login
   email = '';

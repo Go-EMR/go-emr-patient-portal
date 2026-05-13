@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { PatientUser } from '../../shared/data-access';
 
@@ -40,6 +41,8 @@ export class AuthService {
   readonly isFullyAuthenticated = computed(() =>
     this._isAuthenticated() && (!this._mfaRequired() || this._mfaVerified())
   );
+
+  private readonly http = inject(HttpClient);
 
   constructor(private router: Router) {
     this.checkStoredSession();
@@ -89,11 +92,67 @@ export class AuthService {
           if (session.role) {
             this._role.set(session.role);
           }
+          return;
         } else {
           this.clearSession();
         }
       } catch { this.clearSession(); }
     }
+
+    // No JWT and no valid session blob — try the BFF cookie path. When the
+    // browser is served via the patient-portal-bff (port 4611), ZITADEL has
+    // already set an HttpOnly aura_bff_session cookie. A successful GET /me
+    // means the BFF is present and the session is live; silently no-ops on 401.
+    this.tryBootstrapBffSession();
+  }
+
+  /**
+   * BFF cookie bootstrap: GET /api/v1/portal/auth/me with credentials. If a
+   * valid aura_bff_session cookie is present the BFF proxies the request to
+   * the portal-api /me endpoint and returns the PatientUser shape. On 200 we
+   * populate auth state; on 401 we stay signed-out and the router will route
+   * to /login, which the BFF intercepts and 302s to ZITADEL.
+   */
+  private tryBootstrapBffSession(): void {
+    this.http
+      .get<{
+        patientId: string;
+        mrn: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone?: string;
+        dateOfBirth?: string;
+        photoUrl?: string;
+      }>('/api/v1/portal/auth/me', { withCredentials: true })
+      .subscribe({
+        next: (me) => {
+          const user: PatientUser = {
+            id: me.patientId || '',
+            patientId: me.patientId || '',
+            mrn: me.mrn || '',
+            firstName: me.firstName || '',
+            lastName: me.lastName || '',
+            email: me.email || '',
+            phone: me.phone,
+            photoUrl: me.photoUrl,
+            dateOfBirth: me.dateOfBirth ? new Date(me.dateOfBirth) : new Date(0),
+            portalActivatedAt: new Date(),
+            mfaEnabled: false,
+            mfaVerified: true,
+            role: 'patient',
+            preferences: { language: 'en', timezone: 'UTC', paperlessStatements: true },
+          };
+          this._user.set(user);
+          this._isAuthenticated.set(true);
+          this._mfaRequired.set(false);
+          this._mfaVerified.set(true);
+        },
+        error: () => {
+          // 401 or network error — stay signed-out. The router will send the
+          // user to /login, which the BFF rewrites to the OIDC authorize URL.
+        },
+      });
   }
 
   private checkStoredLockout(): void {
