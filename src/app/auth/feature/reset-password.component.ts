@@ -137,7 +137,7 @@ interface PasswordRequirement {
                 label="Go to Login Now"
                 icon="pi pi-sign-in"
                 class="w-full"
-                routerLink="/login"
+                routerLink="/auth/login"
                 aria-label="Go to login page immediately">
               </button>
             </div>
@@ -145,7 +145,7 @@ interface PasswordRequirement {
 
           @if (!success()) {
             <div class="back-link">
-              <a routerLink="/login" aria-label="Return to login page">
+              <a routerLink="/auth/login" aria-label="Return to login page">
                 <i class="pi pi-arrow-left" aria-hidden="true"></i>
                 Back to Login
               </a>
@@ -460,7 +460,7 @@ export class ResetPasswordComponent implements OnDestroy {
       const current = this.countdown();
       if (current <= 1) {
         this.clearCountdown();
-        this.router.navigate(['/login']);
+        this.router.navigate(['/auth/login']);
       } else {
         this.countdown.set(current - 1);
       }

@@ -1,4 +1,4 @@
-import { Component, computed, signal, inject, OnInit } from '@angular/core';
+import { Component, ElementRef, ViewChild, computed, effect, signal, inject, OnInit } from '@angular/core';
 import { AuthService } from '../../auth/data-access/auth.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -211,7 +211,7 @@ interface QuickReplyTemplate {
             </div>
 
             <!-- Feature 1: Conversation bubbles with read receipts -->
-            <div class="message-body">
+            <div class="message-body" #messageBody>
               @for (msg of threadMessages(); track msg.id) {
                 @if (msg.senderType === 'patient') {
 
@@ -553,6 +553,7 @@ interface QuickReplyTemplate {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
+      scroll-behavior: smooth;
     }
 
     /* -----------------------------------------------------------------------
@@ -979,6 +980,35 @@ interface QuickReplyTemplate {
 })
 export class MessagesComponent implements OnInit {
   private readonly authService = inject(AuthService);
+
+  // Conversation scroll
+  @ViewChild('messageBody') private messageBody?: ElementRef<HTMLDivElement>;
+  private lastThreadId: string | null = null;
+  private lastMessageCount = 0;
+
+  constructor() {
+    // Focus the conversation on the latest message whenever the selected
+    // thread changes or a new message is appended.
+    effect(() => {
+      const thread = this.selectedThread();
+      const msgs = this.threadMessages();
+      const threadChanged = (thread?.id ?? null) !== this.lastThreadId;
+      const newMessages = msgs.length > this.lastMessageCount;
+      if (threadChanged || newMessages) {
+        this.scrollToLatest();
+        this.lastThreadId = thread?.id ?? null;
+        this.lastMessageCount = msgs.length;
+      }
+    });
+  }
+
+  private scrollToLatest(): void {
+    queueMicrotask(() => {
+      const el = this.messageBody?.nativeElement;
+      if (!el) return;
+      el.scrollTop = el.scrollHeight;
+    });
+  }
 
   ngOnInit(): void {
     // Load recipients (providers) from the patient's appointments

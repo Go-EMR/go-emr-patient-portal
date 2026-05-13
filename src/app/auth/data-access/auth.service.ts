@@ -412,7 +412,7 @@ export class AuthService {
 
   logout(): void {
     this.clearSession();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth/login']);
   }
 
   private saveSession(mfaVerified: boolean): void {

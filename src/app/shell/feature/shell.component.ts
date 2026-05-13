@@ -12,6 +12,7 @@ import { ThemeService } from '../../shared/data-access';
 import { IdleTimeoutService } from '../../shared/utils';
 import { SkipLinkComponent } from '../../shared/ui';
 import { CountryFeaturesService } from '../../shared/data-access/country-features.service';
+import { NotificationsDataService } from '../../notifications/data-access/notifications-data.service';
 
 type NavTier = 'core' | 'extended' | 'specialist';
 type CountryCode = 'US' | 'IN' | 'RO' | 'AU';
@@ -265,9 +266,11 @@ const MAX_PINS = 6;
             <i class="pi pi-question-circle" aria-hidden="true"></i>
           </button>
           <a routerLink="/notifications" class="notification-bell" pTooltip="Notifications" tooltipPosition="bottom"
-             aria-label="Notifications, 4 unread">
+             [attr.aria-label]="unreadNotifications() > 0 ? 'Notifications, ' + unreadNotifications() + ' unread' : 'Notifications'">
             <i class="pi pi-bell" aria-hidden="true"></i>
-            <span class="bell-badge" aria-hidden="true">4</span>
+            @if (unreadNotifications() > 0) {
+              <span class="bell-badge" aria-hidden="true">{{ unreadNotifications() }}</span>
+            }
           </a>
         </div>
         <router-outlet></router-outlet>
@@ -1060,8 +1063,12 @@ export class ShellComponent implements OnInit, OnDestroy {
   readonly themeService = inject(ThemeService);
   readonly idleService = inject(IdleTimeoutService);
   private countryService = inject(CountryFeaturesService);
+  private notificationsData = inject(NotificationsDataService);
   private messagePollTimer: ReturnType<typeof setInterval> | null = null;
   private lastThreadSnapshot: { id: string; unreadCount: number }[] = [];
+
+  // Topbar bell — live count of unread notifications for this patient.
+  readonly unreadNotifications = this.notificationsData.unreadCount;
 
   sidebarCollapsed = signal(false);
 
@@ -1309,6 +1316,10 @@ export class ShellComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Feature 6.4: Start idle tracking; pass logout callback
     this.idleService.startTracking(() => this.authService.logout());
+
+    // Load notifications so the bell badge reflects real unread counts
+    // (was previously hardcoded to 4).
+    this.notificationsData.loadNotifications();
 
     // Poll for new messages every 30s for toast notifications
     this.messagePollTimer = setInterval(() => this.pollForNewMessages(), 30000);

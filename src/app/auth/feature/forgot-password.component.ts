@@ -100,7 +100,7 @@ import { ButtonModule } from 'primeng/button';
           }
 
           <div class="back-link">
-            <a routerLink="/login" aria-label="Return to login page">
+            <a routerLink="/auth/login" aria-label="Return to login page">
               <i class="pi pi-arrow-left" aria-hidden="true"></i>
               Back to Login
             </a>

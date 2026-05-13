@@ -4,7 +4,11 @@ import { authGuard, mfaGuard, guestGuard } from './shared/utils';
 export const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'onboarding', loadComponent: () => import('./onboarding/feature/onboarding.component').then(m => m.OnboardingComponent) },
-  { path: 'login', canActivate: [guestGuard], loadComponent: () => import('./auth/feature/login.component').then(m => m.LoginComponent) },
+  // Moved off /login to /auth/login so the BFF's /login interception
+  // (the OIDC dance trigger) doesn't preempt the Angular SPA's own
+  // login screen. /login is now a server-owned path that 302s to
+  // ZITADEL via the BFF — the SSO button uses it as a redirect target.
+  { path: 'auth/login', canActivate: [guestGuard], loadComponent: () => import('./auth/feature/login.component').then(m => m.LoginComponent) },
   { path: 'forgot-password', canActivate: [guestGuard], loadComponent: () => import('./auth/feature/forgot-password.component').then(m => m.ForgotPasswordComponent) },
   { path: 'reset-password', canActivate: [guestGuard], loadComponent: () => import('./auth/feature/reset-password.component').then(m => m.ResetPasswordComponent) },
   { path: 'mfa', loadComponent: () => import('./auth/feature/mfa.component').then(m => m.MfaComponent) },
