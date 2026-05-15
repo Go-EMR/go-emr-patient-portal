@@ -411,8 +411,25 @@ export class AuthService {
   }
 
   logout(): void {
+    // Three things must die for a real logout:
+    //  1. local sessionStorage (clearSession)
+    //  2. the BFF cookie + Redis session (POST /api/v1/auth/logout)
+    //  3. ZITADEL's own auth session (follow `redirectUrl` returned by
+    //     the BFF — without this step ZITADEL silently re-issues a code
+    //     on the next /login, making "logout" look like it didn't work).
     this.clearSession();
-    this.router.navigate(['/auth/login']);
+    this.http
+      .post<{ redirectUrl?: string }>('/api/v1/auth/logout', {}, { withCredentials: true })
+      .subscribe({
+        next: (res) => {
+          if (res?.redirectUrl) {
+            window.location.href = res.redirectUrl;
+            return;
+          }
+          this.router.navigate(['/auth/login']);
+        },
+        error: () => this.router.navigate(['/auth/login']),
+      });
   }
 
   private saveSession(mfaVerified: boolean): void {
