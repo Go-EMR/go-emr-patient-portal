@@ -1,7 +1,7 @@
 /**
  * translations-indic.ts
  *
- * Indic language translation tables for the GoHealth Patient Portal.
+ * Indic language translation tables for the AuraHealth Patient Portal.
  * Languages: Hindi (hi), Tamil (ta), Bengali (bn).
  *
  * Keys match the dot-notation convention used in TranslationService.

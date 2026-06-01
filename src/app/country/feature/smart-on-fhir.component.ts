@@ -38,7 +38,7 @@ interface FhirConfig {
           </div>
           <div>
             <h1>SMART on FHIR — EHR Launch</h1>
-            <p>Launch GoHealth Patient Portal directly from your EHR system using the SMART on FHIR standard</p>
+            <p>Launch AuraHealth Patient Portal directly from your EHR system using the SMART on FHIR standard</p>
           </div>
         </div>
         <div class="fhir-badge">
@@ -101,7 +101,7 @@ interface FhirConfig {
       <!-- FHIR Launch Configuration -->
       <p-card header="Launch Configuration" styleClass="config-card">
         <p class="config-intro">
-          Your GoHealth Portal is registered as a SMART on FHIR application. Use these credentials to
+          Your AuraHealth Portal is registered as a SMART on FHIR application. Use these credentials to
           configure the integration in your EHR system's app gallery.
         </p>
         <div class="config-table">
@@ -173,13 +173,13 @@ interface FhirConfig {
             <p-accordion-content>
               <ol class="setup-steps">
                 <li>Log in to the Epic App Orchard at <code>apporchard.epic.com</code></li>
-                <li>Search for <strong>GoHealth Patient Portal</strong> in the app gallery</li>
+                <li>Search for <strong>AuraHealth Patient Portal</strong> in the app gallery</li>
                 <li>Click <strong>Request Access</strong> and provide your organization's NPI</li>
                 <li>Copy the Client ID above and paste it into the Epic configuration form</li>
                 <li>Add the authorized redirect URI: <code>https://portal.gohealth.com/smart/callback</code></li>
                 <li>Select the required scopes: <code>openid profile launch patient/*.read</code></li>
                 <li>Submit for Epic review — approval typically takes 2–5 business days</li>
-                <li>Once approved, GoHealth will appear in MyChart's <strong>Apps</strong> section</li>
+                <li>Once approved, AuraHealth will appear in MyChart's <strong>Apps</strong> section</li>
               </ol>
             </p-accordion-content>
           </p-accordion-panel>
@@ -190,7 +190,7 @@ interface FhirConfig {
               <ol class="setup-steps">
                 <li>Navigate to the Cerner Code Console at <code>code.cerner.com</code></li>
                 <li>Create a new application and select <strong>SMART on FHIR</strong> as the type</li>
-                <li>Enter the GoHealth Client ID in the Application settings</li>
+                <li>Enter the AuraHealth Client ID in the Application settings</li>
                 <li>Configure the launch URL: <code>https://portal.gohealth.com/smart/launch</code></li>
                 <li>Set the redirect URI to the callback URL provided above</li>
                 <li>Request the following scopes: <code>launch patient/Patient.read user/*.read</code></li>
@@ -205,7 +205,7 @@ interface FhirConfig {
             <p-accordion-content>
               <ol class="setup-steps">
                 <li>Access the athenahealth Marketplace at <code>marketplace.athenahealth.com</code></li>
-                <li>Find GoHealth Patient Portal and click <strong>Get Started</strong></li>
+                <li>Find AuraHealth Patient Portal and click <strong>Get Started</strong></li>
                 <li>Your athenahealth Implementation Manager will guide the integration setup</li>
                 <li>Provide the FHIR Base URL and Client ID to your Implementation Manager</li>
                 <li>Configure single sign-on using the OAuth 2.0 authorization code flow</li>
@@ -221,11 +221,11 @@ interface FhirConfig {
               <ol class="setup-steps">
                 <li>Contact your MEDITECH vendor representative to enable SMART on FHIR</li>
                 <li>Request access to the MEDITECH FHIR Sandbox at <code>fhir.meditech.com</code></li>
-                <li>Register GoHealth as a trusted application using the Client ID above</li>
-                <li>Configure the MEDITECH App Server with the GoHealth launch parameters</li>
+                <li>Register AuraHealth as a trusted application using the Client ID above</li>
+                <li>Configure the MEDITECH App Server with the AuraHealth launch parameters</li>
                 <li>Work with MEDITECH support to set up patient-context scoped access tokens</li>
                 <li>Validate the integration in the MEDITECH test environment before production</li>
-                <li>Schedule a go-live date with both MEDITECH and GoHealth implementation teams</li>
+                <li>Schedule a go-live date with both MEDITECH and AuraHealth implementation teams</li>
               </ol>
             </p-accordion-content>
           </p-accordion-panel>

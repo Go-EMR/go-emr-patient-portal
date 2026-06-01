@@ -47,7 +47,7 @@ interface LocalService {
         <div class="ack-text">
           <strong>Acknowledgment of Country</strong>
           <p>
-            GoHealth acknowledges the Traditional Custodians of the land on which we operate and
+            AuraHealth acknowledges the Traditional Custodians of the land on which we operate and
             provide care. We pay our respects to Aboriginal and Torres Strait Islander Elders past,
             present, and emerging. We acknowledge that sovereignty was never ceded and that these
             lands always were and always will be Aboriginal and Torres Strait Islander land.
@@ -71,7 +71,7 @@ interface LocalService {
       <p-card styleClass="welcome-card">
         <div class="welcome-content">
           <p class="welcome-text">
-            Welcome to the First Nations Health section of GoHealth. This space is designed with
+            Welcome to the First Nations Health section of AuraHealth. This space is designed with
             respect for Aboriginal and Torres Strait Islander cultures, knowledge systems, and
             approaches to health and wellbeing. We recognise that health for First Nations peoples
             encompasses physical, social, emotional, spiritual, and cultural wellbeing — for the

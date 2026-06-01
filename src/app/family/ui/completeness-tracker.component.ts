@@ -413,7 +413,7 @@ export class CompletenessTrackerComponent implements OnChanges {
 </head>
 <body>
   <h1>Family History Completeness Report</h1>
-  <p class="subtitle">Generated ${new Date().toLocaleDateString('en-US', { dateStyle: 'long' })} — GoHealth Patient Portal</p>
+  <p class="subtitle">Generated ${new Date().toLocaleDateString('en-US', { dateStyle: 'long' })} — AuraHealth Patient Portal</p>
   <div class="summary">
     <div class="stat"><div class="stat-val">${result.percentage}%</div><div class="stat-lbl">Complete</div></div>
     <div class="stat"><div class="stat-val">${result.totalComplete}</div><div class="stat-lbl">Full Records</div></div>

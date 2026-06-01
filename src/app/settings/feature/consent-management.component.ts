@@ -467,7 +467,7 @@ interface HipaaAuthorization {
           </span>
         </div>
         <p class="section-subtitle">
-          GoHealth Patient Portal complies with the <strong>Privacy Act 1988 (Cth)</strong> and the
+          AuraHealth Patient Portal complies with the <strong>Privacy Act 1988 (Cth)</strong> and the
           <strong>Australian Privacy Principles (APPs)</strong>. Your health information is also protected
           under the <strong>My Health Records Act 2012 (Cth)</strong>.
         </p>
@@ -927,7 +927,7 @@ export class ConsentManagementComponent {
     {
       id: 'CON-002',
       name: 'Terms of Service',
-      description: 'Agreement to the terms governing your use of the GoHealth patient portal, including acceptable use policies and your rights and responsibilities as a portal user.',
+      description: 'Agreement to the terms governing your use of the AuraHealth patient portal, including acceptable use policies and your rights and responsibilities as a portal user.',
       version: '2.4',
       required: true,
       granted: true,
@@ -955,7 +955,7 @@ export class ConsentManagementComponent {
     {
       id: 'CON-005',
       name: 'Marketing Communications',
-      description: 'Receive personalized health tips, wellness newsletters, and information about new services from GoHealth. You may unsubscribe at any time.',
+      description: 'Receive personalized health tips, wellness newsletters, and information about new services from AuraHealth. You may unsubscribe at any time.',
       version: '1.0',
       required: false,
       granted: false

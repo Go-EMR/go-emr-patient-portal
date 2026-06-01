@@ -1,7 +1,7 @@
 /**
  * translations-indic-extra.ts
  *
- * Additional Indic language translation tables for the GoHealth Patient Portal.
+ * Additional Indic language translation tables for the AuraHealth Patient Portal.
  * Languages: Telugu (te), Marathi (mr), Kannada (kn).
  *
  * Keys match the dot-notation convention used in TranslationService.

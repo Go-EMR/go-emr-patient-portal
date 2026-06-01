@@ -308,7 +308,7 @@ export class CowinCertificateComponent {
       vaccine: 'Covaxin (Bharat Biotech)',
       date: '20 Jan 2023',
       batch: 'BB-2023-0012456',
-      vaccinationCenter: 'GoHealth Clinic, Andheri West',
+      vaccinationCenter: 'AuraHealth Clinic, Andheri West',
       verifier: 'Dr. R. Mehta'
     }
   ]);

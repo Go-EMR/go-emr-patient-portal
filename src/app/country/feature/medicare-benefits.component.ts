@@ -312,7 +312,7 @@ export class MedicareBenefitsComponent {
   readonly commonItems = computed(() => this.allMbsItems().slice(0, 4));
 
   readonly claimsHistory = signal<MbsClaim[]>([
-    { id: '1', date: '18 Feb 2026', provider: 'Dr. Sarah Mitchell (GoHealth)', itemNumber: '36', description: 'GP Consultation — Level C', charge: 80.10, medicarePaid: 80.10, patientCost: 0 },
+    { id: '1', date: '18 Feb 2026', provider: 'Dr. Sarah Mitchell (AuraHealth)', itemNumber: '36', description: 'GP Consultation — Level C', charge: 80.10, medicarePaid: 80.10, patientCost: 0 },
     { id: '2', date: '10 Feb 2026', provider: 'Sullivan Nicolaides Pathology', itemNumber: '72817', description: 'Full Blood Count', charge: 28.65, medicarePaid: 21.49, patientCost: 7.16 },
     { id: '3', date: '20 Jan 2026', provider: 'Dr. Michael Torres (Sydney Heart)', itemNumber: '105', description: 'Cardiology Consultation', charge: 295.00, medicarePaid: 132.77, patientCost: 162.23 }
   ]);

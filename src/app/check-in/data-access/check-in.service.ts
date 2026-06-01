@@ -123,7 +123,7 @@ export class CheckInService {
       date: tomorrow,
       startTime: '10:00',
       endTime: '10:30',
-      locationName: 'GoHealth Main Clinic',
+      locationName: 'AuraHealth Main Clinic',
       locationAddress: '123 Medical Drive, Suite 200, Springfield, IL 62701',
       appointmentType: 'Annual Physical',
       department: 'General Medicine',

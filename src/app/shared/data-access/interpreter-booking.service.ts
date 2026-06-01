@@ -15,7 +15,7 @@ export interface InterpreterBooking {
 /**
  * InterpreterBookingService
  *
- * Generic interpreter booking service for the GoHealth Patient Portal.
+ * Generic interpreter booking service for the AuraHealth Patient Portal.
  * Manages mock interpreter bookings using Angular Signals.  In production
  * this would communicate with a backend interpreter coordination service.
  */
@@ -30,7 +30,7 @@ export class InterpreterBookingService {
       type: 'phone',
       status: 'confirmed',
       providerName: 'Dr. Michael Chen',
-      appointmentLabel: 'Annual Physical — GoHealth Primary Care',
+      appointmentLabel: 'Annual Physical — AuraHealth Primary Care',
       requestedAt: new Date('2026-02-20')
     },
     {

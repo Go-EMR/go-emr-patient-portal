@@ -259,7 +259,7 @@ export class BlueButtonComponent {
       id: 'CLM-001',
       date: 'Feb 18, 2026',
       claimType: 'Part B',
-      provider: 'GoHealth Primary Care — Dr. Emily Chen',
+      provider: 'AuraHealth Primary Care — Dr. Emily Chen',
       service: 'Office/Outpatient Visit, New Patient (99204)',
       totalCharged: 280.00,
       medicarePaid: 196.00,

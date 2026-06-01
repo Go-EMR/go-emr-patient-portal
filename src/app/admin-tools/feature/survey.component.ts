@@ -676,7 +676,7 @@ export class SurveyComponent {
     specialty: 'Internal Medicine',
     date: new Date(Date.now() - 3 * 86400000),
     type: 'Follow-up Visit',
-    location: 'GoHealth Main Clinic, Room 4B'
+    location: 'AuraHealth Main Clinic, Room 4B'
   };
 
   questions: SurveyQuestion[] = [

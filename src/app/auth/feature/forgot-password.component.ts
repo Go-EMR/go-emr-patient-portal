@@ -15,9 +15,9 @@ import { ButtonModule } from 'primeng/button';
       <p-card styleClass="auth-card">
         <ng-template pTemplate="header">
           <div class="auth-header">
-            <div class="logo" aria-label="GoHealth Patient Portal">
+            <div class="logo" aria-label="AuraHealth Patient Portal">
               <i class="pi pi-heart-fill" aria-hidden="true"></i>
-              <span>GoHealth</span>
+              <span>AuraHealth</span>
             </div>
             @if (!submitted()) {
               <h1 id="forgot-heading">Forgot Password?</h1>

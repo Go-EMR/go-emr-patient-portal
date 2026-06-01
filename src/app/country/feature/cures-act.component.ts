@@ -53,7 +53,7 @@ interface ComplianceItem {
         <div class="compliance-info">
           <strong>This portal is fully compliant with the 21st Century Cures Act</strong>
           <p>
-            GoHealth Patient Portal meets all ONC Health IT Certification Program requirements under
+            AuraHealth Patient Portal meets all ONC Health IT Certification Program requirements under
             45 CFR Part 170. We support USCDI v5 data classes, SMART on FHIR API access, and
             OpenID Connect. Information blocking is strictly prohibited.
           </p>
@@ -135,7 +135,7 @@ interface ComplianceItem {
               <h3>Authorize a Third-Party App</h3>
               <p>
                 You have the right to share your health data with any SMART on FHIR-compatible
-                health app or service of your choosing. GoHealth uses OAuth 2.0 to ensure secure,
+                health app or service of your choosing. AuraHealth uses OAuth 2.0 to ensure secure,
                 patient-authorized access.
               </p>
               <button pButton label="Manage App Authorizations" icon="pi pi-cog" class="p-button-outlined" (click)="manageApps()"></button>
@@ -175,7 +175,7 @@ interface ComplianceItem {
         <div>
           <strong>Standardized FHIR API Access</strong>
           <p>
-            GoHealth provides a public-facing FHIR R4 API endpoint compliant with the ONC Cures Act
+            AuraHealth provides a public-facing FHIR R4 API endpoint compliant with the ONC Cures Act
             Final Rule (45 CFR 170.315(g)(10)). Developers and patients can access health data
             programmatically using SMART on FHIR and HL7 C-CDA formats.
           </p>

@@ -26,7 +26,7 @@ const TOUR_SLIDES: TourSlide[] = [
     id: 0,
     icon: 'pi pi-heart-fill',
     iconBg: 'rgba(255,255,255,0.2)',
-    title: 'Welcome to GoHealth',
+    title: 'Welcome to AuraHealth',
     subtitle: 'Your personal health hub — manage appointments, records, messages, and more in one secure, HIPAA-compliant portal.',
     badges: ['256-bit Encryption', 'HIPAA Compliant', 'SOC 2 Certified']
   },
@@ -74,7 +74,7 @@ const TOUR_SLIDES: TourSlide[] = [
     icon: 'pi pi-check-circle',
     iconBg: 'rgba(255,255,255,0.2)',
     title: "You're All Set!",
-    subtitle: 'Your GoHealth portal is ready. Explore at your own pace — everything you need is just a click away.',
+    subtitle: 'Your AuraHealth portal is ready. Explore at your own pace — everything you need is just a click away.',
     badges: ['30+ Features Available', 'Always Secure', 'Support 24/7']
   }
 ];

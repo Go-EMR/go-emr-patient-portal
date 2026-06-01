@@ -357,7 +357,7 @@ import { TranslationService, SupportedLanguage, HealthLiteracyService, ReadingLe
 
       <!-- Version Footer -->
       <div class="version-footer">
-        <span>GoHealth Patient Portal v1.0.0</span>
+        <span>AuraHealth Patient Portal v1.0.0</span>
         <span>Built with Angular 19 &amp; PrimeNG</span>
       </div>
     </div>
@@ -587,7 +587,7 @@ export class SettingsComponent {
       language: this.interpLanguage,
       appointmentId: this.interpAppointment,
       appointmentLabel: label ?? appt?.label ?? '',
-      providerName: provider ?? 'GoHealth Provider',
+      providerName: provider ?? 'AuraHealth Provider',
       date: 'Upcoming',
       time: 'TBD',
       type: this.interpType,

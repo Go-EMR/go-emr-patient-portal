@@ -1,7 +1,7 @@
 /**
  * translations-community.ts
  *
- * Community language translation tables for the GoHealth Patient Portal.
+ * Community language translation tables for the AuraHealth Patient Portal.
  * Languages: Cantonese (yue), Arabic (ar), Italian (it), Greek (el).
  *
  * Keys match the dot-notation convention used in TranslationService.

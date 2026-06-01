@@ -316,7 +316,7 @@ export class AbhaHealthIdComponent {
 
   readonly linkedFacilities = signal([
     { name: 'Apollo Hospital, Mumbai', type: 'Multi-Specialty Hospital', linkedDate: 'Jan 2023', status: 'Active' },
-    { name: 'GoHealth Primary Care Clinic', type: 'Primary Care', linkedDate: 'Mar 2023', status: 'Active' },
+    { name: 'AuraHealth Primary Care Clinic', type: 'Primary Care', linkedDate: 'Mar 2023', status: 'Active' },
     { name: 'Aarogya Diagnostic Center', type: 'Diagnostic Lab', linkedDate: 'Jun 2023', status: 'Active' },
     { name: 'City Orthopaedic Centre', type: 'Specialty Clinic', linkedDate: 'Nov 2023', status: 'Inactive' }
   ]);

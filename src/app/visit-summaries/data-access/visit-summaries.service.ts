@@ -50,7 +50,7 @@ export class VisitSummariesService {
           providerName: 'Dr. Sarah Chen',
           providerSpecialty: 'Internal Medicine',
           visitType: 'Annual Physical Exam',
-          locationName: 'GoHealth Primary Care — Downtown',
+          locationName: 'AuraHealth Primary Care — Downtown',
           locationAddress: '400 Westlake Ave N, Seattle, WA 98109',
           durationMinutes: 60,
           status: 'new',
@@ -202,7 +202,7 @@ export class VisitSummariesService {
           providerName: 'Dr. Lisa Wong',
           providerSpecialty: 'Urgent Care',
           visitType: 'Urgent Care Visit',
-          locationName: 'GoHealth Urgent Care — Eastside',
+          locationName: 'AuraHealth Urgent Care — Eastside',
           locationAddress: '15600 NE 8th St, Bellevue, WA 98008',
           durationMinutes: 30,
           status: 'reviewed',
@@ -317,7 +317,7 @@ export class VisitSummariesService {
           providerName: 'Dr. Sarah Chen',
           providerSpecialty: 'Internal Medicine',
           visitType: 'Lab Results Review',
-          locationName: 'GoHealth Primary Care — Downtown',
+          locationName: 'AuraHealth Primary Care — Downtown',
           locationAddress: '400 Westlake Ave N, Seattle, WA 98109',
           durationMinutes: 20,
           status: 'reviewed',
@@ -343,7 +343,7 @@ export class VisitSummariesService {
           labOrders: [
             { testName: 'HbA1c', reason: 'Diabetes monitoring — 3 month follow-up', status: 'ordered' }
           ],
-          followUpInstructions: 'Repeat HbA1c in 3 months. Enroll in the GoHealth Diabetes Education Program — a referral has been sent. Track blood glucose daily and log readings in the patient portal.',
+          followUpInstructions: 'Repeat HbA1c in 3 months. Enroll in the AuraHealth Diabetes Education Program — a referral has been sent. Track blood glucose daily and log readings in the patient portal.',
           warningSignsToWatch: [
             'Blood glucose below 70 mg/dL (hypoglycemia): sweating, shakiness, confusion',
             'Blood glucose above 300 mg/dL on multiple readings',

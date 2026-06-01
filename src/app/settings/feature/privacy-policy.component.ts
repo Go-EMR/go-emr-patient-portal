@@ -22,7 +22,7 @@ import { DividerModule } from 'primeng/divider';
       <p-card styleClass="policy-card">
         <div class="policy-intro">
           <p>
-            GoHealth Patient Portal ("we," "us," or "our") is committed to protecting the privacy and
+            AuraHealth Patient Portal ("we," "us," or "our") is committed to protecting the privacy and
             security of your personal health information. This Privacy Policy explains how we collect,
             use, disclose, and safeguard your information when you use our patient portal. Please read
             this policy carefully. If you do not agree with its terms, please discontinue use of the portal.

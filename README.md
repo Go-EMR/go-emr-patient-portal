@@ -1,4 +1,4 @@
-# GoHealth Patient Portal
+# AuraHealth Patient Portal
 
 A HIPAA-compliant patient portal built with Angular 19 and PrimeNG, following Nx-style architecture patterns.
 

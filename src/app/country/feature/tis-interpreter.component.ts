@@ -122,7 +122,7 @@ interface TisBooking {
             <input
               type="text"
               class="text-input"
-              placeholder="e.g. GoHealth Bondi Junction — GP Consultation"
+              placeholder="e.g. AuraHealth Bondi Junction — GP Consultation"
               [(ngModel)]="appointmentContext"
             />
           </div>
@@ -321,7 +321,7 @@ export class TisInterpreterComponent {
       time: '10:30 AM',
       type: 'Phone',
       appointment: 'GP Consultation',
-      provider: 'GoHealth Bondi Junction',
+      provider: 'AuraHealth Bondi Junction',
       status: 'Confirmed'
     },
     {

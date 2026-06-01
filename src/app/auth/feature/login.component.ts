@@ -44,7 +44,7 @@ import { ThemeService, ThemeMode } from '../../shared/data-access/theme.service'
           <div class="login-header">
             <div class="logo" aria-hidden="true">
               <i class="pi pi-heart-fill"></i>
-              <span>GoHealth</span>
+              <span>AuraHealth</span>
             </div>
             <h1 id="login-heading">Patient Portal</h1>
             <p id="login-subheading">Sign in to access your health information</p>

@@ -217,7 +217,7 @@ import { CheckInService } from '../data-access/check-in.service';
                       <span class="required-badge">Required</span>
                     </label>
                   </div>
-                  <p class="consent-text">I authorize GoHealth Medical Group to provide medical treatment deemed necessary by my healthcare providers.</p>
+                  <p class="consent-text">I authorize AuraHealth Medical Group to provide medical treatment deemed necessary by my healthcare providers.</p>
                 </div>
 
                 <div class="consent-item" [class.accepted]="svc.consent().hipaaConsent">

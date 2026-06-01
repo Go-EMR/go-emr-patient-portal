@@ -68,7 +68,7 @@ interface CrossProviderRecord {
           <strong>Your health records, wherever you've been treated</strong>
           <p>
             CommonWell and Carequality are nationwide health information networks that allow your medical
-            records to follow you across providers — even if they use different EHR systems. GoHealth
+            records to follow you across providers — even if they use different EHR systems. AuraHealth
             is connected to both networks, giving you access to records from millions of providers nationwide.
           </p>
         </div>

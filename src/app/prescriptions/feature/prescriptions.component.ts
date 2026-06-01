@@ -960,7 +960,7 @@ import { PrescriptionsService, Prescription, RefillRequest, PharmacyInfo, Adhere
             </svg>
             <div class="qr-watermark">
               <i class="pi pi-shield"></i>
-              GoHealth
+              AuraHealth
             </div>
           </div>
 

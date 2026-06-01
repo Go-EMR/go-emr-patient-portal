@@ -1,7 +1,7 @@
 /**
  * translations-additional.ts
  *
- * Additional language translation tables for the GoHealth Patient Portal.
+ * Additional language translation tables for the AuraHealth Patient Portal.
  * Languages: Vietnamese (vi), Mandarin Chinese (zh), Tagalog (tl), French Creole (ht).
  *
  * Keys match the dot-notation convention used in TranslationService.

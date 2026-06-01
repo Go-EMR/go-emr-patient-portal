@@ -2184,7 +2184,7 @@ export class TelehealthComponent implements OnInit, OnDestroy {
     console.log('Downloading consultation summary');
     const session = this.telehealth.session();
     const blob = new Blob(
-      [`CONSULTATION SUMMARY\n\nDate: ${new Date().toLocaleDateString()}\nProvider: ${session?.providerName}\nSpecialty: ${session?.providerSpecialty}\nDuration: ${this.telehealth.callDurationFormatted()}\n\nDIAGNOSIS\nMild hypertension (Stage 1).\n\nRECOMMENDATIONS\n1. Reduce sodium intake\n2. Increase aerobic exercise\n3. Monitor BP daily\n\nFOLLOW-UP\nReturn in 6 weeks for BP re-evaluation.\n\n---\nGoHealth Patient Portal | HIPAA Secured`],
+      [`CONSULTATION SUMMARY\n\nDate: ${new Date().toLocaleDateString()}\nProvider: ${session?.providerName}\nSpecialty: ${session?.providerSpecialty}\nDuration: ${this.telehealth.callDurationFormatted()}\n\nDIAGNOSIS\nMild hypertension (Stage 1).\n\nRECOMMENDATIONS\n1. Reduce sodium intake\n2. Increase aerobic exercise\n3. Monitor BP daily\n\nFOLLOW-UP\nReturn in 6 weeks for BP re-evaluation.\n\n---\nAuraHealth Patient Portal | HIPAA Secured`],
       { type: 'text/plain' }
     );
     const url = URL.createObjectURL(blob);

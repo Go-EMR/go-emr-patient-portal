@@ -47,10 +47,10 @@ const MAX_PINS = 6;
       <!-- Sidebar -->
       <aside class="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-header">
-          <div class="logo" [class.collapsed]="sidebarCollapsed()" aria-label="GoHealth Patient Portal">
+          <div class="logo" [class.collapsed]="sidebarCollapsed()" aria-label="AuraHealth Patient Portal">
             <i class="pi pi-heart-fill" aria-hidden="true"></i>
             @if (!sidebarCollapsed()) {
-              <span>GoHealth</span>
+              <span>AuraHealth</span>
             }
           </div>
           <button pButton [icon]="sidebarCollapsed() ? 'pi pi-angle-right' : 'pi pi-angle-left'"

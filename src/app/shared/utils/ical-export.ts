@@ -243,7 +243,7 @@ export function exportToICal(appointment: ICalAppointment): void {
   const lines: string[] = [
     'BEGIN:VCALENDAR\r\n',
     prop('VERSION', '2.0'),
-    prop('PRODID', '-//GoHealth Patient Portal//EN'),
+    prop('PRODID', '-//AuraHealth Patient Portal//EN'),
     prop('CALSCALE', 'GREGORIAN'),
     prop('METHOD', 'PUBLISH'),
     'BEGIN:VEVENT\r\n',

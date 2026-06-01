@@ -264,17 +264,17 @@ export class MyHealthRecordComponent {
   emergencyAccess = true;
 
   readonly healthDocuments = signal<HealthDocument[]>([
-    { id: '1', type: 'Health Summary', title: 'Shared Health Summary', date: '18 Feb 2026', provider: 'Dr. Sarah Mitchell', facility: 'GoHealth Bondi Junction', size: '42 KB', isShared: true },
-    { id: '2', type: 'Event Summary', title: 'Annual Health Check 2025', date: '14 Nov 2025', provider: 'Dr. Sarah Mitchell', facility: 'GoHealth Bondi Junction', size: '38 KB', isShared: true },
+    { id: '1', type: 'Health Summary', title: 'Shared Health Summary', date: '18 Feb 2026', provider: 'Dr. Sarah Mitchell', facility: 'AuraHealth Bondi Junction', size: '42 KB', isShared: true },
+    { id: '2', type: 'Event Summary', title: 'Annual Health Check 2025', date: '14 Nov 2025', provider: 'Dr. Sarah Mitchell', facility: 'AuraHealth Bondi Junction', size: '38 KB', isShared: true },
     { id: '3', type: 'Discharge Summary', title: 'Day Surgery - Arthroscopy', date: '02 Aug 2025', provider: 'Dr. James Nguyen', facility: 'Prince of Wales Hospital', size: '88 KB', isShared: true },
-    { id: '4', type: 'Prescription', title: 'Prescription Records (PBS)', date: '18 Feb 2026', provider: 'Dr. Sarah Mitchell', facility: 'GoHealth Bondi Junction', size: '12 KB', isShared: true },
+    { id: '4', type: 'Prescription', title: 'Prescription Records (PBS)', date: '18 Feb 2026', provider: 'Dr. Sarah Mitchell', facility: 'AuraHealth Bondi Junction', size: '12 KB', isShared: true },
     { id: '5', type: 'Medicare Overview', title: 'Medicare Claims Overview 2026', date: '21 Feb 2026', provider: 'Medicare Australia', facility: 'Services Australia', size: '25 KB', isShared: true },
     { id: '6', type: 'Pathology Report', title: 'Blood Panel - February 2026', date: '10 Feb 2026', provider: 'Dr. Priya Sharma', facility: 'Sullivan Nicolaides Pathology', size: '55 KB', isShared: false },
     { id: '7', type: 'Specialist Letter', title: 'Cardiology Consultation Report', date: '20 Jan 2026', provider: 'Dr. Michael Torres', facility: 'Sydney Heart Specialists', size: '62 KB', isShared: false }
   ]);
 
   readonly accessHistory = signal<AccessHistoryItem[]>([
-    { date: '21 Feb 2026, 10:14 AM', accessor: 'GoHealth Bondi Junction', accessorType: 'GP', reason: 'Routine Consultation', location: 'Bondi Junction, NSW' },
+    { date: '21 Feb 2026, 10:14 AM', accessor: 'AuraHealth Bondi Junction', accessorType: 'GP', reason: 'Routine Consultation', location: 'Bondi Junction, NSW' },
     { date: '18 Feb 2026, 09:30 AM', accessor: 'Sullivan Nicolaides Pathology', accessorType: 'Pathology', reason: 'Test Results Upload', location: 'Bondi, NSW' },
     { date: '10 Feb 2026, 02:15 PM', accessor: 'Sydney Heart Specialists', accessorType: 'Specialist', reason: 'Cardiology Referral', location: 'Sydney CBD, NSW' },
     { date: '21 Feb 2026, 12:00 AM', accessor: 'Services Australia (Medicare)', accessorType: 'Government', reason: 'Automated Medicare Update', location: 'National' },

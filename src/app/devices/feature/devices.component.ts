@@ -455,7 +455,7 @@ interface SleepBar {
               <div class="share-text">
                 <h3 class="share-title">Share data with your care team</h3>
                 <p class="share-desc">Your connected device data can be automatically sent to your provider for review during appointments and care management.</p>
-                <p class="share-consent">By enabling sharing, you consent to transmit activity, heart rate, sleep, and glucose data to your GoHealth care team. Data is encrypted and governed by your signed HIPAA authorization.</p>
+                <p class="share-consent">By enabling sharing, you consent to transmit activity, heart rate, sleep, and glucose data to your AuraHealth care team. Data is encrypted and governed by your signed HIPAA authorization.</p>
               </div>
               <div class="share-toggle">
                 <div class="toggle-wrap" [class.toggle-active]="sharingEnabled()" (click)="toggleSharing()">
